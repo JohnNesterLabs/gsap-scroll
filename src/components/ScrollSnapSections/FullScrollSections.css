@@ -9,76 +9,76 @@
     overflow: auto;
   }
   
-  .section {
+  .full-section {
     text-align: center;
-    scroll-snap-align: start;
-    height: 50vh;
+    scroll-snap-align: center;
+    height: 100vh;
     width: 100%;
     position: relative;
   }
   
-  .section:nth-child(odd) {
+  .full-section:nth-child(odd) {
     background-color: #000;
     color: #fff;
   }
   
-  .section:nth-child(even) {
+  .full-section:nth-child(even) {
     background-color: #fff;
     color: #000;
   }
   
   /* Additional color variations for more sections */
-  .section.four {
+  .full-section.four {
     background-color: #1a1a1a;
     color: #fff;
   }
   
-  .section.five {
+  .full-section.five {
     background-color: #f0f0f0;
     color: #000;
   }
   
-  .section.six {
+  .full-section.six {
     background-color: #2c2c2c;
     color: #fff;
   }
   
-  .section.seven {
+  .full-section.seven {
     background-color: #e8e8e8;
     color: #000;
   }
   
-  .section.eight {
+  .full-section.eight {
     background-color: #3c3c3c;
     color: #fff;
   }
   
-  .section.nine {
+  .full-section.nine {
     background-color: #d8d8d8;
     color: #000;
   }
   
-  .section.last {
+  .full-section.last {
     background-color: #4c4c4c;
     color: #fff;
   }
   
   /* span styling */
-  .section span {
+  .full-section span {
     font-family: 'Lato', sans-serif;
     font-size: 40px;
     height: 40px;
-    width: 0px; /* note: width 0 because only used for positioning? */
+    width: 0px;
     position: absolute;
   }
   
-  .section span.number {
+  .full-section span.number {
     top: 50%;
     left: 50%;
     transform: translate(-50px, -50%);
   }
   
-  .section span.slash {
+  .full-section span.slash {
     top: 50%;
     left: 50%;
     height: 50px;
@@ -87,7 +87,7 @@
     transform: rotate(20deg) translate(-50%, -50%);
   }
   
-  .section span.ten {
+  .full-section span.ten {
     top: 50%;
     left: 50%;
     transform: translate(40px, -50%);
@@ -95,7 +95,7 @@
   }
   
   /* Section Titles */
-  .section-title {
+  .full-section .section-title {
     position: absolute;
     top: 20%;
     left: 50%;
@@ -109,7 +109,7 @@
     opacity: 0.9;
   }
   
-  .section-subtitle {
+  .full-section .section-subtitle {
     position: absolute;
     top: 30%;
     left: 50%;
@@ -124,5 +124,3 @@
     max-width: 80%;
     line-height: 1.4;
   }
-
-  

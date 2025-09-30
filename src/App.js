@@ -1,10 +1,10 @@
 import './App.css';
-import ScrollSnapSections from './components/ScrollSnapSections/ScrollSnapSections';
+import ScrollNavigation from './components/ScrollSnapSections/ScrollNavigation';
 
 function App() {
   return (
     <div className="App">
-      <ScrollSnapSections />
+      <ScrollNavigation />
     </div>
   );
 }
