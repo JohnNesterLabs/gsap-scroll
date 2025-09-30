@@ -1,5 +1,5 @@
 import './App.css';
-import ScrollNavigation from './components/ScrollSnapSections/ScrollNavigation';
+import { ScrollNavigation } from './components/scroll-sections';
 
 function App() {
   return (
