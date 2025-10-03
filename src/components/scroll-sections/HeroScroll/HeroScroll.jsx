@@ -121,7 +121,7 @@ const HeroScroll = () => {
         // Smooth video movement animation from center to right side
         gsap.to(videoHero, {
           x: window.innerWidth * 0.5, // Move to right half of screen
-          y: -window.innerHeight * 0.3, // Move up to align with combined section
+          y: -window.innerHeight * 0.5, // Move up to align with combined section
           scale: 1, // Scale down to fit nicely on the right side
           zIndex: 10000, // Ensure high z-index
           duration: 1,
@@ -181,7 +181,7 @@ const HeroScroll = () => {
                 videoHero.classList.add('animating');
                 gsap.to(videoHero, {
                   x: 0, // Move to center horizontally
-                  y: -220, // Keep same vertical position (no diagonal movement)
+                  y: -720, // Keep same vertical position (no diagonal movement)
                   scale: 1, // Keep same scale as right side
                   zIndex: 10000,
                   duration: 1,
