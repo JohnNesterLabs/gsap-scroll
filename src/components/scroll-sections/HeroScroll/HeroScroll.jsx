@@ -72,7 +72,7 @@ const HeroScroll = () => {
 
       // Parallax effect for video
       gsap.to(videoHero, {
-        y: -100,
+        y: -60,
         ease: "none",
         scrollTrigger: {
           trigger: sections[1],
@@ -122,7 +122,7 @@ const HeroScroll = () => {
         gsap.to(videoHero, {
           x: window.innerWidth * 0.5, // Move to right half of screen
           y: -window.innerHeight * 0.3, // Move up to align with combined section
-          scale: 0.5, // Scale down to fit nicely on the right side
+          scale: 1, // Scale down to fit nicely on the right side
           zIndex: 10000, // Ensure high z-index
           duration: 1,
           ease: "power2.out",
@@ -176,18 +176,18 @@ const HeroScroll = () => {
             trigger: section,
             start: 'top center',
             end: 'bottom center',
-            onEnter: () => {
-              // Video moves from right to center with same scale
-              videoHero.classList.add('animating');
-              gsap.to(videoHero, {
-                x: 0, // Move to center
-                y: -window.innerHeight * 0.1, // Adjust vertical position
-                scale: 0.5, // Keep same scale as right side
-                zIndex: 10000,
-                duration: 1,
-                ease: "power2.out"
-              });
-            },
+              onEnter: () => {
+                // Video moves from right to center with same scale
+                videoHero.classList.add('animating');
+                gsap.to(videoHero, {
+                  x: 0, // Move to center horizontally
+                  y: -220, // Keep same vertical position (no diagonal movement)
+                  scale: 1, // Keep same scale as right side
+                  zIndex: 10000,
+                  duration: 1,
+                  ease: "power2.out"
+                });
+              },
             onLeave: () => {
               // Video stays in center
               gsap.set(videoHero, { zIndex: 10000 });

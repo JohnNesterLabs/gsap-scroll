@@ -7,7 +7,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 /* Text Hero Section */
@@ -178,7 +178,7 @@
   color: #fff;
   height: 100vh;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
   z-index: -50;
 }
 
