@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import HalfScroll from '../HalfScroll';
 import FullScroll from '../FullScroll';
 import VideoScroll from '../VideoScroll';
+import VideoDirectionScroll from '../VideoDirectionScroll';
+import TestScroll from '../TestScroll';
+import HeroScroll from '../HeroScroll';
 import './ScrollNavigation.css';
 
 const ScrollNavigation = () => {
-  const [scrollType, setScrollType] = useState('half'); // 'half', 'full', or 'video'
+  const [scrollType, setScrollType] = useState('half'); // 'half', 'full', 'video', 'videoDirection', 'test', or 'hero'
 
   const handleScrollTypeChange = (type) => {
     setScrollType(type);
@@ -48,6 +51,39 @@ const ScrollNavigation = () => {
               <small>Video zoom animations</small>
             </span>
           </button>
+          
+          <button 
+            className={`nav-button ${scrollType === 'videoDirection' ? 'active' : ''}`}
+            onClick={() => handleScrollTypeChange('videoDirection')}
+          >
+            <span className="button-icon">🎬</span>
+            <span className="button-text">
+              <strong>Direction Scroll</strong>
+              <small>Video direction moves</small>
+            </span>
+          </button>
+          
+          <button 
+            className={`nav-button ${scrollType === 'test' ? 'active' : ''}`}
+            onClick={() => handleScrollTypeChange('test')}
+          >
+            <span className="button-icon">🧪</span>
+            <span className="button-text">
+              <strong>Test Scroll</strong>
+              <small>Testing component</small>
+            </span>
+          </button>
+          
+          <button 
+            className={`nav-button ${scrollType === 'hero' ? 'active' : ''}`}
+            onClick={() => handleScrollTypeChange('hero')}
+          >
+            <span className="button-icon">🎯</span>
+            <span className="button-text">
+              <strong>Hero Scroll</strong>
+              <small>Text + Video hero</small>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -56,6 +92,9 @@ const ScrollNavigation = () => {
         {scrollType === 'half' && <HalfScroll />}
         {scrollType === 'full' && <FullScroll />}
         {scrollType === 'video' && <VideoScroll />}
+        {scrollType === 'videoDirection' && <VideoDirectionScroll />}
+        {scrollType === 'test' && <TestScroll />}
+        {scrollType === 'hero' && <HeroScroll />}
       </div>
     </div>
   );

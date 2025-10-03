@@ -58,10 +58,6 @@
 /* Video Container */
 .video-container {
   position: relative;
-  width: 70%;
-  max-width: 800px;
-  height: 60%;
-  max-height: 500px;
   margin: 0 auto;
   border-radius: 20px;
   overflow: hidden;
