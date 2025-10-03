@@ -318,11 +318,13 @@
 .section-five {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: #fff;
+  position: relative;
 }
 
 .section-six {
   background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
   color: #fff;
+  position: relative;
 }
 
 .section-seven {
@@ -553,5 +555,59 @@ html {
   .section-button {
     padding: 10px 20px;
     font-size: 13px;
+  }
+}
+
+/* Video Text Overlay Styles */
+.video-text-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.video-overlay-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 48px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  line-height: 1.2;
+  max-width: 600px;
+  padding: 0 40px;
+}
+
+/* Section-specific overlay positioning */
+.section-five-overlay {
+  z-index: 10001;
+}
+
+.section-six-overlay {
+  z-index: 10001;
+}
+
+/* Responsive styles for video overlay */
+@media (max-width: 768px) {
+  .video-overlay-title {
+    font-size: 32px;
+    letter-spacing: 1px;
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-overlay-title {
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    padding: 0 15px;
   }
 }

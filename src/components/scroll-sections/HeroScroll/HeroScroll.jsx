@@ -235,6 +235,51 @@ const HeroScroll = () => {
           );
         });
 
+        // Text overlay animation for sections 5 and 6
+        if (index === 3 || index === 4) { // Sections 5 and 6 (index 3 and 4)
+          const textOverlay = section.querySelector('.video-text-overlay');
+          const overlayTitle = section.querySelector('.video-overlay-title');
+          
+          if (textOverlay && overlayTitle) {
+            // Set initial state - text starts from left side
+            gsap.set(overlayTitle, {
+              x: -window.innerWidth,
+              opacity: 0
+            });
+
+            // Animate text from left to center
+            gsap.to(overlayTitle, {
+              x: 0,
+              opacity: 1,
+              duration: 1.5,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: section,
+                start: 'top center',
+                end: 'bottom center',
+                toggleActions: "play none none reverse"
+              }
+            });
+
+            // Show overlay when section comes into view
+            gsap.fromTo(textOverlay,
+              {
+                opacity: 0,
+              },
+              {
+                opacity: 1,
+                duration: 0.8,
+                scrollTrigger: {
+                  trigger: section,
+                  start: 'top center',
+                  end: 'bottom center',
+                  toggleActions: "play none none reverse"
+                }
+              }
+            );
+          }
+        }
+
         // Background color transition effect for each section
         const backgroundColors = [
           '#e74c3c', // Section 5 - Red
@@ -327,6 +372,10 @@ const HeroScroll = () => {
           </p>
           <button className="section-button">BECOME A PARTNER</button>
         </div>
+        {/* Video Text Overlay for Section 5 */}
+        <div className="video-text-overlay section-five-overlay">
+          <h2 className="video-overlay-title">Meet Kahuna AI</h2>
+        </div>
       </section>
 
       {/* Section 6 - Contact */}
@@ -337,6 +386,10 @@ const HeroScroll = () => {
             Join thousands of enterprises already transforming their operations with our solutions
           </p>
           <button className="section-button">START YOUR JOURNEY</button>
+        </div>
+        {/* Video Text Overlay for Section 6 */}
+        <div className="video-text-overlay section-six-overlay">
+          <h2 className="video-overlay-title">Meet Kahuna AI</h2>
         </div>
       </section>
 
