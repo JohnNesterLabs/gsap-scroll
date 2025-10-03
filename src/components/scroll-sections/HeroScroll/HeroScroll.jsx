@@ -270,7 +270,10 @@ const HeroScroll = () => {
       <section className="hero-section text-hero">
         {/* Header */}
         <header className="hero-header">
-          <div className="logo">Kahuna Labs</div>
+          <div className="logo">
+            <img src="/kahuna-logo.svg" alt="Kahuna Labs" className="logo-image" />
+            {/* <span className="logo-text">Kahuna Labs</span> */}
+          </div>
           <button className="contact-btn">CONTACT US</button>
         </header>
 
