@@ -179,16 +179,35 @@ const HeroScroll = () => {
               onEnter: () => {
                 // Video moves from right to center with same scale
                 videoHero.classList.add('animating');
+                
+                // For sections 7 and 8 (index 5 and 6), use smaller scale to show full model
+                const isSection7Or8 = index === 5 || index === 6;
+                const videoScale = isSection7Or8 ? 0.4 : 1; // Smaller scale for sections 7 & 8
+                const videoY = isSection7Or8 ? -window.innerHeight * 0.3 : -720; // Better vertical centering
+                
+                // Add class to video for sections 7 & 8 to change object-fit
+                if (isSection7Or8) {
+                  videoHero.classList.add('show-full-model');
+                } else {
+                  videoHero.classList.remove('show-full-model');
+                }
+                
                 gsap.to(videoHero, {
                   x: 0, // Move to center horizontally
-                  y: -720, // Keep same vertical position (no diagonal movement)
-                  scale: 1, // Keep same scale as right side
+                  y: videoY, // Adjusted vertical position
+                  scale: videoScale, // Smaller scale for sections 7 & 8
                   zIndex: 10000,
                   duration: 1,
                   ease: "power2.out"
                 });
               },
             onLeave: () => {
+              // Remove show-full-model class when leaving sections 7 & 8
+              const isSection7Or8 = index === 5 || index === 6;
+              if (isSection7Or8) {
+                videoHero.classList.remove('show-full-model');
+              }
+              
               // Video stays in center
               gsap.set(videoHero, { zIndex: 10000 });
             },
@@ -197,6 +216,12 @@ const HeroScroll = () => {
               gsap.set(videoHero, { zIndex: 10000 });
             },
             onLeaveBack: () => {
+              // Remove show-full-model class when leaving sections 7 & 8
+              const isSection7Or8 = index === 5 || index === 6;
+              if (isSection7Or8) {
+                videoHero.classList.remove('show-full-model');
+              }
+              
               // Video goes back to right side when going back to combined section
               gsap.to(videoHero, {
                 x: window.innerWidth * 0.5, // Move back to right
