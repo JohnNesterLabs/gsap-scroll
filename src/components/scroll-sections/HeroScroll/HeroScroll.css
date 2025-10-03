@@ -171,6 +171,12 @@
   filter: contrast(1.1) brightness(1.1);
 }
 
+/* Show full model for sections 7 & 8 */
+.video-hero.show-full-model .hero-video {
+  object-fit: contain;
+  background: #000;
+}
+
 .video-overlay {
   position: absolute;
   top: 0;
