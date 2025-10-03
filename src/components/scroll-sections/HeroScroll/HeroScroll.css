@@ -12,7 +12,7 @@
 
 /* Text Hero Section */
 .text-hero {
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  /* background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); */
   color: #fff;
   padding: 0 40px;
   font-size: 60px;
@@ -387,6 +387,7 @@ html {
 
 .hero-section {
   scroll-snap-align: start;
+  background-color: black;
 }
 
 /* Responsive Design */
