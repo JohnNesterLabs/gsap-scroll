@@ -33,7 +33,22 @@
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: 'Arial', sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo-image {
+  width: 187px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.logo-text {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
@@ -400,6 +415,15 @@ html {
     font-size: 20px;
   }
   
+  .logo-image {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .logo-text {
+    font-size: 20px;
+  }
+  
   .contact-btn {
     padding: 10px 20px;
     font-size: 12px;
@@ -468,6 +492,15 @@ html {
   }
   
   .logo {
+    font-size: 18px;
+  }
+  
+  .logo-image {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .logo-text {
     font-size: 18px;
   }
   
