@@ -1,3 +1,6 @@
+/* Import Footer Styles */
+@import '../../Footer/Footer.css';
+
 /* Hero Scroll Styles */
 .hero-section {
   height: 50vh;
@@ -8,6 +11,57 @@
   justify-content: center;
   align-items: center;
   /* overflow: hidden; */
+}
+
+/* Full height sections */
+.section-eleven {
+  height: 100vh;
+}
+
+.section-twelve {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.section-twelve .section-content {
+  flex: 0 0 auto;
+  padding: 60px 40px 40px;
+  text-align: center;
+}
+
+.section-twelve .footer {
+  padding: 4rem;
+  margin: 0;
+}
+
+/* Ensure video is hidden in Section 12 */
+.section-twelve .video-hero {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Hide any text overlays in Section 12 */
+.section-twelve .video-text-overlay {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Hide all video-related elements in Section 12 */
+.section-twelve .video-hero,
+.section-twelve .hero-video,
+.section-twelve .video-overlay,
+.section-twelve .video-text-overlay,
+.section-twelve .video-overlay-title,
+.section-twelve .secure-text {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Text Hero Section */
