@@ -18,54 +18,115 @@ const HeroScroll = () => {
       toggleActions: "restart pause resume pause",
     });
 
-    // Text animations for the first section
-    const textElements = gsap.utils.toArray('.hero-text, .hero-subtitle, .hero-button');
-    
-    textElements.forEach((element, index) => {
-      gsap.fromTo(element, 
-        {
-          opacity: 0,
-          y: 50,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          delay: index * 0.2,
-          scrollTrigger: {
-            trigger: sections[0],
-            start: 'top center',
-            end: 'bottom center',
-            toggleActions: "play none none reverse"
-          }
-        }
-      );
-    });
+    // Text animations for the first section - slide from top
+    const logo = document.querySelector('.logo');
+    const contactBtn = document.querySelector('.contact-btn');
+    const heroLine1 = document.querySelector('.hero-line-1');
+    const heroLine2 = document.querySelector('.hero-line-2');
 
-    // Video hero animations for the second section
-    if (videoHero) {
-      // Set initial state for normal video behavior
-      gsap.set(videoHero, {
-        x: 0,
-        y: 0,
-        scale: 1,
-        zIndex: 10
+    // All elements slide from top at the same time - faster rate
+    if (logo && contactBtn && heroLine1 && heroLine2) {
+      // Create a timeline for all elements synchronized
+      const allElementsTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sections[0],
+          start: 'top center',
+          end: 'bottom center',
+          toggleActions: "play none none reverse"
+        }
       });
 
+      // Add all animations to the same timeline starting at the same time
+      allElementsTimeline
+        .fromTo(logo,
+          {
+            opacity: 0,
+            y: -50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8, // Faster duration
+            ease: "power2.out"
+          }, 0.2) // Start at 0.2s
+        .fromTo(contactBtn,
+          {
+            opacity: 0,
+            y: -50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8, // Faster duration
+            ease: "power2.out"
+          }, 0.2) // Start at the same time (0.2s)
+        .fromTo(heroLine1,
+          {
+            opacity: 0,
+            y: -50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8, // Faster duration
+            ease: "power2.out"
+          }, 0.2) // Start at the same time (0.2s)
+        .fromTo(heroLine2,
+          {
+            opacity: 0,
+            y: -50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8, // Faster duration
+            ease: "power2.out"
+          }, 0.2) // Start at the same time (0.2s)
+        .to(heroLine2, {
+          duration: 0.1,
+          ease: "power2.out",
+          onComplete: () => {
+            // Add strike-through class after text appears to trigger width animation
+            heroLine2.classList.add('strike-through');
+          }
+        }, 1.0); // Start after text animation completes (0.2 + 0.8 = 1.0s)
+    }
+
+    // Video hero animations for the second section - gif model slides slightly to top
+    if (videoHero) {
+      // Set initial state for video to slide from bottom
+      gsap.set(videoHero, {
+        x: 0,
+        y: 50, // Start slightly below
+        scale: 1,
+        zIndex: 10,
+        opacity: 0
+      });
+
+      // Animate video sliding slightly to top on page load
+      gsap.to(videoHero, {
+        y: 0,
+        opacity: 1,
+        duration: 1.5,
+        delay: 1.0, // Start after text animations
+        ease: "power2.out"
+      });
+
+      // Additional scroll-triggered animation
       gsap.fromTo(videoHero,
         {
-          scale: 1,
+          y: 0,
           opacity: 1,
         },
         {
-          scale: 1,
+          y: 0,
           opacity: 1,
-          duration: 2,
+          duration: 1,
           scrollTrigger: {
             trigger: sections[1],
             start: 'top center',
             end: 'bottom center',
-            scrub: 1,
+            toggleActions: "play none none reverse"
           }
         }
       );
@@ -92,7 +153,7 @@ const HeroScroll = () => {
           onEnter: () => {
             // Video becomes fixed and appears on top
             videoHero.classList.add('animating');
-            gsap.set(videoHero, { 
+            gsap.set(videoHero, {
               zIndex: 10000,
               opacity: 1 // Ensure it's visible
             });
@@ -109,11 +170,11 @@ const HeroScroll = () => {
           onLeaveBack: () => {
             // Reset video to normal state when going back to hero section
             videoHero.classList.remove('animating');
-            gsap.set(videoHero, { 
-              x: 0, 
-              y: 0, 
-              scale: 1, 
-              zIndex: 10 
+            gsap.set(videoHero, {
+              x: 0,
+              y: 0,
+              scale: 1,
+              zIndex: 10
             });
           }
         });
@@ -143,7 +204,7 @@ const HeroScroll = () => {
     // Animations for combined section
     if (combinedSection) {
       const combinedTitle = combinedSection.querySelector('.combined-title');
-      
+
       gsap.fromTo(combinedTitle,
         {
           opacity: 0,
@@ -176,38 +237,38 @@ const HeroScroll = () => {
             trigger: section,
             start: 'top center',
             end: 'bottom center',
-              onEnter: () => {
-                // Video moves from right to center with same scale
-                videoHero.classList.add('animating');
-                
-                // For sections 7 and 8 (index 5 and 6), use smaller scale to show full model
-                const isSection7Or8 = index === 5 || index === 6;
-                const videoScale = isSection7Or8 ? 0.4 : 1; // Smaller scale for sections 7 & 8
-                const videoY = isSection7Or8 ? -window.innerHeight * 0.3 : -720; // Better vertical centering
-                
-                // Add class to video for sections 7 & 8 to change object-fit
-                if (isSection7Or8) {
-                  videoHero.classList.add('show-full-model');
-                } else {
-                  videoHero.classList.remove('show-full-model');
-                }
-                
-                gsap.to(videoHero, {
-                  x: 0, // Move to center horizontally
-                  y: videoY, // Adjusted vertical position
-                  scale: videoScale, // Smaller scale for sections 7 & 8
-                  zIndex: 10000,
-                  duration: 1,
-                  ease: "power2.out"
-                });
-              },
+            onEnter: () => {
+              // Video moves from right to center with same scale
+              videoHero.classList.add('animating');
+
+              // For sections 7 and 8 (index 5 and 6), use smaller scale to show full model
+              const isSection7Or8 = index === 5 || index === 6;
+              const videoScale = isSection7Or8 ? 0.4 : 1; // Smaller scale for sections 7 & 8
+              const videoY = isSection7Or8 ? -window.innerHeight * 0.3 : -720; // Better vertical centering
+
+              // Add class to video for sections 7 & 8 to change object-fit
+              if (isSection7Or8) {
+                videoHero.classList.add('show-full-model');
+              } else {
+                videoHero.classList.remove('show-full-model');
+              }
+
+              gsap.to(videoHero, {
+                x: 0, // Move to center horizontally
+                y: videoY, // Adjusted vertical position
+                scale: videoScale, // Smaller scale for sections 7 & 8
+                zIndex: 10000,
+                duration: 1,
+                ease: "power2.out"
+              });
+            },
             onLeave: () => {
               // Remove show-full-model class when leaving sections 7 & 8
               const isSection7Or8 = index === 5 || index === 6;
               if (isSection7Or8) {
                 videoHero.classList.remove('show-full-model');
               }
-              
+
               // Video stays in center
               gsap.set(videoHero, { zIndex: 10000 });
             },
@@ -221,7 +282,7 @@ const HeroScroll = () => {
               if (isSection7Or8) {
                 videoHero.classList.remove('show-full-model');
               }
-              
+
               // Video goes back to right side when going back to combined section
               gsap.to(videoHero, {
                 x: window.innerWidth * 0.5, // Move back to right
@@ -236,7 +297,7 @@ const HeroScroll = () => {
 
         // Staggered animations for section content
         const elements = [sectionTitle, sectionSubtitle, sectionButton].filter(Boolean);
-        
+
         elements.forEach((element, elemIndex) => {
           gsap.fromTo(element,
             {
@@ -264,7 +325,7 @@ const HeroScroll = () => {
         if (index === 3 || index === 4) { // Sections 5 and 6 (index 3 and 4)
           const textOverlay = section.querySelector('.video-text-overlay');
           const overlayTitle = section.querySelector('.video-overlay-title');
-          
+
           if (textOverlay && overlayTitle) {
             // Set initial state - text starts from left side
             gsap.set(overlayTitle, {
@@ -314,7 +375,7 @@ const HeroScroll = () => {
           '#1abc9c', // Section 9 - Teal
           '#34495e'  // Section 10 - Dark Blue
         ];
-        
+
         gsap.to(section, {
           backgroundColor: backgroundColors[index - 3] || '#34495e',
           duration: 1,
@@ -344,13 +405,14 @@ const HeroScroll = () => {
             <img src="/kahuna-logo.svg" alt="Kahuna Labs" className="logo-image" />
             {/* <span className="logo-text">Kahuna Labs</span> */}
           </div>
-          <button className="contact-btn">CONTACT US</button>
+          <button className="contact-btn">Lets Talk</button>
         </header>
 
         {/* Main Content */}
         <div className="hero-content">
           <h1 className="hero-text">
-            Vast & intricate products never stop evolving 
+            <span className="hero-line-1">Vast and intricate,</span>
+            <span className="hero-line-2">products never stop evolving.</span>
           </h1>
           {/* <p className="hero-subtitle">
             Enterprise customers have an endless spectrum of realities
@@ -362,11 +424,11 @@ const HeroScroll = () => {
       {/* Video Hero Section */}
       <section className="hero-section video-hero-section">
         <div className="video-hero">
-          <video 
+          <video
             className="hero-video"
-            autoPlay 
-            loop 
-            muted 
+            autoPlay
+            loop
+            muted
             playsInline
           >
             <source src="/hero1.mp4" type="video/mp4" />
