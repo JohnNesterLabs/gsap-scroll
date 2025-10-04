@@ -579,6 +579,7 @@ html {
   opacity: 0;
 }
 
+/* Default centered layout for sections 5 and 6 */
 .video-overlay-title {
   font-family: 'Arial', sans-serif;
   font-size: 48px;
@@ -592,6 +593,36 @@ html {
   padding: 0 40px;
 }
 
+/* Side-by-side layout for sections 7 and 8 */
+.section-seven-overlay,
+.section-eight-overlay {
+  justify-content: space-between;
+  padding: 0 10%;
+}
+
+.section-seven-overlay .video-overlay-title,
+.section-eight-overlay .video-overlay-title {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.secure-text {
+  font-family: 'Arial', sans-serif;
+  font-size: 48px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  line-height: 1.2;
+  max-width: 600px;
+  padding: 0 40px;
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Section-specific overlay positioning */
 .section-five-overlay {
   z-index: 10001;
@@ -603,15 +634,65 @@ html {
 
 /* Responsive styles for video overlay */
 @media (max-width: 768px) {
+  .video-text-overlay {
+    padding: 0 5%;
+  }
+  
+  /* Default centered layout for sections 5 and 6 */
   .video-overlay-title {
     font-size: 32px;
     letter-spacing: 1px;
     padding: 0 20px;
   }
+  
+  /* Side-by-side layout for sections 7 and 8 on mobile */
+  .section-seven-overlay,
+  .section-eight-overlay {
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .section-seven-overlay .video-overlay-title,
+  .section-eight-overlay .video-overlay-title {
+    font-size: 32px;
+    letter-spacing: 1px;
+    padding: 0 20px;
+    justify-content: center;
+  }
+  
+  .secure-text {
+    font-size: 32px;
+    letter-spacing: 1px;
+    padding: 0 20px;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
+  .video-text-overlay {
+    padding: 0 3%;
+  }
+  
   .video-overlay-title {
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    padding: 0 15px;
+  }
+  
+  .section-seven-overlay,
+  .section-eight-overlay {
+    gap: 15px;
+  }
+  
+  .section-seven-overlay .video-overlay-title,
+  .section-eight-overlay .video-overlay-title {
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    padding: 0 15px;
+  }
+  
+  .secure-text {
     font-size: 24px;
     letter-spacing: 0.5px;
     padding: 0 15px;

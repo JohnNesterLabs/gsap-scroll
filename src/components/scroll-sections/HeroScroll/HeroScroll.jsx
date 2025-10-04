@@ -305,6 +305,77 @@ const HeroScroll = () => {
           }
         }
 
+        // Text overlay animation for sections 7 and 8
+        if (index === 5 || index === 6) { // Sections 7 and 8 (index 5 and 6)
+          const textOverlay = section.querySelector('.video-text-overlay');
+          const overlayTitle = section.querySelector('.video-overlay-title');
+          const secureText = section.querySelector('.secure-text');
+          
+          if (textOverlay && overlayTitle) {
+            // Set initial state - "Meet Kahuna AI" starts centered (same as sections 5,6 final position)
+            gsap.set(overlayTitle, {
+              x: 0,
+              opacity: 1
+            });
+
+            // Set initial state - "secure text" starts from right side
+            if (secureText) {
+              gsap.set(secureText, {
+                x: window.innerWidth,
+                opacity: 0
+              });
+            }
+
+            // Show overlay when section comes into view
+            gsap.fromTo(textOverlay,
+              {
+                opacity: 0,
+              },
+              {
+                opacity: 1,
+                duration: 0.8,
+                scrollTrigger: {
+                  trigger: section,
+                  start: 'top center',
+                  end: 'bottom center',
+                  toggleActions: "play none none reverse"
+                }
+              }
+            );
+
+            // Animate "Meet Kahuna AI" from center to left (reverse of sections 5,6)
+            gsap.to(overlayTitle, {
+              x: -window.innerWidth * 0.25, // Move to left side (same element as sections 5,6)
+              opacity: 1,
+              duration: 1.5,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: section,
+                start: 'top center',
+                end: 'bottom center',
+                toggleActions: "play none none reverse"
+              }
+            });
+
+            // Animate "secure text" from right to center
+            if (secureText) {
+              gsap.to(secureText, {
+                x: 0,
+                opacity: 1,
+                duration: 1.5,
+                ease: "power2.out",
+                delay: 0.3, // Slight delay after "Meet Kahuna AI" starts moving
+                scrollTrigger: {
+                  trigger: section,
+                  start: 'top center',
+                  end: 'bottom center',
+                  toggleActions: "play none none reverse"
+                }
+              });
+            }
+          }
+        }
+
         // Background color transition effect for each section
         const backgroundColors = [
           '#e74c3c', // Section 5 - Red
@@ -427,9 +498,14 @@ const HeroScroll = () => {
           </p>
           <button className="section-button">EXPLORE LAB</button>
         </div>
+        {/* Video Text Overlay for Section 7 */}
+        <div className="video-text-overlay section-seven-overlay">
+          <h2 className="video-overlay-title">Meet Kahuna AI</h2>
+          <h2 className="secure-text">secure text</h2>
+        </div>
       </section>
 
-      {/* Section 8 - Global Reach */}
+      {/* Section 8 - Global Reach */} 
       <section className="hero-section section-eight">
         <div className="section-content">
           <h2 className="section-title">Global Reach</h2>
@@ -437,6 +513,11 @@ const HeroScroll = () => {
             Serving clients across continents with localized expertise and 24/7 support
           </p>
           <button className="section-button">VIEW LOCATIONS</button>
+        </div>
+        {/* Video Text Overlay for Section 8 */}
+        <div className="video-text-overlay section-eight-overlay">
+          <h2 className="video-overlay-title">Meet Kahuna AI</h2>
+          <h2 className="secure-text">secure text</h2>
         </div>
       </section>
 
