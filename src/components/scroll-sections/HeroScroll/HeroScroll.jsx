@@ -25,9 +25,10 @@ const HeroScroll = () => {
     const heroLine2 = document.querySelector('.hero-line-2');
     const heroLine3 = document.querySelector('.hero-line-3');
     const heroLine4 = document.querySelector('.hero-line-4');
+    const scrollIndicator = document.querySelector('.scroll-indicator');
 
     // Complete animation sequence
-    if (logo && contactBtn && heroLine1 && heroLine2 && heroLine3 && heroLine4) {
+    if (logo && contactBtn && heroLine1 && heroLine2 && heroLine3 && heroLine4 && scrollIndicator) {
       // Create a timeline for the complete sequence
       const completeTimeline = gsap.timeline({
         scrollTrigger: {
@@ -131,6 +132,20 @@ const HeroScroll = () => {
             heroLine4.classList.add('strike-through');
           }
         }, 4.3); // Start after new text appears
+    }
+
+    // Scroll indicator animation for section 2
+    if (scrollIndicator) {
+      gsap.fromTo(scrollIndicator, {
+        opacity: 0,
+        y: -20 // Slide from top
+      }, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        delay: 6.4, // Start 2 seconds after blue strike is complete (4.3 + 2 = 6.3, rounded to 6.4)
+        ease: "power2.out"
+      });
     }
 
     // Video hero animations for the second section - gif model slides slightly to top
@@ -462,6 +477,7 @@ const HeroScroll = () => {
           </p> */}
           {/* <button className="hero-button">LEARN MORE</button> */}
         </div>
+
       </section>
 
       {/* Video Hero Section */}
@@ -478,6 +494,12 @@ const HeroScroll = () => {
             Your browser does not support the video tag.
           </video>
           <div className="video-overlay"></div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="scroll-indicator">
+          <span className="scroll-text">SCROLL</span>
+          <img src="/Component 3.png" alt="Scroll Arrow" className="scroll-arrow-png" />
         </div>
       </section>
 
