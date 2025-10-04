@@ -23,11 +23,13 @@ const HeroScroll = () => {
     const contactBtn = document.querySelector('.contact-btn');
     const heroLine1 = document.querySelector('.hero-line-1');
     const heroLine2 = document.querySelector('.hero-line-2');
+    const heroLine3 = document.querySelector('.hero-line-3');
+    const heroLine4 = document.querySelector('.hero-line-4');
 
-    // All elements slide from top at the same time - faster rate
-    if (logo && contactBtn && heroLine1 && heroLine2) {
-      // Create a timeline for all elements synchronized
-      const allElementsTimeline = gsap.timeline({
+    // Complete animation sequence
+    if (logo && contactBtn && heroLine1 && heroLine2 && heroLine3 && heroLine4) {
+      // Create a timeline for the complete sequence
+      const completeTimeline = gsap.timeline({
         scrollTrigger: {
           trigger: sections[0],
           start: 'top center',
@@ -36,8 +38,8 @@ const HeroScroll = () => {
         }
       });
 
-      // Add all animations to the same timeline starting at the same time
-      allElementsTimeline
+      // Phase 1: Logo, button, and first two lines appear
+      completeTimeline
         .fromTo(logo,
           {
             opacity: 0,
@@ -46,9 +48,9 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8, // Faster duration
+            duration: 0.8,
             ease: "power2.out"
-          }, 0.2) // Start at 0.2s
+          }, 0.2)
         .fromTo(contactBtn,
           {
             opacity: 0,
@@ -57,9 +59,9 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8, // Faster duration
+            duration: 0.8,
             ease: "power2.out"
-          }, 0.2) // Start at the same time (0.2s)
+          }, 0.2)
         .fromTo(heroLine1,
           {
             opacity: 0,
@@ -68,9 +70,9 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8, // Faster duration
+            duration: 0.8,
             ease: "power2.out"
-          }, 0.2) // Start at the same time (0.2s)
+          }, 0.2)
         .fromTo(heroLine2,
           {
             opacity: 0,
@@ -79,17 +81,56 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8, // Faster duration
+            duration: 0.8,
             ease: "power2.out"
-          }, 0.2) // Start at the same time (0.2s)
+          }, 0.2)
         .to(heroLine2, {
           duration: 0.1,
           ease: "power2.out",
           onComplete: () => {
-            // Add strike-through class after text appears to trigger width animation
             heroLine2.classList.add('strike-through');
           }
-        }, 1.0); // Start after text animation completes (0.2 + 0.8 = 1.0s)
+        }, 1.0)
+
+        // Phase 2: First two lines slide up, zoom out and fade out
+        .to([heroLine1, heroLine2], {
+          opacity: 0,
+          y: -50,
+          scale: 0.8, // Zoom out effect
+          duration: 0.8,
+          ease: "power2.in"
+        }, 3.0) // Start after 3 seconds
+
+        // Phase 3: New lines appear from bottom and take exact same position
+        .fromTo(heroLine3,
+          {
+            opacity: 0,
+            y: 50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5, // Faster speed
+            ease: "power2.out"
+          }, 3.2) // Start slightly after first lines start fading
+        .fromTo(heroLine4,
+          {
+            opacity: 0,
+            y: 50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5, // Faster speed
+            ease: "power2.out"
+          }, 3.2) // Start at same time as line 3
+        .to(heroLine4, {
+          duration: 0.1,
+          ease: "power2.out",
+          onComplete: () => {
+            heroLine4.classList.add('strike-through');
+          }
+        }, 4.3); // Start after new text appears
     }
 
     // Video hero animations for the second section - gif model slides slightly to top
@@ -413,6 +454,8 @@ const HeroScroll = () => {
           <h1 className="hero-text">
             <span className="hero-line-1">Vast and intricate,</span>
             <span className="hero-line-2">products never stop evolving.</span>
+            <span className="hero-line-3">Enterprise customers have an</span>
+            <span className="hero-line-4">endless spectrum of realities</span>
           </h1>
           {/* <p className="hero-subtitle">
             Enterprise customers have an endless spectrum of realities

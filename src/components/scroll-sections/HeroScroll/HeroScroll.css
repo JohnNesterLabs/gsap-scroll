@@ -84,7 +84,7 @@
   font-size: 48px;
   font-weight: 500;
   line-height: 1.2;
-  margin-top: 108px;
+  margin-top: 150px;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -118,6 +118,39 @@
 
 .hero-line-2.strike-through::after {
   width: 100%;
+}
+
+.hero-line-4 {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-line-4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  top: 50%;
+  height: 50%;
+  background: #0020B0;
+  transform: translateY(-38%);
+  z-index: -1;
+  transition: width 1.5s ease-out;
+}
+
+
+
+.hero-line-4.strike-through::after {
+  width: 100%;
+}
+
+/* Second set of lines positioning - no overlap */
+.hero-line-3,
+.hero-line-4 {
+  position: relative;
+  top: -60px;
+  /* Move up to match first set position */
 }
 
 .hero-text .highlight {
