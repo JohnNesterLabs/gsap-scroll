@@ -259,25 +259,93 @@ const HeroScroll = () => {
 
     // Animations for combined section
     if (combinedSection) {
-      const combinedTitle = combinedSection.querySelector('.combined-title');
+      const combinedLine1 = combinedSection.querySelector('.combined-line-1');
+      const combinedLine2 = combinedSection.querySelector('.combined-line-2');
+      const newTextContent = combinedSection.querySelector('.new-text-content');
+      const newLine1 = combinedSection.querySelector('.new-line-1');
+      const newLineSpacer = combinedSection.querySelector('.new-line-spacer');
+      const newLine2 = combinedSection.querySelector('.new-line-2');
+      const newLine3 = combinedSection.querySelector('.new-line-3');
+      const newLine4 = combinedSection.querySelector('.new-line-4');
 
-      gsap.fromTo(combinedTitle,
-        {
-          opacity: 0,
-          x: -50,
-        },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 1,
-          scrollTrigger: {
-            trigger: combinedSection,
-            start: 'top center',
-            end: 'bottom center',
-            toggleActions: "play none none reverse"
-          }
+      // Debug: Check if elements exist
+      console.log('New line elements found:', { newLine1, newLine2, newLine3, newLine4 });
+
+      // Set initial state - text starts from left side
+      gsap.set([combinedLine1, combinedLine2], {
+        x: -window.innerWidth,
+        opacity: 0
+      });
+
+      // Set initial state for new text - starts from below
+      gsap.set([newLine1, newLine2, newLine3, newLine4], {
+        y: 100,
+        opacity: 0
+      });
+
+      // Create a timeline for the complete text transition
+      const textTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: combinedSection,
+          start: 'top center',
+          end: 'bottom center',
+          toggleActions: "play none none reverse"
         }
-      );
+      });
+
+      // Phase 1: Animate first line from left to center
+      textTimeline.to(combinedLine1, {
+        x: 0,
+        opacity: 1,
+        duration: 1.5,
+        ease: "power2.out"
+      });
+
+      // Phase 2: Animate second line from left to center with slight delay
+      textTimeline.to(combinedLine2, {
+        x: 0,
+        opacity: 1,
+        duration: 1.5,
+        ease: "power2.out"
+      }, "-=1.2"); // Start slightly before first line finishes
+
+      // Phase 3: After 1 second, zoom out and fade out current text
+      textTimeline.to([combinedLine1, combinedLine2], {
+        opacity: 0,
+        y: -50,
+        scale: 0.8,
+        duration: 0.8,
+        ease: "power2.in"
+      }, "+=1");
+
+      // Phase 4: New text slides in from below - each line with slight delay
+      textTimeline.to(newLine1, {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      }, "-=0.1");
+
+      textTimeline.to(newLine2, {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      }, "-=0.5");
+
+      textTimeline.to(newLine3, {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      }, "-=0.5");
+
+      textTimeline.to(newLine4, {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      }, "-=0.5");
     }
 
     // Animations for remaining sections (5-10)
@@ -507,7 +575,20 @@ const HeroScroll = () => {
       <section className="hero-section combined-section">
         <div className="combined-content">
           <div className="text-content">
-            <h2 className="combined-title">The support landscape is boundless and shifting</h2>
+            <h2 className="combined-title">
+              <span className="combined-line-1"> The support landscape is</span>
+              <span className="combined-line-2">boundless and shifting</span>
+            </h2>
+
+            {/* New text content that will slide in from below */}
+            <div className="new-text-content">
+              <span className="new-line-1">You're lost</span>
+              <span className="new-line-spacer"></span>
+              <span className="new-line-2">Outdated, laborious</span>
+              <span className="new-line-3">and fractional knowledge</span>
+              <span className="new-line-4">cripple frontline actions.</span>
+
+            </div>
           </div>
           <div className="video-space">
             {/* Video will animate here from the hero section */}
