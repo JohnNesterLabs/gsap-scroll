@@ -277,7 +277,7 @@ const HeroScroll = () => {
         {/* Main Content */}
         <div className="hero-content">
           <h1 className="hero-text">
-            Enterprise customers have an endless spectrum of realities
+            Vast & intricate products never stop evolving 
           </h1>
           {/* <p className="hero-subtitle">
             Enterprise customers have an endless spectrum of realities
