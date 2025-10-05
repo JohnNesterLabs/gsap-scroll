@@ -445,30 +445,41 @@ const HeroScroll = () => {
           );
         });
 
-        // Text overlay animation for sections 5 and 6
-        if (index === 3 || index === 4) { // Sections 5 and 6 (index 3 and 4)
+        // Text overlay animation for section 5 only
+        if (index === 3) { // Section 5 (index 3)
           const textOverlay = section.querySelector('.video-text-overlay');
           const overlayTitle = section.querySelector('.video-overlay-title');
 
           if (textOverlay && overlayTitle) {
-            // Set initial state - text starts from left side
+            // For section 5 (index 3), create zoom out effect from center
+            // Set initial state - text starts very small in center
             gsap.set(overlayTitle, {
-              x: -window.innerWidth,
-              opacity: 0
+              scale: 0.1,
+              opacity: 0,
+              x: 0,
+              y: 0
             });
 
-            // Animate text from left to center
-            gsap.to(overlayTitle, {
-              x: 0,
-              opacity: 1,
-              duration: 1.5,
-              ease: "power2.out",
+            // Create a timeline for better control over zoom in/out
+            const section5Timeline = gsap.timeline({
               scrollTrigger: {
                 trigger: section,
-                start: 'top center',
-                end: 'bottom center',
-                toggleActions: "play none none reverse"
+                start: 'top 80%',
+                end: 'bottom 20%',
+                toggleActions: "play none none reverse",
+                onEnter: () => console.log('Section 5: Zoom in'),
+                onLeave: () => console.log('Section 5: Zoom out'),
+                onEnterBack: () => console.log('Section 5: Zoom in (back)'),
+                onLeaveBack: () => console.log('Section 5: Zoom out (back)')
               }
+            });
+
+            // Animate text zooming out from center
+            section5Timeline.to(overlayTitle, {
+              scale: 1,
+              opacity: 1,
+              duration: 2,
+              ease: "power2.out"
             });
 
             // Show overlay when section comes into view
@@ -492,8 +503,8 @@ const HeroScroll = () => {
 
         // Background color transition effect for each section
         const backgroundColors = [
-          '#e74c3c', // Section 5 - Red
-          '#f39c12', // Section 6 - Orange
+          '#000000', // Section 5 - Black
+          '#000000', // Section 6 - Black
           '#9b59b6', // Section 7 - Purple
           '#3498db', // Section 8 - Blue
           '#1abc9c', // Section 9 - Teal
@@ -598,13 +609,13 @@ const HeroScroll = () => {
 
       {/* Section 5 - Partnership */}
       <section className="hero-section section-five">
-        <div className="section-content">
+        {/* <div className="section-content">
           <h2 className="section-title">Strategic Partnerships</h2>
           <p className="section-subtitle">
             Collaborating with industry leaders to deliver exceptional value and drive digital transformation
           </p>
           <button className="section-button">BECOME A PARTNER</button>
-        </div>
+        </div> */}
         {/* Video Text Overlay for Section 5 */}
         <div className="video-text-overlay section-five-overlay">
           <h2 className="video-overlay-title">Meet Kahuna AI</h2>
@@ -613,17 +624,13 @@ const HeroScroll = () => {
 
       {/* Section 6 - Contact */}
       <section className="hero-section section-six">
-        <div className="section-content">
+        {/* <div className="section-content">
           <h2 className="section-title">Ready to Get Started?</h2>
           <p className="section-subtitle">
             Join thousands of enterprises already transforming their operations with our solutions
           </p>
           <button className="section-button">START YOUR JOURNEY</button>
-        </div>
-        {/* Video Text Overlay for Section 6 */}
-        <div className="video-text-overlay section-six-overlay">
-          <h2 className="video-overlay-title">Meet Kahuna AI</h2>
-        </div>
+        </div> */}
       </section>
 
       {/* Section 7 - Innovation Lab */}

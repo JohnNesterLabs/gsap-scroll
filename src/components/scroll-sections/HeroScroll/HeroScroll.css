@@ -385,8 +385,8 @@
   line-height: 1.2;
   
 } */
- .combined-line-1,
- .combined-line-2,
+.combined-line-1,
+.combined-line-2,
 .new-line-1,
 .new-line-2,
 .new-line-3,
@@ -512,13 +512,13 @@
 
 /* Additional Hero Sections (5-10) */
 .section-five {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: #000;
   color: #fff;
   position: relative;
 }
 
 .section-six {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  background: #000;
   color: #fff;
   position: relative;
 }
