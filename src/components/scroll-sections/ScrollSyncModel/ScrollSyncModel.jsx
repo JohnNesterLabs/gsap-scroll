@@ -8,6 +8,7 @@ function ScrollSyncModel() {
   const rendererRef = useRef(null);
   const modelRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
 
   useEffect(() => {
     // Scene setup
@@ -35,8 +36,10 @@ function ScrollSyncModel() {
       shininess: 100
     });
     const model = new THREE.Mesh(geometry, material);
+    model.position.set(0, 0, 0); // Set initial position
     scene.add(model);
     modelRef.current = model;
+    console.log('Model created and added to scene:', model);
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -67,11 +70,25 @@ function ScrollSyncModel() {
     // Scroll handler
     const handleScroll = () => {
       const scrollContainer = scrollContainerRef.current;
-      if (!scrollContainer || !modelRef.current) return;
+      if (!scrollContainer || !modelRef.current) {
+        console.log('Missing scroll container or model ref');
+        return;
+      }
 
       const scrollTop = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-      const scrollProgress = scrollTop / maxScroll;
+      
+      if (maxScroll <= 0) {
+        console.log('No scroll available - maxScroll:', maxScroll, 'scrollHeight:', scrollContainer.scrollHeight, 'clientHeight:', scrollContainer.clientHeight);
+        return;
+      }
+
+      const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
+
+      console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
+      
+      // Update state for UI display
+      setScrollProgress(scrollProgress);
 
       // Define positions for each section (0 to 1 represents sections 1 to 5)
       const positions = [
@@ -92,8 +109,13 @@ function ScrollSyncModel() {
       const currentPos = positions[currentSection];
       const nextPos = positions[nextSection];
 
-      modelRef.current.position.x = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
-      modelRef.current.position.y = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+      const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
+      const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+
+      modelRef.current.position.x = newX;
+      modelRef.current.position.y = newY;
+
+      console.log('Model position updated:', { x: newX, y: newY, section: currentSection, progress: sectionProgress });
 
       // Change color based on section
       const colors = [0x00ff88, 0xff0088, 0xffff00, 0x00ffff, 0xff8800];
@@ -106,10 +128,26 @@ function ScrollSyncModel() {
       modelRef.current.scale.set(scale, scale, scale);
     };
 
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-    }
+    // Store scroll container reference for cleanup
+    let scrollContainer = null;
+
+    // Attach scroll listener after a small delay to ensure the container is ready
+    setTimeout(() => {
+      scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        console.log('Attaching scroll listener to:', scrollContainer);
+        console.log('Container dimensions:', {
+          scrollHeight: scrollContainer.scrollHeight,
+          clientHeight: scrollContainer.clientHeight,
+          scrollTop: scrollContainer.scrollTop
+        });
+        scrollContainer.addEventListener('scroll', handleScroll);
+        // Call handleScroll once to set initial position
+        handleScroll();
+      } else {
+        console.error('Scroll container not found');
+      }
+    }, 100);
 
     // Handle window resize
     const handleResize = () => {
@@ -141,6 +179,24 @@ function ScrollSyncModel() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      {/* Debug Info */}
+      <div style={{
+        position: 'fixed',
+        top: '2rem',
+        left: '2rem',
+        zIndex: 20,
+        color: 'white',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        fontSize: '0.875rem'
+      }}>
+        <div>ScrollSyncModel Loaded</div>
+        <div>Canvas: {canvasRef.current ? '✓' : '✗'}</div>
+        <div>Model: {modelRef.current ? '✓' : '✗'}</div>
+        <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
+        <div>Model Position: {modelRef.current ? `(${modelRef.current.position.x.toFixed(2)}, ${modelRef.current.position.y.toFixed(2)})` : 'N/A'}</div>
+      </div>
       {/* Fixed Canvas */}
       <canvas 
         ref={canvasRef}
@@ -161,7 +217,7 @@ function ScrollSyncModel() {
           position: 'relative',
           width: '100%',
           height: '100vh',
-          overflowY: 'scroll',
+          overflowY: 'auto',
           scrollBehavior: 'smooth'
         }}
       >
@@ -169,7 +225,7 @@ function ScrollSyncModel() {
           <div
             key={index}
             style={{
-              minHeight: '100vh',
+              height: '100vh',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -216,6 +272,56 @@ function ScrollSyncModel() {
         fontSize: '0.875rem'
       }}>
         Scroll to see the model move through sections
+      </div>
+
+      {/* Debug Controls */}
+      <div style={{
+        position: 'fixed',
+        top: '2rem',
+        right: '2rem',
+        zIndex: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem'
+      }}>
+        <button 
+          onClick={() => {
+            if (modelRef.current) {
+              modelRef.current.position.x = 3;
+              modelRef.current.position.y = 0;
+              console.log('Manual position set to right');
+            }
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Test Move Right
+        </button>
+        <button 
+          onClick={() => {
+            if (modelRef.current) {
+              modelRef.current.position.x = 0;
+              modelRef.current.position.y = 0;
+              console.log('Manual position set to center');
+            }
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Test Move Center
+        </button>
       </div>
     </div>
   );
