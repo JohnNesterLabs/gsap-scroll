@@ -21,7 +21,7 @@ function ScrollSyncModel() {
       // Section 4: Medium when moving left
       section4: { width: 600, height: 'auto' },
       // Section 5: Extra large when at top
-      section5: { width: 700, height: 'auto' }
+      section5: { width: 600, height: 'auto' }
     };
     let isMounted = true;
     
@@ -145,7 +145,7 @@ function ScrollSyncModel() {
         { x: 95, y: 60 },      // Section 2 - Right
         { x: 50, y: 50 },      // Section 3 - center
         { x: 50, y: 50 },      // Section 4 - Left
-        { x: 50, y: 25 }       // Section 5 - Top
+        { x: 50, y: 50 }       // Section 5 - Top
       ];
 
       // Calculate which section we're in and interpolate
