@@ -260,7 +260,7 @@ function ScrollSyncModel() {
               height: '100vh',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'left',
               background: section.background,
               border: section.border,
               boxSizing: 'border-box'
