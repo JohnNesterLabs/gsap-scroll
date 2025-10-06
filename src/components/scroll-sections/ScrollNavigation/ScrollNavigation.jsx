@@ -8,7 +8,7 @@ import HeroScroll from '../HeroScroll';
 import './ScrollNavigation.css';
 
 const ScrollNavigation = () => {
-  const [scrollType, setScrollType] = useState('half'); // 'half', 'full', 'video', 'videoDirection', 'test', or 'hero'
+  const [scrollType, setScrollType] = useState('hero'); // 'half', 'full', 'video', 'videoDirection', 'test', or 'hero'
 
   const handleScrollTypeChange = (type) => {
     setScrollType(type);
@@ -19,7 +19,7 @@ const ScrollNavigation = () => {
       {/* Simple Navigation Header */}
       <div className="navigation-header">
         <div className="scroll-type-selector">
-          <button 
+          {/* <button 
             className={`nav-button ${scrollType === 'half' ? 'active' : ''}`}
             onClick={() => handleScrollTypeChange('half')}
           >
@@ -28,9 +28,9 @@ const ScrollNavigation = () => {
               <strong>Half Scroll</strong>
               <small>Scroll twice per section</small>
             </span>
-          </button>
+          </button> */}
           
-          <button 
+          {/* <button 
             className={`nav-button ${scrollType === 'full' ? 'active' : ''}`}
             onClick={() => handleScrollTypeChange('full')}
           >
@@ -72,9 +72,9 @@ const ScrollNavigation = () => {
               <strong>Test Scroll</strong>
               <small>Testing component</small>
             </span>
-          </button>
+          </button> */}
           
-          <button 
+          {/* <button 
             className={`nav-button ${scrollType === 'hero' ? 'active' : ''}`}
             onClick={() => handleScrollTypeChange('hero')}
           >
@@ -83,7 +83,7 @@ const ScrollNavigation = () => {
               <strong>Hero Scroll</strong>
               <small>Text + Video hero</small>
             </span>
-          </button>
+          </button> */}
         </div>
       </div>
 
