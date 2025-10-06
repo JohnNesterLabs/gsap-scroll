@@ -9,65 +9,97 @@ function ScrollSyncModel() {
   const modelRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = React.useState(0);
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
 
   useEffect(() => {
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0a);
-    sceneRef.current = scene;
+    let isMounted = true;
+    
+    // Robust initialization function
+    const initializeThreeJS = async () => {
+      try {
+        // Wait for canvas to be available
+        let attempts = 0;
+        while (!canvasRef.current && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!canvasRef.current) {
+          throw new Error('Canvas element not found after 5 seconds');
+        }
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
-    cameraRef.current = camera;
+        console.log('Initializing Three.js...');
 
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    rendererRef.current = renderer;
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+        sceneRef.current = scene;
 
-    // Create a colorful 3D model (torus knot)
-    const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
-    const material = new THREE.MeshPhongMaterial({
-      color: 0x00ff88,
-      emissive: 0x002211,
-      specular: 0xffffff,
-      shininess: 100
-    });
-    const model = new THREE.Mesh(geometry, material);
-    model.position.set(0, 0, 0); // Set initial position
-    scene.add(model);
-    modelRef.current = model;
-    console.log('Model created and added to scene:', model);
+        // Camera setup
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        cameraRef.current = camera;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+        // Renderer setup
+        const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        rendererRef.current = renderer;
 
-    const pointLight1 = new THREE.PointLight(0xff00ff, 1);
-    pointLight1.position.set(5, 5, 5);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0x00ffff, 1);
-    pointLight2.position.set(-5, -5, 5);
-    scene.add(pointLight2);
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      
-      // Rotate model slightly for visual appeal
-      if (modelRef.current) {
-        modelRef.current.rotation.x += 0.005;
-        modelRef.current.rotation.y += 0.005;
+        console.log('Three.js initialized successfully');
+        return { scene, camera, renderer };
+      } catch (error) {
+        console.error('Three.js initialization failed:', error);
+        setError(error.message);
+        throw error;
       }
-      
-      renderer.render(scene, camera);
     };
-    animate();
 
-    // Scroll handler
+    // Robust scroll setup function
+    const setupScrollListener = async () => {
+      try {
+        // Wait for scroll container to be available
+        let attempts = 0;
+        while (!scrollContainerRef.current && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!scrollContainerRef.current) {
+          throw new Error('Scroll container not found after 5 seconds');
+        }
+
+        console.log('Setting up scroll listener...');
+        
+        // Wait for container to have proper dimensions
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        const scrollContainer = scrollContainerRef.current;
+        console.log('Container dimensions:', {
+          scrollHeight: scrollContainer.scrollHeight,
+          clientHeight: scrollContainer.clientHeight,
+          offsetHeight: scrollContainer.offsetHeight
+        });
+
+        if (scrollContainer.scrollHeight <= scrollContainer.clientHeight) {
+          console.warn('Container has no scrollable content');
+        }
+
+        scrollContainer.addEventListener('scroll', handleScroll);
+        handleScroll(); // Set initial position
+        
+        console.log('Scroll listener attached successfully');
+        return scrollContainer;
+      } catch (error) {
+        console.error('Scroll setup failed:', error);
+        setError(error.message);
+        throw error;
+      }
+    };
+
+    // Scroll handler function
     const handleScroll = () => {
       const scrollContainer = scrollContainerRef.current;
       if (!scrollContainer || !modelRef.current) {
@@ -127,47 +159,100 @@ function ScrollSyncModel() {
       const scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
       modelRef.current.scale.set(scale, scale, scale);
     };
+    
+    const initialize = async () => {
+      try {
+        const { scene, camera, renderer } = await initializeThreeJS();
+        
+        if (!isMounted) return;
 
-    // Store scroll container reference for cleanup
-    let scrollContainer = null;
-
-    // Attach scroll listener after a small delay to ensure the container is ready
-    setTimeout(() => {
-      scrollContainer = scrollContainerRef.current;
-      if (scrollContainer) {
-        console.log('Attaching scroll listener to:', scrollContainer);
-        console.log('Container dimensions:', {
-          scrollHeight: scrollContainer.scrollHeight,
-          clientHeight: scrollContainer.clientHeight,
-          scrollTop: scrollContainer.scrollTop
+        // Create a colorful 3D model (torus knot)
+        const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x00ff88,
+          emissive: 0x002211,
+          specular: 0xffffff,
+          shininess: 100
         });
-        scrollContainer.addEventListener('scroll', handleScroll);
-        // Call handleScroll once to set initial position
-        handleScroll();
-      } else {
-        console.error('Scroll container not found');
-      }
-    }, 100);
+        const model = new THREE.Mesh(geometry, material);
+        model.position.set(0, 0, 0); // Set initial position
+        scene.add(model);
+        modelRef.current = model;
+        console.log('Model created and added to scene:', model);
 
-    // Handle window resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0xff00ff, 1);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x00ffff, 1);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        // Animation loop
+        const animate = () => {
+          if (!isMounted) return;
+          
+          requestAnimationFrame(animate);
+          
+          // Rotate model slightly for visual appeal
+          if (modelRef.current) {
+            modelRef.current.rotation.x += 0.005;
+            modelRef.current.rotation.y += 0.005;
+          }
+          
+          renderer.render(scene, camera);
+        };
+        animate();
+
+        // Setup scroll listener after Three.js is ready
+        if (!isMounted) return;
+        
+        const scrollContainer = await setupScrollListener();
+        
+        if (!isMounted) return;
+        
+        // Handle window resize
+        const handleResize = () => {
+          if (!isMounted || !camera || !renderer) return;
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+
+        setIsInitialized(true);
+        console.log('ScrollSyncModel fully initialized');
+
+        // Cleanup
+        return () => {
+          isMounted = false;
+          window.removeEventListener('resize', handleResize);
+          if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', handleScroll);
+          }
+          geometry.dispose();
+          material.dispose();
+          renderer.dispose();
+        };
+      } catch (error) {
+        console.error('Initialization failed:', error);
+        setError(error.message);
+        setIsInitialized(false);
+      }
     };
-    window.addEventListener('resize', handleResize);
 
-    // Cleanup
+    initialize();
+
+    // Fallback cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      }
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
+      isMounted = false;
     };
   }, []);
+
 
   const sections = [
     { title: 'Section 1', subtitle: 'Model at Center', gradient: 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.2), rgba(6, 78, 59, 0.2))' },
@@ -191,11 +276,13 @@ function ScrollSyncModel() {
         borderRadius: '0.5rem',
         fontSize: '0.875rem'
       }}>
-        <div>ScrollSyncModel Loaded</div>
+        <div>ScrollSyncModel Status</div>
+        <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
         <div>Canvas: {canvasRef.current ? '✓' : '✗'}</div>
         <div>Model: {modelRef.current ? '✓' : '✗'}</div>
         <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
         <div>Model Position: {modelRef.current ? `(${modelRef.current.position.x.toFixed(2)}, ${modelRef.current.position.y.toFixed(2)})` : 'N/A'}</div>
+        {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
       </div>
       {/* Fixed Canvas */}
       <canvas 
@@ -321,6 +408,25 @@ function ScrollSyncModel() {
           }}
         >
           Test Move Center
+        </button>
+        <button 
+          onClick={() => {
+            console.log('Retrying initialization...');
+            setError(null);
+            setIsInitialized(false);
+            // Force re-render by updating a state
+            window.location.reload();
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(255, 107, 107, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Retry Init
         </button>
       </div>
     </div>
