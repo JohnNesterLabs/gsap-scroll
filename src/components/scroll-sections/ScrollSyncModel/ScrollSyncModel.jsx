@@ -15,7 +15,7 @@ function ScrollSyncModel() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     // Robust initialization function
     const initializeThreeJS = async () => {
       try {
@@ -25,7 +25,7 @@ function ScrollSyncModel() {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
         }
-        
+
         if (!canvasRef.current) {
           throw new Error('Canvas element not found after 5 seconds');
         }
@@ -66,16 +66,16 @@ function ScrollSyncModel() {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
         }
-        
+
         if (!scrollContainerRef.current) {
           throw new Error('Scroll container not found after 5 seconds');
         }
 
         console.log('Setting up scroll listener...');
-        
+
         // Wait for container to have proper dimensions
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         const scrollContainer = scrollContainerRef.current;
         console.log('Container dimensions:', {
           scrollHeight: scrollContainer.scrollHeight,
@@ -89,7 +89,7 @@ function ScrollSyncModel() {
 
         scrollContainer.addEventListener('scroll', handleScroll);
         handleScroll(); // Set initial position
-        
+
         console.log('Scroll listener attached successfully');
         return scrollContainer;
       } catch (error) {
@@ -109,7 +109,7 @@ function ScrollSyncModel() {
 
       const scrollTop = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-      
+
       if (maxScroll <= 0) {
         console.log('No scroll available - maxScroll:', maxScroll, 'scrollHeight:', scrollContainer.scrollHeight, 'clientHeight:', scrollContainer.clientHeight);
         return;
@@ -118,7 +118,7 @@ function ScrollSyncModel() {
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
       console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
-      
+
       // Update state for UI display
       setScrollProgress(scrollProgress);
 
@@ -149,30 +149,36 @@ function ScrollSyncModel() {
 
       console.log('Model position updated:', { x: newX, y: newY, section: currentSection, progress: sectionProgress });
 
-      // Change color based on section
-      const colors = [0x00ff88, 0xff0088, 0xffff00, 0x00ffff, 0xff8800];
-      const currentColor = new THREE.Color(colors[currentSection]);
-      const nextColor = new THREE.Color(colors[nextSection]);
-      modelRef.current.material.color.copy(currentColor).lerp(nextColor, sectionProgress);
+      // Change opacity/tint based on section for visual feedback
+      const opacities = [1.0, 0.8, 0.9, 0.7, 0.85];
+      const currentOpacity = opacities[currentSection];
+      const nextOpacity = opacities[nextSection];
+      const newOpacity = currentOpacity + (nextOpacity - currentOpacity) * sectionProgress;
+      modelRef.current.material.opacity = newOpacity;
 
       // Scale effect
       const scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
       modelRef.current.scale.set(scale, scale, scale);
     };
-    
+
     const initialize = async () => {
       try {
         const { scene, camera, renderer } = await initializeThreeJS();
-        
+
         if (!isMounted) return;
 
-        // Create a colorful 3D model (torus knot)
-        const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
-        const material = new THREE.MeshPhongMaterial({
-          color: 0x00ff88,
-          emissive: 0x002211,
-          specular: 0xffffff,
-          shininess: 100
+        // Create a plane geometry with the new-model.png texture (zoomed in more)
+        const geometry = new THREE.PlaneGeometry(4, 4);
+
+        // Load the texture
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load('/new-model.png');
+
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          alphaTest: 0.1,
+          opacity: 1.0
         });
         const model = new THREE.Mesh(geometry, material);
         model.position.set(0, 0, 0); // Set initial position
@@ -195,26 +201,22 @@ function ScrollSyncModel() {
         // Animation loop
         const animate = () => {
           if (!isMounted) return;
-          
+
           requestAnimationFrame(animate);
-          
-          // Rotate model slightly for visual appeal
-          if (modelRef.current) {
-            modelRef.current.rotation.x += 0.005;
-            modelRef.current.rotation.y += 0.005;
-          }
-          
+
+          // No rotation - keep image static
+
           renderer.render(scene, camera);
         };
         animate();
 
         // Setup scroll listener after Three.js is ready
         if (!isMounted) return;
-        
+
         const scrollContainer = await setupScrollListener();
-        
+
         if (!isMounted) return;
-        
+
         // Handle window resize
         const handleResize = () => {
           if (!isMounted || !camera || !renderer) return;
@@ -285,7 +287,7 @@ function ScrollSyncModel() {
         {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
       </div>
       {/* Fixed Canvas */}
-      <canvas 
+      <canvas
         ref={canvasRef}
         style={{
           position: 'fixed',
@@ -296,9 +298,9 @@ function ScrollSyncModel() {
           pointerEvents: 'none'
         }}
       />
-      
+
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         style={{
           position: 'relative',
@@ -371,7 +373,7 @@ function ScrollSyncModel() {
         flexDirection: 'column',
         gap: '0.5rem'
       }}>
-        <button 
+        <button
           onClick={() => {
             if (modelRef.current) {
               modelRef.current.position.x = 3;
@@ -390,7 +392,7 @@ function ScrollSyncModel() {
         >
           Test Move Right
         </button>
-        <button 
+        <button
           onClick={() => {
             if (modelRef.current) {
               modelRef.current.position.x = 0;
@@ -409,7 +411,7 @@ function ScrollSyncModel() {
         >
           Test Move Center
         </button>
-        <button 
+        <button
           onClick={() => {
             console.log('Retrying initialization...');
             setError(null);
