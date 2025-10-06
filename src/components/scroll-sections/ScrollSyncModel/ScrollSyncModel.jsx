@@ -13,11 +13,11 @@ function ScrollSyncModel() {
     // Video size configuration for different sections
     const videoSizeConfig = {
       // Section 1: Small and centered
-      section1: { width: 300, height: 'auto' },
+      section1: { width: 1100, height: 'auto' },
       // Section 2: Medium size when moving right
-      section2: { width: 450, height: 'auto' },
+      section2: { width: 1100, height: 'auto' },
       // Section 3: Large when at bottom
-      section3: { width: 600, height: 'auto' },
+      section3: { width: 900, height: 'auto' },
       // Section 4: Medium when moving left
       section4: { width: 350, height: 'auto' },
       // Section 5: Extra large when at top
@@ -141,7 +141,7 @@ function ScrollSyncModel() {
 
       // Define positions for each section (convert to CSS percentages)
       const positions = [
-        { x: 50, y: 75},      // Section 1 - Bottom
+        { x: 50, y: 105},      // Section 1 - Bottom
         { x: 75, y: 50 },      // Section 2 - Right
         { x: 50, y: 75 },      // Section 3 - Bottom
         { x: 25, y: 50 },      // Section 4 - Left
