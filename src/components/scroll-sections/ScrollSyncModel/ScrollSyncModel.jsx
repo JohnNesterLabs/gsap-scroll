@@ -8,6 +8,7 @@ function ScrollSyncModel() {
   const [error, setError] = React.useState(null);
   const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
+  const [showHeader, setShowHeader] = React.useState(true);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -179,6 +180,9 @@ function ScrollSyncModel() {
       setVideoPosition({ x: newX, y: newY, scale });
       setVideoSize({ width: newWidth, height: 'auto' });
 
+      // Show header only during section 1 (first 20% of scroll)
+      setShowHeader(scrollProgress < 0.2);
+
       console.log('Video position and size updated:', { 
         x: newX, 
         y: newY, 
@@ -232,7 +236,13 @@ function ScrollSyncModel() {
 
 
   const sections = [
-    { title: 'Section 1', subtitle: 'Model at Center', background: '#000000', border: '2px solid #ffffff' },
+    { 
+      title: 'Section 1', 
+      subtitle: 'Model at Center', 
+      background: '#000000', 
+      border: '2px solid #ffffff',
+      hasHeader: true // Add header flag for section 1
+    },
     { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
@@ -260,6 +270,7 @@ function ScrollSyncModel() {
         <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
         <div>Scale: {videoPosition.scale.toFixed(2)}</div>
         <div>Size: {videoSize.width}px</div>
+        <div>Header: {showHeader ? '✓' : '✗'}</div>
         {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
       </div>
       {/* Fixed Video */}
@@ -278,6 +289,78 @@ function ScrollSyncModel() {
           objectFit: 'contain'
         }}
       />
+
+      {/* Header - Only visible on Section 1 */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '80px',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 2rem',
+        zIndex: 15,
+        transition: 'opacity 0.3s ease',
+        opacity: showHeader ? 1 : 0,
+        pointerEvents: showHeader ? 'auto' : 'none'
+      }}>
+        {/* Left Logo */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%'
+        }}>
+          <img 
+            src="/kahuna-logo.svg" 
+            alt="Kahuna Logo" 
+            style={{
+              height: '40px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)' // Make logo white
+            }}
+            onError={(e) => {
+              // Fallback to final-logo.svg if kahuna-logo.svg fails
+              e.target.src = '/final-logo.svg';
+            }}
+          />
+        </div>
+
+        {/* Right Let's Talk Button */}
+        <button 
+          onClick={() => {
+            console.log('Let\'s Talk button clicked!');
+            // Add your contact/navigation logic here
+          }}
+          style={{
+            backgroundColor: 'transparent',
+            color: 'white',
+            border: '2px solid white',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textTransform: 'none',
+            letterSpacing: '0.5px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = 'white';
+            e.target.style.color = 'black';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'transparent';
+            e.target.style.color = 'white';
+          }}
+        >
+          Let's Talk
+        </button>
+      </div>
 
       {/* Scrollable Content */}
       <div
@@ -300,7 +383,8 @@ function ScrollSyncModel() {
               justifyContent: 'left',
               background: section.background,
               border: section.border,
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              paddingTop: section.hasHeader ? '80px' : '0' // Add top padding for header
             }}
           >
             <div style={{
@@ -449,6 +533,22 @@ function ScrollSyncModel() {
           }}
         >
           Test Size Cycle
+        </button>
+        <button
+          onClick={() => {
+            setShowHeader(!showHeader);
+            console.log('Header visibility toggled:', !showHeader);
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: showHeader ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          {showHeader ? 'Hide Header' : 'Show Header'}
         </button>
         <button
           onClick={() => {
