@@ -24,7 +24,7 @@ function ScrollSyncModel() {
       section5: { width: 600, height: 'auto' }
     };
     let isMounted = true;
-    
+
     // Simple video initialization
     const initializeVideo = async () => {
       try {
@@ -34,22 +34,22 @@ function ScrollSyncModel() {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
         }
-        
+
         if (!videoRef.current) {
           throw new Error('Video element not found after 5 seconds');
         }
 
         console.log('Initializing video...');
-        
+
         const video = videoRef.current;
-        
+
         // Set video properties for best quality
         video.loop = true;
         video.muted = true;
         video.autoplay = true;
         video.playsInline = true;
         video.preload = 'auto';
-        
+
         // Handle video loading
         video.addEventListener('loadeddata', () => {
           console.log('Video loaded successfully');
@@ -58,7 +58,7 @@ function ScrollSyncModel() {
             console.warn('Autoplay failed, user interaction required:', err);
           });
         });
-        
+
         video.addEventListener('error', (e) => {
           console.error('Video loading error:', e);
           setError('Failed to load video: ' + e.message);
@@ -126,7 +126,7 @@ function ScrollSyncModel() {
 
       const scrollTop = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-      
+
       if (maxScroll <= 0) {
         console.log('No scroll available - maxScroll:', maxScroll, 'scrollHeight:', scrollContainer.scrollHeight, 'clientHeight:', scrollContainer.clientHeight);
         return;
@@ -135,13 +135,13 @@ function ScrollSyncModel() {
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
       console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
-      
+
       // Update state for UI display
       setScrollProgress(scrollProgress);
 
       // Define positions for each section (convert to CSS percentages)
       const positions = [
-        { x: 50, y: 135},      // Section 1 - Bottom
+        { x: 50, y: 135 },      // Section 1 - Bottom
         { x: 95, y: 60 },      // Section 2 - Right
         { x: 50, y: 50 },      // Section 3 - center
         { x: 50, y: 50 },      // Section 4 - Left
@@ -161,17 +161,22 @@ function ScrollSyncModel() {
       const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
       const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
 
-      // Scale effect
-      const scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
+      // Scale effect - set section 5 to 0.8 scale
+      let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
+
+      // If in section 5 or transitioning to section 5, set scale to 0.8
+      if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
+        scale = 0.8;
+      }
 
       // Dynamic video sizing based on section
       const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
       const nextSizeKey = sizeKeys[nextSection];
-      
+
       const currentSize = videoSizeConfig[currentSizeKey];
       const nextSize = videoSizeConfig[nextSizeKey];
-      
+
       // Interpolate between current and next size
       const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
 
@@ -179,12 +184,12 @@ function ScrollSyncModel() {
       setVideoPosition({ x: newX, y: newY, scale });
       setVideoSize({ width: newWidth, height: 'auto' });
 
-      console.log('Video position and size updated:', { 
-        x: newX, 
-        y: newY, 
-        scale, 
+      console.log('Video position and size updated:', {
+        x: newX,
+        y: newY,
+        scale,
         width: newWidth,
-        section: currentSection, 
+        section: currentSection,
         progress: sectionProgress,
         scrollProgress: scrollProgress,
         currentSize: currentSize.width,
@@ -195,14 +200,14 @@ function ScrollSyncModel() {
     const initialize = async () => {
       try {
         await initializeVideo();
-        
+
         if (!isMounted) return;
 
         // Setup scroll listener after video is ready
         if (!isMounted) return;
-        
+
         const scrollContainer = await setupScrollListener();
-        
+
         if (!isMounted) return;
 
         setIsInitialized(true);
