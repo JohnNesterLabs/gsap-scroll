@@ -4,11 +4,13 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
+import ScrollSyncModelGsap from './components/scroll-sections/ScrollSyncModelGsap/ScrollSyncModelGsap';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ScrollSyncModel/>
+    {/* <ScrollSyncModelGsap/> */}
     {/* <App /> */}
   </React.StrictMode>
 );

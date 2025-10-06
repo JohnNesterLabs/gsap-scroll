@@ -1,57 +1,60 @@
 import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
 
 function ScrollSyncModel() {
-  const canvasRef = useRef(null);
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
-  const rendererRef = useRef(null);
-  const modelRef = useRef(null);
+  const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = React.useState(0);
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
 
 
   useEffect(() => {
     let isMounted = true;
-
-    // Robust initialization function
-    const initializeThreeJS = async () => {
+    
+    // Simple video initialization
+    const initializeVideo = async () => {
       try {
-        // Wait for canvas to be available
+        // Wait for video to be available
         let attempts = 0;
-        while (!canvasRef.current && attempts < 50) {
+        while (!videoRef.current && attempts < 50) {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
         }
-
-        if (!canvasRef.current) {
-          throw new Error('Canvas element not found after 5 seconds');
+        
+        if (!videoRef.current) {
+          throw new Error('Video element not found after 5 seconds');
         }
 
-        console.log('Initializing Three.js...');
+        console.log('Initializing video...');
+        
+        const video = videoRef.current;
+        
+        // Set video properties for best quality
+        video.loop = true;
+        video.muted = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        
+        // Handle video loading
+        video.addEventListener('loadeddata', () => {
+          console.log('Video loaded successfully');
+          console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+          video.play().catch(err => {
+            console.warn('Autoplay failed, user interaction required:', err);
+          });
+        });
+        
+        video.addEventListener('error', (e) => {
+          console.error('Video loading error:', e);
+          setError('Failed to load video: ' + e.message);
+        });
 
-        // Scene setup
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a0a);
-        sceneRef.current = scene;
-
-        // Camera setup
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
-        cameraRef.current = camera;
-
-        // Renderer setup
-        const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        rendererRef.current = renderer;
-
-        console.log('Three.js initialized successfully');
-        return { scene, camera, renderer };
+        console.log('Video initialized successfully');
+        return video;
       } catch (error) {
-        console.error('Three.js initialization failed:', error);
+        console.error('Video initialization failed:', error);
         setError(error.message);
         throw error;
       }
@@ -102,14 +105,14 @@ function ScrollSyncModel() {
     // Scroll handler function
     const handleScroll = () => {
       const scrollContainer = scrollContainerRef.current;
-      if (!scrollContainer || !modelRef.current) {
-        console.log('Missing scroll container or model ref');
+      if (!scrollContainer || !videoRef.current) {
+        console.log('Missing scroll container or video ref');
         return;
       }
 
       const scrollTop = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-
+      
       if (maxScroll <= 0) {
         console.log('No scroll available - maxScroll:', maxScroll, 'scrollHeight:', scrollContainer.scrollHeight, 'clientHeight:', scrollContainer.clientHeight);
         return;
@@ -118,17 +121,17 @@ function ScrollSyncModel() {
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
       console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
-
+      
       // Update state for UI display
       setScrollProgress(scrollProgress);
 
-      // Define positions for each section (0 to 1 represents sections 1 to 5)
+      // Define positions for each section (convert to CSS percentages)
       const positions = [
-        { x: 0, y: 0 },      // Section 1 - Center
-        { x: 3, y: 0 },      // Section 2 - Right
-        { x: 0, y: -3 },     // Section 3 - Bottom
-        { x: -3, y: 0 },     // Section 4 - Left
-        { x: 0, y: 3 }       // Section 5 - Top
+        { x: 50, y: 50 },      // Section 1 - Center
+        { x: 75, y: 50 },      // Section 2 - Right
+        { x: 50, y: 75 },      // Section 3 - Bottom
+        { x: 25, y: 50 },      // Section 4 - Left
+        { x: 50, y: 25 }       // Section 5 - Top
       ];
 
       // Calculate which section we're in and interpolate
@@ -144,87 +147,27 @@ function ScrollSyncModel() {
       const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
       const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
 
-      modelRef.current.position.x = newX;
-      modelRef.current.position.y = newY;
-
-      console.log('Model position updated:', { x: newX, y: newY, section: currentSection, progress: sectionProgress });
-
-      // Change opacity/tint based on section for visual feedback
-      const opacities = [1.0, 0.8, 0.9, 0.7, 0.85];
-      const currentOpacity = opacities[currentSection];
-      const nextOpacity = opacities[nextSection];
-      const newOpacity = currentOpacity + (nextOpacity - currentOpacity) * sectionProgress;
-      modelRef.current.material.opacity = newOpacity;
-
       // Scale effect
       const scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
-      modelRef.current.scale.set(scale, scale, scale);
+
+      // Update video position state
+      setVideoPosition({ x: newX, y: newY, scale });
+
+      console.log('Video position updated:', { x: newX, y: newY, scale, section: currentSection, progress: sectionProgress });
     };
 
     const initialize = async () => {
       try {
-        const { scene, camera, renderer } = await initializeThreeJS();
-
+        await initializeVideo();
+        
         if (!isMounted) return;
 
-        // Create a plane geometry with the new-model.png texture (zoomed in more)
-        const geometry = new THREE.PlaneGeometry(4, 4);
-
-        // Load the texture
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load('/new-model.png');
-
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          alphaTest: 0.1,
-          opacity: 1.0
-        });
-        const model = new THREE.Mesh(geometry, material);
-        model.position.set(0, 0, 0); // Set initial position
-        scene.add(model);
-        modelRef.current = model;
-        console.log('Model created and added to scene:', model);
-
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-
-        const pointLight1 = new THREE.PointLight(0xff00ff, 1);
-        pointLight1.position.set(5, 5, 5);
-        scene.add(pointLight1);
-
-        const pointLight2 = new THREE.PointLight(0x00ffff, 1);
-        pointLight2.position.set(-5, -5, 5);
-        scene.add(pointLight2);
-
-        // Animation loop
-        const animate = () => {
-          if (!isMounted) return;
-
-          requestAnimationFrame(animate);
-
-          // No rotation - keep image static
-
-          renderer.render(scene, camera);
-        };
-        animate();
-
-        // Setup scroll listener after Three.js is ready
+        // Setup scroll listener after video is ready
         if (!isMounted) return;
-
+        
         const scrollContainer = await setupScrollListener();
-
+        
         if (!isMounted) return;
-
-        // Handle window resize
-        const handleResize = () => {
-          if (!isMounted || !camera || !renderer) return;
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        };
-        window.addEventListener('resize', handleResize);
 
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
@@ -232,13 +175,9 @@ function ScrollSyncModel() {
         // Cleanup
         return () => {
           isMounted = false;
-          window.removeEventListener('resize', handleResize);
           if (scrollContainer) {
             scrollContainer.removeEventListener('scroll', handleScroll);
           }
-          geometry.dispose();
-          material.dispose();
-          renderer.dispose();
         };
       } catch (error) {
         console.error('Initialization failed:', error);
@@ -257,11 +196,11 @@ function ScrollSyncModel() {
 
 
   const sections = [
-    { title: 'Section 1', subtitle: 'Model at Center', gradient: 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.2), rgba(6, 78, 59, 0.2))' },
-    { title: 'Section 2', subtitle: 'Model moves Right', gradient: 'linear-gradient(to bottom right, rgba(236, 72, 153, 0.2), rgba(131, 24, 67, 0.2))' },
-    { title: 'Section 3', subtitle: 'Model moves Down', gradient: 'linear-gradient(to bottom right, rgba(234, 179, 8, 0.2), rgba(113, 63, 18, 0.2))' },
-    { title: 'Section 4', subtitle: 'Model moves Left', gradient: 'linear-gradient(to bottom right, rgba(6, 182, 212, 0.2), rgba(21, 94, 117, 0.2))' },
-    { title: 'Section 5', subtitle: 'Model moves Up', gradient: 'linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(124, 45, 18, 0.2))' }
+    { title: 'Section 1', subtitle: 'Model at Center', background: '#000000', border: '2px solid #ffffff' },
+    { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
+    { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
+    { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
+    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' }
   ];
 
   return (
@@ -280,22 +219,26 @@ function ScrollSyncModel() {
       }}>
         <div>ScrollSyncModel Status</div>
         <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
-        <div>Canvas: {canvasRef.current ? '✓' : '✗'}</div>
-        <div>Model: {modelRef.current ? '✓' : '✗'}</div>
+        <div>Video: {videoRef.current ? '✓' : '✗'}</div>
         <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
-        <div>Model Position: {modelRef.current ? `(${modelRef.current.position.x.toFixed(2)}, ${modelRef.current.position.y.toFixed(2)})` : 'N/A'}</div>
+        <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
+        <div>Scale: {videoPosition.scale.toFixed(2)}</div>
         {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
       </div>
-      {/* Fixed Canvas */}
-      <canvas
-        ref={canvasRef}
+      {/* Fixed Video */}
+      <video
+        ref={videoRef}
+        src="/hero1.mp4"
         style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none'
+          left: `${videoPosition.x}%`,
+          top: `${videoPosition.y}%`,
+          transform: `translate(-50%, -50%) scale(${videoPosition.scale})`,
+          width: '400px',
+          height: 'auto',
+          pointerEvents: 'none',
+          zIndex: 5,
+          objectFit: 'contain'
         }}
       />
 
@@ -318,7 +261,9 @@ function ScrollSyncModel() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: section.gradient
+              background: section.background,
+              border: section.border,
+              boxSizing: 'border-box'
             }}
           >
             <div style={{
@@ -326,10 +271,16 @@ function ScrollSyncModel() {
               zIndex: 10,
               padding: '2rem',
               backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
               borderRadius: '1rem',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+              border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
+              <div style={{
+                fontSize: '1rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginBottom: '1rem',
+                fontWeight: 'bold'
+              }}>SECTION {index + 1}</div>
               <h2 style={{
                 fontSize: '3.75rem',
                 fontWeight: 'bold',
@@ -375,11 +326,8 @@ function ScrollSyncModel() {
       }}>
         <button
           onClick={() => {
-            if (modelRef.current) {
-              modelRef.current.position.x = 3;
-              modelRef.current.position.y = 0;
-              console.log('Manual position set to right');
-            }
+            setVideoPosition({ x: 75, y: 50, scale: 1 });
+            console.log('Manual position set to right');
           }}
           style={{
             padding: '0.5rem',
@@ -394,11 +342,8 @@ function ScrollSyncModel() {
         </button>
         <button
           onClick={() => {
-            if (modelRef.current) {
-              modelRef.current.position.x = 0;
-              modelRef.current.position.y = 0;
-              console.log('Manual position set to center');
-            }
+            setVideoPosition({ x: 50, y: 50, scale: 1 });
+            console.log('Manual position set to center');
           }}
           style={{
             padding: '0.5rem',
@@ -429,6 +374,65 @@ function ScrollSyncModel() {
           }}
         >
           Retry Init
+        </button>
+        <button
+          onClick={() => {
+            // Find the video element and toggle play/pause
+            const videos = document.querySelectorAll('video');
+            console.log('Found videos:', videos.length);
+            videos.forEach((video, index) => {
+              console.log(`Video ${index}:`, {
+                src: video.src,
+                paused: video.paused,
+                currentTime: video.currentTime,
+                duration: video.duration,
+                readyState: video.readyState
+              });
+              if (video.paused) {
+                video.play().catch(err => console.log('Play failed:', err));
+              } else {
+                video.pause();
+              }
+            });
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(34, 197, 94, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Toggle Video
+        </button>
+        <button
+          onClick={() => {
+            console.log('Video element:', videoRef.current);
+            console.log('Video position state:', videoPosition);
+            console.log('Scroll progress:', scrollProgress);
+            if (videoRef.current) {
+              console.log('Video properties:', {
+                src: videoRef.current.src,
+                paused: videoRef.current.paused,
+                currentTime: videoRef.current.currentTime,
+                duration: videoRef.current.duration,
+                readyState: videoRef.current.readyState,
+                videoWidth: videoRef.current.videoWidth,
+                videoHeight: videoRef.current.videoHeight
+              });
+            }
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Debug Info
         </button>
       </div>
     </div>
