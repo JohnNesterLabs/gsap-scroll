@@ -7,9 +7,22 @@ function ScrollSyncModel() {
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
-
+  const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
 
   useEffect(() => {
+    // Video size configuration for different sections
+    const videoSizeConfig = {
+      // Section 1: Small and centered
+      section1: { width: 300, height: 'auto' },
+      // Section 2: Medium size when moving right
+      section2: { width: 450, height: 'auto' },
+      // Section 3: Large when at bottom
+      section3: { width: 600, height: 'auto' },
+      // Section 4: Medium when moving left
+      section4: { width: 350, height: 'auto' },
+      // Section 5: Extra large when at top
+      section5: { width: 700, height: 'auto' }
+    };
     let isMounted = true;
     
     // Simple video initialization
@@ -90,7 +103,8 @@ function ScrollSyncModel() {
           console.warn('Container has no scrollable content');
         }
 
-        scrollContainer.addEventListener('scroll', handleScroll);
+        // Use passive listener for better performance during scroll
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
         handleScroll(); // Set initial position
 
         console.log('Scroll listener attached successfully');
@@ -127,7 +141,7 @@ function ScrollSyncModel() {
 
       // Define positions for each section (convert to CSS percentages)
       const positions = [
-        { x: 50, y: 50 },      // Section 1 - Center
+        { x: 50, y: 75},      // Section 1 - Bottom
         { x: 75, y: 50 },      // Section 2 - Right
         { x: 50, y: 75 },      // Section 3 - Bottom
         { x: 25, y: 50 },      // Section 4 - Left
@@ -150,10 +164,32 @@ function ScrollSyncModel() {
       // Scale effect
       const scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
 
-      // Update video position state
-      setVideoPosition({ x: newX, y: newY, scale });
+      // Dynamic video sizing based on section
+      const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5'];
+      const currentSizeKey = sizeKeys[currentSection];
+      const nextSizeKey = sizeKeys[nextSection];
+      
+      const currentSize = videoSizeConfig[currentSizeKey];
+      const nextSize = videoSizeConfig[nextSizeKey];
+      
+      // Interpolate between current and next size
+      const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
 
-      console.log('Video position updated:', { x: newX, y: newY, scale, section: currentSection, progress: sectionProgress });
+      // Update video position and size state
+      setVideoPosition({ x: newX, y: newY, scale });
+      setVideoSize({ width: newWidth, height: 'auto' });
+
+      console.log('Video position and size updated:', { 
+        x: newX, 
+        y: newY, 
+        scale, 
+        width: newWidth,
+        section: currentSection, 
+        progress: sectionProgress,
+        scrollProgress: scrollProgress,
+        currentSize: currentSize.width,
+        nextSize: nextSize.width
+      });
     };
 
     const initialize = async () => {
@@ -223,6 +259,7 @@ function ScrollSyncModel() {
         <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
         <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
         <div>Scale: {videoPosition.scale.toFixed(2)}</div>
+        <div>Size: {videoSize.width}px</div>
         {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
       </div>
       {/* Fixed Video */}
@@ -234,8 +271,8 @@ function ScrollSyncModel() {
           left: `${videoPosition.x}%`,
           top: `${videoPosition.y}%`,
           transform: `translate(-50%, -50%) scale(${videoPosition.scale})`,
-          width: '400px',
-          height: 'auto',
+          width: `${videoSize.width}px`,
+          height: videoSize.height,
           pointerEvents: 'none',
           zIndex: 5,
           objectFit: 'contain'
@@ -355,6 +392,63 @@ function ScrollSyncModel() {
           }}
         >
           Test Move Center
+        </button>
+        <button
+          onClick={() => {
+            setVideoSize({ width: 300, height: 'auto' });
+            console.log('Video size set to small');
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(168, 85, 247, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Small Size
+        </button>
+        <button
+          onClick={() => {
+            setVideoSize({ width: 600, height: 'auto' });
+            console.log('Video size set to large');
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(168, 85, 247, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Large Size
+        </button>
+        <button
+          onClick={() => {
+            // Test immediate size change
+            const testSizes = [300, 400, 500, 600, 700];
+            let index = 0;
+            const interval = setInterval(() => {
+              setVideoSize({ width: testSizes[index], height: 'auto' });
+              console.log('Test size change to:', testSizes[index]);
+              index++;
+              if (index >= testSizes.length) {
+                clearInterval(interval);
+              }
+            }, 200);
+          }}
+          style={{
+            padding: '0.5rem',
+            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.25rem',
+            cursor: 'pointer'
+          }}
+        >
+          Test Size Cycle
         </button>
         <button
           onClick={() => {
