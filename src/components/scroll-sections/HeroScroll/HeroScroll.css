@@ -375,16 +375,11 @@
 }
 
 /* Additional Hero Sections (5-10) */
-.section-five {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+.section-five-six {
+  background: linear-gradient(135deg, #e74c3c 0%, #f39c12 50%, #e67e22 100%);
   color: #fff;
   position: relative;
-}
-
-.section-six {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: #fff;
-  position: relative;
+  height: 100vh; /* Make it full height since it's combined */
 }
 
 .section-seven {
@@ -454,6 +449,19 @@
   border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+/* Button Group for Combined Section */
+.button-group {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.button-group .section-button {
+  margin: 0;
 }
 
 /* Scroll snap behavior */
@@ -678,11 +686,7 @@ html {
 }
 
 /* Section-specific overlay positioning */
-.section-five-overlay {
-  z-index: 10001;
-}
-
-.section-six-overlay {
+.section-five-six-overlay {
   z-index: 10001;
 }
 

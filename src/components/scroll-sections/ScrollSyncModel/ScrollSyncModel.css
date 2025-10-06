@@ -1,0 +1,124 @@
+/* ScrollSyncModel.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .scroll-sync-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .fixed-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .scroll-content {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    z-index: 2;
+  }
+  
+  .section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .section-1 {
+    background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.2), rgba(6, 78, 59, 0.2));
+  }
+  
+  .section-2 {
+    background: linear-gradient(to bottom right, rgba(236, 72, 153, 0.2), rgba(131, 24, 67, 0.2));
+  }
+  
+  .section-3 {
+    background: linear-gradient(to bottom right, rgba(234, 179, 8, 0.2), rgba(113, 63, 18, 0.2));
+  }
+  
+  .section-4 {
+    background: linear-gradient(to bottom right, rgba(6, 182, 212, 0.2), rgba(22, 78, 99, 0.2));
+  }
+  
+  .section-5 {
+    background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.2), rgba(124, 45, 18, 0.2));
+  }
+  
+  .section-content {
+    text-align: center;
+    z-index: 10;
+    padding: 2rem;
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 600px;
+  }
+  
+  .section-title {
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .section-subtitle {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1.5rem;
+  }
+  
+  .scroll-hint {
+    margin-top: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+  
+  .scroll-indicator {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2.5rem;
+    }
+    
+    .section-subtitle {
+      font-size: 1.125rem;
+    }
+    
+    .section-content {
+      padding: 1.5rem;
+      max-width: 90%;
+    }
+  }
+  
