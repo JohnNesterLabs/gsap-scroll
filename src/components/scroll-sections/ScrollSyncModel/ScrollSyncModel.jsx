@@ -1,6 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 
-function ScrollSyncModel() {
+function ScrollSyncModel({ 
+  showScrollIndicator = false, 
+  showDebugControls = false,
+  showDebugInfo = false,
+  showHeader = true,
+  showFooter = true,
+  scrollIndicatorText = "Scroll to see the model move through sections",
+  debugControlsPosition = "top-right",
+  videoSrc = "/hero1.mp4"
+}) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = React.useState(0);
@@ -8,7 +17,7 @@ function ScrollSyncModel() {
   const [error, setError] = React.useState(null);
   const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
-  const [showHeader, setShowHeader] = React.useState(true);
+  const [headerVisible, setHeaderVisible] = React.useState(true);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -23,8 +32,8 @@ function ScrollSyncModel() {
       section4: { width: 600, height: 'auto' },
       // Section 5: Extra large when at top
       section5: { width: 600, height: 'auto' },
-      // Section 6: Footer section - hide video
-      section6: { width: 0, height: 'auto' }
+      // Section 6: Footer section - hide video (only if footer is enabled)
+      ...(showFooter && { section6: { width: 0, height: 'auto' } })
     };
     let isMounted = true;
 
@@ -153,9 +162,10 @@ function ScrollSyncModel() {
       ];
 
       // Calculate which section we're in and interpolate
-      const sectionIndex = scrollProgress * 5; // 0 to 5 (6 sections total)
+      const totalSections = showFooter ? 6 : 5; // Dynamic sections based on footer
+      const sectionIndex = scrollProgress * (totalSections - 1); // 0 to totalSections-1
       const currentSection = Math.floor(sectionIndex);
-      const nextSection = Math.min(currentSection + 1, 5);
+      const nextSection = Math.min(currentSection + 1, totalSections - 1);
       const sectionProgress = sectionIndex - currentSection;
 
       // Interpolate between current and next position
@@ -179,7 +189,9 @@ function ScrollSyncModel() {
       }
 
       // Dynamic video sizing based on section
-      const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'];
+      const sizeKeys = showFooter ? 
+        ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
+        ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
       const nextSizeKey = sizeKeys[nextSection];
 
@@ -193,8 +205,8 @@ function ScrollSyncModel() {
       setVideoPosition({ x: newX, y: newY, scale });
       setVideoSize({ width: newWidth, height: 'auto' });
 
-      // Show header only during section 1 (first 20% of scroll)
-      setShowHeader(scrollProgress < 0.2);
+      // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
+      setHeaderVisible(showHeader && scrollProgress < 0.2);
 
       console.log('Video position and size updated:', { 
         x: newX, 
@@ -245,7 +257,7 @@ function ScrollSyncModel() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [showFooter, showHeader]);
 
 
   const sections = [
@@ -254,49 +266,51 @@ function ScrollSyncModel() {
       subtitle: 'Model at Center', 
       background: '#000000', 
       border: '2px solid #ffffff',
-      hasHeader: true // Add header flag for section 1
+      hasHeader: showHeader // Use prop for header visibility
     },
     { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
-    { 
+    ...(showFooter ? [{ 
       title: 'Footer', 
       subtitle: 'Contact & Links', 
       background: '#0A0A0A', 
       border: '2px solid #ffffff',
       isFooter: true // Add footer flag for section 6
-    }
+    }] : [])
   ];
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
       {/* Debug Info */}
-      <div style={{
-        position: 'fixed',
-        top: '6rem',
-        left: '2rem',
-        zIndex: 20,
-        color: 'white',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        padding: '1rem',
-        borderRadius: '0.5rem',
-        fontSize: '0.875rem'
-      }}>
-        <div>ScrollSyncModel Status</div>
-        <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
-        <div>Video: {videoRef.current ? '✓' : '✗'}</div>
-        <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
-        <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
-        <div>Scale: {videoPosition.scale.toFixed(2)}</div>
-        <div>Size: {videoSize.width}px</div>
-        <div>Header: {showHeader ? '✓' : '✗'}</div>
-        {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
-      </div>
+      {showDebugInfo && (
+        <div style={{
+          position: 'fixed',
+          top: '6rem',
+          left: '2rem',
+          zIndex: 20,
+          color: 'white',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem'
+        }}>
+          <div>ScrollSyncModel Status</div>
+          <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
+          <div>Video: {videoRef.current ? '✓' : '✗'}</div>
+          <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
+          <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
+          <div>Scale: {videoPosition.scale.toFixed(2)}</div>
+          <div>Size: {videoSize.width}px</div>
+          <div>Header: {headerVisible ? '✓' : '✗'}</div>
+          {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
+        </div>
+      )}
       {/* Fixed Video */}
       <video
         ref={videoRef}
-        src="/hero1.mp4"
+        src={videoSrc}
         style={{
           position: 'fixed',
           left: `${videoPosition.x}%`,
@@ -326,8 +340,8 @@ function ScrollSyncModel() {
         padding: '0 2rem',
         zIndex: 15,
         transition: 'opacity 0.3s ease',
-        opacity: showHeader ? 1 : 0,
-        pointerEvents: showHeader ? 'auto' : 'none'
+        opacity: headerVisible ? 1 : 0,
+        pointerEvents: headerVisible ? 'auto' : 'none'
       }}>
         {/* Left Logo */}
         <div style={{
@@ -562,6 +576,7 @@ function ScrollSyncModel() {
       </div>
 
       {/* Scroll Indicator */}
+      {showScrollIndicator && (
       <div style={{
         position: 'fixed',
         bottom: '2rem',
@@ -571,19 +586,22 @@ function ScrollSyncModel() {
         color: 'rgba(255, 255, 255, 0.6)',
         fontSize: '0.875rem'
       }}>
-        Scroll to see the model move through sections
-      </div>
+          {scrollIndicatorText}
+        </div>
+      )}
 
       {/* Debug Controls */}
-      <div style={{
-        position: 'fixed',
-        top: '6rem',
-        right: '2rem',
-        zIndex: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem'
-      }}>
+      {showDebugControls && (
+        <div style={{
+          position: 'fixed',
+          top: debugControlsPosition === 'top-left' ? '6rem' : '6rem',
+          right: debugControlsPosition === 'top-right' ? '2rem' : 'auto',
+          left: debugControlsPosition === 'top-left' ? '2rem' : 'auto',
+          zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}>
         <button
           onClick={() => {
             setVideoPosition({ x: 75, y: 50, scale: 1 });
@@ -675,19 +693,19 @@ function ScrollSyncModel() {
         </button>
         <button
           onClick={() => {
-            setShowHeader(!showHeader);
-            console.log('Header visibility toggled:', !showHeader);
+            setHeaderVisible(!headerVisible);
+            console.log('Header visibility toggled:', !headerVisible);
           }}
           style={{
             padding: '0.5rem',
-            backgroundColor: showHeader ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+            backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
             color: 'white',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '0.25rem',
             cursor: 'pointer'
           }}
         >
-          {showHeader ? 'Hide Header' : 'Show Header'}
+          {headerVisible ? 'Hide Header' : 'Show Header'}
         </button>
         <button
           onClick={() => {
@@ -768,6 +786,7 @@ function ScrollSyncModel() {
           Debug Info
         </button>
       </div>
+      )}
     </div>
   );
 }
