@@ -22,7 +22,9 @@ function ScrollSyncModel() {
       // Section 4: Medium when moving left
       section4: { width: 600, height: 'auto' },
       // Section 5: Extra large when at top
-      section5: { width: 600, height: 'auto' }
+      section5: { width: 600, height: 'auto' },
+      // Section 6: Footer section - hide video
+      section6: { width: 0, height: 'auto' }
     };
     let isMounted = true;
 
@@ -146,13 +148,14 @@ function ScrollSyncModel() {
         { x: 95, y: 60 },      // Section 2 - Right
         { x: 50, y: 50 },      // Section 3 - center
         { x: 50, y: 50 },      // Section 4 - Left
-        { x: 50, y: 50 }       // Section 5 - Top
+        { x: 50, y: 50 },      // Section 5 - Top
+        { x: 50, y: 50 }       // Section 6 - Footer (center)
       ];
 
       // Calculate which section we're in and interpolate
-      const sectionIndex = scrollProgress * 4; // 0 to 4
+      const sectionIndex = scrollProgress * 5; // 0 to 5 (6 sections total)
       const currentSection = Math.floor(sectionIndex);
-      const nextSection = Math.min(currentSection + 1, 4);
+      const nextSection = Math.min(currentSection + 1, 5);
       const sectionProgress = sectionIndex - currentSection;
 
       // Interpolate between current and next position
@@ -162,7 +165,7 @@ function ScrollSyncModel() {
       const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
       const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
 
-      // Scale effect - set section 5 to 0.8 scale
+      // Scale effect - set section 5 to 0.8 scale, hide video in section 6
       let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
 
       // If in section 5 or transitioning to section 5, set scale to 0.8
@@ -170,8 +173,13 @@ function ScrollSyncModel() {
         scale = 0.8;
       }
 
+      // Hide video in footer section (section 6)
+      if (currentSection === 5) {
+        scale = 0;
+      }
+
       // Dynamic video sizing based on section
-      const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5'];
+      const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'];
       const currentSizeKey = sizeKeys[currentSection];
       const nextSizeKey = sizeKeys[nextSection];
 
@@ -217,11 +225,11 @@ function ScrollSyncModel() {
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
 
-        // Cleanup
-        return () => {
+    // Cleanup
+    return () => {
           isMounted = false;
-          if (scrollContainer) {
-            scrollContainer.removeEventListener('scroll', handleScroll);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
           }
         };
       } catch (error) {
@@ -251,7 +259,14 @@ function ScrollSyncModel() {
     { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' }
+    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
+    { 
+      title: 'Footer', 
+      subtitle: 'Contact & Links', 
+      background: '#0A0A0A', 
+      border: '2px solid #ffffff',
+      isFooter: true // Add footer flag for section 6
+    }
   ];
 
   return (
@@ -366,9 +381,9 @@ function ScrollSyncModel() {
           Let's Talk
         </button>
       </div>
-
+      
       {/* Scrollable Content */}
-      <div
+      <div 
         ref={scrollContainerRef}
         style={{
           position: 'relative',
@@ -385,28 +400,145 @@ function ScrollSyncModel() {
               height: '100vh',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'left',
+              justifyContent: section.isFooter ? 'flex-end' : 'left',
               background: section.background,
               border: section.border,
               boxSizing: 'border-box',
-              paddingTop: section.hasHeader ? '80px' : '0' // Add top padding for header
+              paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
+              flexDirection: section.isFooter ? 'column' : 'row'
             }}
           >
+            {section.isFooter ? (
+              // Footer UI from HeroScroll
+              <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                padding: '4rem',
+                boxSizing: 'border-box'
+              }}>
+                {/* Main Tagline Section */}
+                <img 
+                  src="/final-logo.svg" 
+                  alt="Kahuna Labs" 
+                  style={{
+                    position: 'absolute',
+                    top: '-120px',
+                    left: '4rem',
+                    width: '286px',
+                    height: '317px',
+                    objectFit: 'contain',
+                    filter: 'brightness(0) invert(1)',
+                    opacity: '0.1'
+                  }}
+                />
+                <div style={{ marginBottom: '50px' }}>
+                  <div style={{
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    fontSize: '3.5rem',
+                    fontWeight: '600',
+                    lineHeight: '1.1',
+                    margin: '0',
+                    color: '#FFFFFF'
+                  }}>
+                    <div style={{ display: 'block' }}>Secure. Private. Comprehensive.</div>
+                    <div style={{ display: 'block' }}>Enterprise Grade.</div>
+                  </div>
+                </div>
+
+                {/* Footer Content */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  width: '100%',
+                  marginBottom: '4rem'
+                }}>
+                  <div style={{ display: 'flex', gap: '120px' }}>
+                    {/* Technology Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <h3 style={{
+                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#AAAAAA',
+                        marginBottom: '12px',
+                        margin: '0 0 12px 0'
+                      }}>TECHNOLOGY</h3>
+                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
+                        <li><a href="/technology/frontline-productivity" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Frontline Productivity</a></li>
+                        <li><a href="/technology/agentic-ai-impact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Estimate Agentic AI Impact</a></li>
+                      </ul>
+                    </div>
+
+                    {/* Company Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <h3 style={{
+                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#AAAAAA',
+                        marginBottom: '12px',
+                        margin: '0 0 12px 0'
+                      }}>COMPANY</h3>
+                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
+                        <li><a href="/contact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Contact us</a></li>
+                        <li><a href="/careers" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Careers</a></li>
+                      </ul>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
+                        <div style={{ width: '20px', height: '20px', backgroundColor: '#838485', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000000', fontFamily: "'Inter', sans-serif" }}>in</span>
+                        </div>
+                        <span>LinkedIn</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Kahuna Labs Logo */}
+                  <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <img src="/final-logo.svg" alt="Kahuna Labs" style={{ width: '34px', height: '38px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                      <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Copyright Line */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
+                    All rights reserved to Kahuna Labs. Copyright © 2025.
+                  </div>
+                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
+                    Made by Nester Labs
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Regular section content
             <div style={{
               textAlign: 'center',
               zIndex: 10,
               padding: '2rem',
               backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
               borderRadius: '1rem',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
-            }}>
-              <div style={{
-                fontSize: '1rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                marginBottom: '1rem',
-                fontWeight: 'bold'
-              }}>SECTION {index + 1}</div>
+                border: '1px solid rgba(255, 255, 255, 0.3)'
+              }}>
+                <div style={{
+                  fontSize: '1rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginBottom: '1rem',
+                  fontWeight: 'bold'
+                }}>SECTION {index + 1}</div>
               <h2 style={{
                 fontSize: '3.75rem',
                 fontWeight: 'bold',
@@ -423,6 +555,7 @@ function ScrollSyncModel() {
                 </p>
               </div>
             </div>
+            )}
           </div>
         ))}
       </div>
