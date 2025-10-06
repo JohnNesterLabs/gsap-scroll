@@ -49,7 +49,7 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8,
+            duration: 0.5,
             ease: "power2.out"
           }, 0.2)
         .fromTo(contactBtn,
@@ -60,7 +60,7 @@ const HeroScroll = () => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.8,
+            duration: 0.5,
             ease: "power2.out"
           }, 0.2)
         .fromTo(heroLine1,
@@ -70,8 +70,8 @@ const HeroScroll = () => {
           },
           {
             opacity: 1,
-            y: 0,
-            duration: 0.8,
+            y: 40,
+            duration: 0.5,
             ease: "power2.out"
           }, 0.2)
         .fromTo(heroLine2,
@@ -81,8 +81,8 @@ const HeroScroll = () => {
           },
           {
             opacity: 1,
-            y: 0,
-            duration: 0.8,
+            y: 40,
+            duration: 0.5,
             ease: "power2.out"
           }, 0.2)
         .to(heroLine2, {
@@ -97,41 +97,77 @@ const HeroScroll = () => {
         .to([heroLine1, heroLine2], {
           opacity: 0,
           y: -50,
-          scale: 0.8, // Zoom out effect
-          duration: 0.8,
+          scale: 0.5, // Zoom out effect
+          duration: 0.4,
           ease: "power2.in"
         }, 3.0) // Start after 3 seconds
 
         // Phase 3: New lines appear from bottom and take exact same position
+        // .fromTo(heroLine3,
+        //   {
+        //     opacity: 0,
+        //     y: 50,
+        //   },
+        //   {
+        //     opacity: 1,
+        //     y: 0,
+        //     duration: 0.5, // Faster speed
+        //     ease: "power2.out"
+        //   }, 3.2) // Start slightly after first lines start fading
+        // .fromTo(heroLine4,
+        //   {
+        //     opacity: 0,
+        //     y: 50,
+        //   },
+        //   {
+        //     opacity: 1,
+        //     y: 0,
+        //     duration: 0.5, // Faster speed
+        //     ease: "power2.out"
+        //   }, 3.2) // Start at same time as line 3
+        // .to(heroLine4, {
+        //   duration: 0.1,
+        //   ease: "power2.out",
+        //   onComplete: () => {
+        //     heroLine4.classList.add('strike-through');
+        //   }
+        // }, 4.3); // Start after new text appears
+        // Phase 3: New lines appear from bottom with zoom-in effect
         .fromTo(heroLine3,
           {
             opacity: 0,
             y: 50,
+            scale: 0.5   // Start small (zoomed out)
           },
           {
             opacity: 1,
             y: 0,
-            duration: 0.5, // Faster speed
+            scale: 1,    // Grow to normal size
+            duration: 0.5,
             ease: "power2.out"
-          }, 3.2) // Start slightly after first lines start fading
+          }, 3.2) // Start slightly after line1 & line2 fade out
+
         .fromTo(heroLine4,
           {
             opacity: 0,
             y: 50,
+            scale: 0.5   // Start small (zoomed out)
           },
           {
             opacity: 1,
             y: 0,
-            duration: 0.5, // Faster speed
+            scale: 1,    // Grow to normal size
+            duration: 0.5,
             ease: "power2.out"
-          }, 3.2) // Start at same time as line 3
+          }, 3.2) // Start at same time as line3
         .to(heroLine4, {
           duration: 0.1,
           ease: "power2.out",
           onComplete: () => {
             heroLine4.classList.add('strike-through');
           }
-        }, 4.3); // Start after new text appears
+        }, 4.3);
+
     }
 
     // Scroll indicator animation for section 2
@@ -142,7 +178,7 @@ const HeroScroll = () => {
       }, {
         opacity: 1,
         y: 0,
-        duration: 0.8,
+        duration: 0.5,
         delay: 6.4, // Start 2 seconds after blue strike is complete (4.3 + 2 = 6.3, rounded to 6.4)
         ease: "power2.out"
       });
@@ -153,7 +189,7 @@ const HeroScroll = () => {
       // Set initial state for video to slide from bottom
       gsap.set(videoHero, {
         x: 0,
-        y: 50, // Start slightly below
+        y: 20, // Start slightly below
         scale: 1,
         zIndex: 10,
         opacity: 0
