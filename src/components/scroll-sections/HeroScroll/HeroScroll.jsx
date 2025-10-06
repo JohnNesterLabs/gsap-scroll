@@ -533,10 +533,11 @@ const HeroScroll = () => {
       {/* Video Hero Section */}
       <section className="hero-section video-hero-section">
         <div className="video-hero">
-          <video className="hero-video" autoPlay loop muted playsInline>
-            <source src="/hero1.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          <img 
+            className="hero-video" 
+            src="/new-model.png" 
+            alt="3D Model"
+          />
           <div className="video-overlay"></div>
         </div>
       </section>
