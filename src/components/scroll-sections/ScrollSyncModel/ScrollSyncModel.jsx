@@ -417,7 +417,8 @@ function ScrollSyncModel() {
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
                 padding: '4rem',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                position: "relative"
               }}>
                 {/* Main Tagline Section */}
                 <img 
