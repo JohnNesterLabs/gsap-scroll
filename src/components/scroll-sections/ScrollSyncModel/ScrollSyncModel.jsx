@@ -259,7 +259,7 @@ function ScrollSyncModel() {
       {/* Debug Info */}
       <div style={{
         position: 'fixed',
-        top: '2rem',
+        top: '6rem',
         left: '2rem',
         zIndex: 20,
         color: 'white',
@@ -443,7 +443,7 @@ function ScrollSyncModel() {
       {/* Debug Controls */}
       <div style={{
         position: 'fixed',
-        top: '2rem',
+        top: '6rem',
         right: '2rem',
         zIndex: 20,
         display: 'flex',
