@@ -350,16 +350,11 @@ function ScrollSyncModel({
           height: '100%'
         }}>
           <img 
-            src="/kahuna-logo.svg" 
+            src="/kahuna-logo-3.svg"
             alt="Kahuna Logo" 
             style={{
               height: '36px',
               width: 'auto',
-              filter: 'brightness(0) invert(1)' // Make logo white
-            }}
-            onError={(e) => {
-              // Fallback to final-logo.svg if kahuna-logo.svg fails
-              e.target.src = '/final-logo.svg';
             }}
           />
         </div>
@@ -530,9 +525,9 @@ function ScrollSyncModel({
 
                   {/* Kahuna Labs Logo */}
                   <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <img src="/final-logo.svg" alt="Kahuna Labs" style={{ width: '34px', height: '38px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                      <span style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span>
+                    <div style={{ display: 'flex', alignItems: 'center'}}>
+                      <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
+                      {/* <span style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span> */}
                     </div>
                   </div>
                 </div>
