@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import './ScrollSyncModel.css';
 
 function ScrollSyncModel({ 
   showScrollIndicator = false, 
@@ -282,20 +283,10 @@ function ScrollSyncModel({
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+    <div className="scroll-sync-container">
       {/* Debug Info */}
       {showDebugInfo && (
-        <div style={{
-          position: 'fixed',
-          top: '6rem',
-          left: '2rem',
-          zIndex: 20,
-          color: 'white',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          fontSize: '0.875rem'
-        }}>
+        <div className="debug-info">
           <div>ScrollSyncModel Status</div>
           <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
           <div>Video: {videoRef.current ? '✓' : '✗'}</div>
@@ -304,58 +295,31 @@ function ScrollSyncModel({
           <div>Scale: {videoPosition.scale.toFixed(2)}</div>
           <div>Size: {videoSize.width}px</div>
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
-          {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
+          {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
       {/* Fixed Video */}
       <video
         ref={videoRef}
         src={videoSrc}
+        className="fixed-video"
         style={{
-          position: 'fixed',
           left: `${videoPosition.x}%`,
           top: `${videoPosition.y}%`,
           transform: `translate(-50%, -50%) scale(${videoPosition.scale})`,
           width: `${videoSize.width}px`,
-          height: videoSize.height,
-          pointerEvents: 'none',
-          zIndex: 5,
-          objectFit: 'contain'
+          height: videoSize.height
         }}
       />
 
       {/* Header - Only visible on Section 1 */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '36px',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        margin: '40px 80px',
-        zIndex: 15,
-        transition: 'opacity 0.3s ease',
-        opacity: headerVisible ? 1 : 0,
-        pointerEvents: headerVisible ? 'auto' : 'none'
-      }}>
+      <div className={`header ${headerVisible ? 'visible' : 'hidden'}`}>
         {/* Left Logo */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <div className="header-left">
           <img 
             src="/kahuna-logo-3.svg"
             alt="Kahuna Logo" 
-            style={{
-              height: '36px',
-              width: 'auto',
-            }}
+            className="header-logo"
           />
         </div>
 
@@ -365,28 +329,7 @@ function ScrollSyncModel({
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
           }}
-          style={{
-            backgroundColor: '#0020B0',
-            color: 'white',
-            borderRadius: '4px',
-            padding: '11px 16px',
-            fontSize: '12.8px',
-            fontWeight: '400',
-            fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            textTransform: 'none',
-            letterSpacing: '0.5px',
-            border:"none"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = 'white';
-            e.target.style.color = 'black';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#0020B0';
-            e.target.style.color = 'white';
-          }}
+          className="header-button"
         >
           Let's Talk
         </button>
@@ -395,182 +338,92 @@ function ScrollSyncModel({
       {/* Scrollable Content */}
       <div 
         ref={scrollContainerRef}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100vh',
-          overflowY: 'auto',
-          scrollBehavior: 'smooth'
-        }}
+        className="scroll-container"
       >
         {sections.map((section, index) => (
           <div
             key={index}
+            className={`section ${section.isFooter ? 'footer' : ''}`}
             style={{
-              height: '100vh',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: section.isFooter ? 'flex-end' : 'left',
               background: section.background,
-              border: section.border,
-              boxSizing: 'border-box',
-              // paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
-              flexDirection: section.isFooter ? 'column' : 'row'
+              border: section.border
             }}
           >
             {section.isFooter ? (
               // Footer UI from HeroScroll
-              <div style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: '60px 80px',
-                boxSizing: 'border-box',
-                position: "relative"
-              }}>
+              <div className="footer-container">
                 {/* Main Tagline Section */}
                 <img 
                   src="/final-logo.svg" 
                   alt="Kahuna Labs" 
-                  style={{
-                    position: 'absolute',
-                    top: '-120px',
-                    left: '4rem',
-                    width: '286px',
-                    height: '317px',
-                    objectFit: 'contain',
-                    filter: 'brightness(0) invert(1)',
-                    opacity: '0.1'
-                  }}
+                  className="footer-logo-bg"
                 />
-                <div style={{ marginBottom: '117px' }}>
-                  <div style={{
-                    fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                    fontSize: '56px',
-                    fontWeight: '400',
-                    lineHeight: '1.1',
-                    margin: '0',
-                    color: '#FFFFFF'
-                  }}>
-                    <div style={{ display: 'block' }}>Secure. Private. Comprehensive.</div>
-                    <div style={{ display: 'block' }}>Enterprise Grade.</div>
+                <div className="footer-tagline">
+                  <div className="footer-tagline-text">
+                    <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
+                    <div className="footer-tagline-line">Enterprise Grade.</div>
                   </div>
                 </div>
 
                 {/* Footer Content */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  width: '100%',
-                  marginBottom: '92px'
-                }}>
-                  <div style={{ display: 'flex', gap: '100px' }}>
+                <div className="footer-content">
+                  <div className="footer-links">
                     {/* Technology Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <h3 style={{
-                         fontFamily: "JetBrains Mono",
-                        // fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: '14px',
-                        fontWeight: '400',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: '#FFFFFF',
-                        marginBottom: '12px',
-                        margin: '0 0 12px 0'
-                      }}>TECHNOLOGY</h3>
-                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/technology/frontline-productivity" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#818181 ', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Frontline Productivity</a></li>
-                        <li><a href="/technology/agentic-ai-impact" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#818181 ', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Estimate Agentic AI Impact</a></li>
+                    <div className="footer-column">
+                      <h3 className="footer-column-title">TECHNOLOGY</h3>
+                      <ul className="footer-links-list">
+                        <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
+                        <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
                       </ul>
                     </div>
 
                     {/* Company Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <h3 style={{
-                        fontFamily: "JetBrains Mono",
-                        // fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: '14px',
-                        fontWeight: '400',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: '#FFFFFF',
-                        marginBottom: '12px',
-                        margin: '0 0 12px 0'
-                      }}>COMPANY</h3>
-                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/contact" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#818181', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Contact us</a></li>
-                        <li><a href="/careers" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#818181', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Careers</a></li>
+                    <div className="footer-column">
+                      <h3 className="footer-column-title">COMPANY</h3>
+                      <ul className="footer-links-list">
+                        <li><a href="/contact" className="footer-link">Contact us</a></li>
+                        <li><a href="/careers" className="footer-link">Careers</a></li>
                       </ul>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
+                    <div className="footer-column">
+                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
                         <img 
                           src="/LinkedIn-Icon.png" 
                           alt="LinkedIn" 
-                          style={{ 
-                            width: '24px', 
-                            height: '24px', 
-                            objectFit: 'contain',
-                            filter: 'brightness(0) saturate(100%) invert(51%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)'
-                          }} 
+                          className="footer-linkedin-icon"
                         />
-                        <span>LinkedIn</span>
+                        <span className="footer-linkedin-text">LinkedIn</span>
                       </a>
                     </div>
                   </div>
 
                   {/* Kahuna Labs Logo */}
-                  <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', alignItems: 'center'}}>
+                  <div className="footer-logo-section">
+                    <div className="footer-logo-container">
                       <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
-                      {/* <span style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span> */}
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Copyright Line */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#414243' }}>
+                <div className="footer-copyright">
+                  <div className="footer-copyright-text">
                     All rights reserved to Kahuna Labs. Copyright © 2025.
                   </div>
-                  <div style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#414243' }}>
+                  <div className="footer-copyright-text">
                     Made by Nester Labs
                   </div>
                 </div>
               </div>
             ) : (
               // Regular section content
-            <div style={{
-              textAlign: 'center',
-              zIndex: 10,
-              padding: '2rem',
-              backdropFilter: 'blur(12px)',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
-              }}>
-                <div style={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginBottom: '1rem',
-                  fontWeight: 'bold'
-                }}>SECTION {index + 1}</div>
-              <h2 style={{
-                fontSize: '3.75rem',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '1rem'
-              }}>{section.title}</h2>
-              <p style={{
-                fontSize: '1.5rem',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>{section.subtitle}</p>
-              <div style={{ marginTop: '1.5rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                <p style={{ fontSize: '0.875rem' }}>
+            <div className="section-content">
+                <div className="section-number">SECTION {index + 1}</div>
+              <h2 className="section-title">{section.title}</h2>
+              <p className="section-subtitle">{section.subtitle}</p>
+              <div className="section-scroll-hint">
+                <p className="section-scroll-text">
                   Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
                 </p>
               </div>
@@ -582,44 +435,20 @@ function ScrollSyncModel({
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div style={{
-        position: 'fixed',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: '0.875rem'
-      }}>
+      <div className="scroll-indicator">
           {scrollIndicatorText}
         </div>
       )}
 
       {/* Debug Controls */}
       {showDebugControls && (
-        <div style={{
-          position: 'fixed',
-          top: debugControlsPosition === 'top-left' ? '6rem' : '6rem',
-          right: debugControlsPosition === 'top-right' ? '2rem' : 'auto',
-          left: debugControlsPosition === 'top-left' ? '2rem' : 'auto',
-          zIndex: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
+        <div className={`debug-controls ${debugControlsPosition}`}>
         <button
           onClick={() => {
             setVideoPosition({ x: 75, y: 50, scale: 1 });
             console.log('Manual position set to right');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button primary"
         >
           Test Move Right
         </button>
@@ -628,14 +457,7 @@ function ScrollSyncModel({
             setVideoPosition({ x: 50, y: 50, scale: 1 });
             console.log('Manual position set to center');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button primary"
         >
           Test Move Center
         </button>
@@ -644,14 +466,7 @@ function ScrollSyncModel({
             setVideoSize({ width: 300, height: 'auto' });
             console.log('Video size set to small');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button purple"
         >
           Small Size
         </button>
@@ -660,14 +475,7 @@ function ScrollSyncModel({
             setVideoSize({ width: 600, height: 'auto' });
             console.log('Video size set to large');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button purple"
         >
           Large Size
         </button>
@@ -685,14 +493,7 @@ function ScrollSyncModel({
               }
             }, 200);
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button red"
         >
           Test Size Cycle
         </button>
@@ -701,14 +502,7 @@ function ScrollSyncModel({
             setHeaderVisible(!headerVisible);
             console.log('Header visibility toggled:', !headerVisible);
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className={`debug-button ${headerVisible ? 'green' : 'red'}`}
         >
           {headerVisible ? 'Hide Header' : 'Show Header'}
         </button>
@@ -720,14 +514,7 @@ function ScrollSyncModel({
             // Force re-render by updating a state
             window.location.reload();
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255, 107, 107, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button red"
         >
           Retry Init
         </button>
@@ -751,14 +538,7 @@ function ScrollSyncModel({
               }
             });
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button green"
         >
           Toggle Video
         </button>
@@ -779,14 +559,7 @@ function ScrollSyncModel({
               });
             }
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button blue"
         >
           Debug Info
         </button>
