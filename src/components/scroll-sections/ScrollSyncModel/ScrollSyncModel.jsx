@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
-function ScrollSyncModel({ 
-  showScrollIndicator = false, 
+function ScrollSyncModel({
+  showScrollIndicator = false,
   showDebugControls = false,
   showDebugInfo = false,
   showHeader = true,
@@ -15,9 +15,15 @@ function ScrollSyncModel({
   const [scrollProgress, setScrollProgress] = React.useState(0);
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
+  const [videoPosition, setVideoPosition] = React.useState({ x: 50, y: 135, scale: 1 });
+  const [videoVisible, setVideoVisible] = React.useState(false);
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
+  const [overlayVisible, setOverlayVisible] = React.useState(true);
+  const [overlayElements, setOverlayElements] = React.useState({
+    text1: { opacity: 0, y: -100 },
+    text2: { opacity: 0, y: -100 }
+  });
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -189,7 +195,7 @@ function ScrollSyncModel({
       }
 
       // Dynamic video sizing based on section
-      const sizeKeys = showFooter ? 
+      const sizeKeys = showFooter ?
         ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
         ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
@@ -205,13 +211,41 @@ function ScrollSyncModel({
       setVideoPosition({ x: newX, y: newY, scale });
       setVideoSize({ width: newWidth, height: 'auto' });
 
+      // Show video only after it's properly positioned
+      setVideoVisible(true);
+
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.2);
 
-      console.log('Video position and size updated:', { 
-        x: newX, 
-        y: newY, 
-        scale, 
+      // Animate transparent overlay text sliding down from top when page loads
+      if (scrollProgress < 0.1) {
+        const animationProgress = Math.min(scrollProgress / 0.1, 1); // 0 to 1 over first 10% of scroll
+
+        setOverlayElements({
+          text1: {
+            opacity: animationProgress,
+            y: -100 + (100 * animationProgress) // Slide from -100px to 0px
+          },
+          text2: {
+            opacity: animationProgress, // Same timing as text1
+            y: -100 + (100 * animationProgress)
+          }
+        });
+      } else {
+        // Keep elements visible after animation completes
+        setOverlayElements({
+          text1: { opacity: 1, y: 0 },
+          text2: { opacity: 1, y: 0 }
+        });
+      }
+
+      // Hide overlay after animation completes (after 20% scroll)
+      setOverlayVisible(scrollProgress < 0.2);
+
+      console.log('Video position and size updated:', {
+        x: newX,
+        y: newY,
+        scale,
         width: newWidth,
         section: currentSection,
         progress: sectionProgress,
@@ -237,11 +271,11 @@ function ScrollSyncModel({
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
 
-    // Cleanup
-    return () => {
+        // Cleanup
+        return () => {
           isMounted = false;
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+          if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', handleScroll);
           }
         };
       } catch (error) {
@@ -261,10 +295,10 @@ function ScrollSyncModel({
 
 
   const sections = [
-    { 
-      title: 'Section 1', 
-      subtitle: 'Model at Center', 
-      background: '#000000', 
+    {
+      title: 'Section 1',
+      subtitle: 'Model at Center',
+      background: '#000000',
       border: '2px solid #ffffff',
       hasHeader: showHeader // Use prop for header visibility
     },
@@ -272,10 +306,10 @@ function ScrollSyncModel({
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
-    ...(showFooter ? [{ 
-      title: 'Footer', 
-      subtitle: 'Contact & Links', 
-      background: '#0A0A0A', 
+    ...(showFooter ? [{
+      title: 'Footer',
+      subtitle: 'Contact & Links',
+      background: '#0A0A0A',
       border: '2px solid #ffffff',
       isFooter: true // Add footer flag for section 6
     }] : [])
@@ -283,6 +317,59 @@ function ScrollSyncModel({
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      {/* Transparent Text Overlay - Slides down from top when page loads */}
+      {overlayVisible && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'transparent',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          transition: 'opacity 0.5s ease-out',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            textAlign: 'center'
+          }}>
+            <h1 style={{
+              fontSize: '4rem',
+              fontWeight: '300',
+              color: 'white',
+              margin: '0',
+              lineHeight: '1.1',
+              letterSpacing: '-0.02em',
+              opacity: overlayElements.text1.opacity,
+              transform: `translateY(${overlayElements.text1.y}px)`,
+              transition: 'all 0.1s ease-out'
+            }}>
+              vast and intricate
+            </h1>
+            <h2 style={{
+              fontSize: '3rem',
+              fontWeight: '300',
+              color: 'rgba(255, 255, 255, 0.8)',
+              margin: '0',
+              lineHeight: '1.2',
+              letterSpacing: '-0.01em',
+              opacity: overlayElements.text2.opacity,
+              transform: `translateY(${overlayElements.text2.y}px)`,
+              transition: 'all 0.1s ease-out'
+            }}>
+              product never stops evolving
+            </h2>
+          </div>
+        </div>
+      )}
       {/* Debug Info */}
       {showDebugInfo && (
         <div style={{
@@ -320,7 +407,9 @@ function ScrollSyncModel({
           height: videoSize.height,
           pointerEvents: 'none',
           zIndex: 5,
-          objectFit: 'contain'
+          objectFit: 'contain',
+          opacity: videoVisible ? 1 : 0,
+          transition: 'opacity 0.3s ease-out'
         }}
       />
 
@@ -349,9 +438,9 @@ function ScrollSyncModel({
           alignItems: 'center',
           height: '100%'
         }}>
-          <img 
-            src="/kahuna-logo.svg" 
-            alt="Kahuna Logo" 
+          <img
+            src="/kahuna-logo.svg"
+            alt="Kahuna Logo"
             style={{
               height: '40px',
               width: 'auto',
@@ -365,7 +454,7 @@ function ScrollSyncModel({
         </div>
 
         {/* Right Let's Talk Button */}
-        <button 
+        <button
           onClick={() => {
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
@@ -395,9 +484,9 @@ function ScrollSyncModel({
           Let's Talk
         </button>
       </div>
-      
+
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         style={{
           position: 'relative',
@@ -435,9 +524,9 @@ function ScrollSyncModel({
                 position: "relative"
               }}>
                 {/* Main Tagline Section */}
-                <img 
-                  src="/final-logo.svg" 
-                  alt="Kahuna Labs" 
+                <img
+                  src="/final-logo.svg"
+                  alt="Kahuna Labs"
                   style={{
                     position: 'absolute',
                     top: '-120px',
@@ -538,38 +627,19 @@ function ScrollSyncModel({
                 </div>
               </div>
             ) : (
-              // Regular section content
-            <div style={{
-              textAlign: 'center',
-              zIndex: 10,
-              padding: '2rem',
-              backdropFilter: 'blur(12px)',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
+              // Regular section content - Completely empty for your actual content
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                width: '100%',
+                padding: '2rem',
+                boxSizing: 'border-box'
               }}>
-                <div style={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginBottom: '1rem',
-                  fontWeight: 'bold'
-                }}>SECTION {index + 1}</div>
-              <h2 style={{
-                fontSize: '3.75rem',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '1rem'
-              }}>{section.title}</h2>
-              <p style={{
-                fontSize: '1.5rem',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>{section.subtitle}</p>
-              <div style={{ marginTop: '1.5rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                <p style={{ fontSize: '0.875rem' }}>
-                  Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
-                </p>
+                {/* Completely empty - add your content here */}
               </div>
-            </div>
             )}
           </div>
         ))}
@@ -577,15 +647,15 @@ function ScrollSyncModel({
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div style={{
-        position: 'fixed',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: '0.875rem'
-      }}>
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: '0.875rem'
+        }}>
           {scrollIndicatorText}
         </div>
       )}
@@ -602,190 +672,190 @@ function ScrollSyncModel({
           flexDirection: 'column',
           gap: '0.5rem'
         }}>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1 });
-            console.log('Manual position set to right');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Move Right
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1 });
-            console.log('Manual position set to center');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Move Center
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 300, height: 'auto' });
-            console.log('Video size set to small');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Small Size
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 600, height: 'auto' });
-            console.log('Video size set to large');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Large Size
-        </button>
-        <button
-          onClick={() => {
-            // Test immediate size change
-            const testSizes = [300, 400, 500, 600, 700];
-            let index = 0;
-            const interval = setInterval(() => {
-              setVideoSize({ width: testSizes[index], height: 'auto' });
-              console.log('Test size change to:', testSizes[index]);
-              index++;
-              if (index >= testSizes.length) {
-                clearInterval(interval);
-              }
-            }, 200);
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Size Cycle
-        </button>
-        <button
-          onClick={() => {
-            setHeaderVisible(!headerVisible);
-            console.log('Header visibility toggled:', !headerVisible);
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          {headerVisible ? 'Hide Header' : 'Show Header'}
-        </button>
-        <button
-          onClick={() => {
-            console.log('Retrying initialization...');
-            setError(null);
-            setIsInitialized(false);
-            // Force re-render by updating a state
-            window.location.reload();
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255, 107, 107, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Retry Init
-        </button>
-        <button
-          onClick={() => {
-            // Find the video element and toggle play/pause
-            const videos = document.querySelectorAll('video');
-            console.log('Found videos:', videos.length);
-            videos.forEach((video, index) => {
-              console.log(`Video ${index}:`, {
-                src: video.src,
-                paused: video.paused,
-                currentTime: video.currentTime,
-                duration: video.duration,
-                readyState: video.readyState
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 75, y: 50, scale: 1 });
+              console.log('Manual position set to right');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Move Right
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1 });
+              console.log('Manual position set to center');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Move Center
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 300, height: 'auto' });
+              console.log('Video size set to small');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Small Size
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 600, height: 'auto' });
+              console.log('Video size set to large');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Large Size
+          </button>
+          <button
+            onClick={() => {
+              // Test immediate size change
+              const testSizes = [300, 400, 500, 600, 700];
+              let index = 0;
+              const interval = setInterval(() => {
+                setVideoSize({ width: testSizes[index], height: 'auto' });
+                console.log('Test size change to:', testSizes[index]);
+                index++;
+                if (index >= testSizes.length) {
+                  clearInterval(interval);
+                }
+              }, 200);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Size Cycle
+          </button>
+          <button
+            onClick={() => {
+              setHeaderVisible(!headerVisible);
+              console.log('Header visibility toggled:', !headerVisible);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            {headerVisible ? 'Hide Header' : 'Show Header'}
+          </button>
+          <button
+            onClick={() => {
+              console.log('Retrying initialization...');
+              setError(null);
+              setIsInitialized(false);
+              // Force re-render by updating a state
+              window.location.reload();
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(255, 107, 107, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Retry Init
+          </button>
+          <button
+            onClick={() => {
+              // Find the video element and toggle play/pause
+              const videos = document.querySelectorAll('video');
+              console.log('Found videos:', videos.length);
+              videos.forEach((video, index) => {
+                console.log(`Video ${index}:`, {
+                  src: video.src,
+                  paused: video.paused,
+                  currentTime: video.currentTime,
+                  duration: video.duration,
+                  readyState: video.readyState
+                });
+                if (video.paused) {
+                  video.play().catch(err => console.log('Play failed:', err));
+                } else {
+                  video.pause();
+                }
               });
-              if (video.paused) {
-                video.play().catch(err => console.log('Play failed:', err));
-              } else {
-                video.pause();
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Toggle Video
+          </button>
+          <button
+            onClick={() => {
+              console.log('Video element:', videoRef.current);
+              console.log('Video position state:', videoPosition);
+              console.log('Scroll progress:', scrollProgress);
+              if (videoRef.current) {
+                console.log('Video properties:', {
+                  src: videoRef.current.src,
+                  paused: videoRef.current.paused,
+                  currentTime: videoRef.current.currentTime,
+                  duration: videoRef.current.duration,
+                  readyState: videoRef.current.readyState,
+                  videoWidth: videoRef.current.videoWidth,
+                  videoHeight: videoRef.current.videoHeight
+                });
               }
-            });
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Toggle Video
-        </button>
-        <button
-          onClick={() => {
-            console.log('Video element:', videoRef.current);
-            console.log('Video position state:', videoPosition);
-            console.log('Scroll progress:', scrollProgress);
-            if (videoRef.current) {
-              console.log('Video properties:', {
-                src: videoRef.current.src,
-                paused: videoRef.current.paused,
-                currentTime: videoRef.current.currentTime,
-                duration: videoRef.current.duration,
-                readyState: videoRef.current.readyState,
-                videoWidth: videoRef.current.videoWidth,
-                videoHeight: videoRef.current.videoHeight
-              });
-            }
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Debug Info
-        </button>
-      </div>
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Debug Info
+          </button>
+        </div>
       )}
     </div>
   );
