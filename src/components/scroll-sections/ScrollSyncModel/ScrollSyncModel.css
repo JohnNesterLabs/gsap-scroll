@@ -1,0 +1,825 @@
+/* Main container */
+.scroll-sync-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Debug info panel */
+.debug-info {
+  position: fixed;
+  top: 6rem;
+  left: 2rem;
+  z-index: 20;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.debug-error {
+  color: #ff6b6b;
+}
+
+/* Fixed video element */
+.fixed-video {
+  position: fixed;
+  pointer-events: none;
+  z-index: 5;
+  object-fit: contain;
+}
+
+/* Header styles */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 40px 80px;
+  z-index: 15;
+  transition: opacity 0.3s ease;
+}
+
+.header.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.header.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.header-logo {
+  height: 36px;
+  width: auto;
+}
+
+.header-button {
+  background-color: #0020B0;
+  color: white;
+  border-radius: 4px;
+  padding: 11px 16px;
+  font-size: 12.8px;
+  font-weight: 400;
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.header-button:hover {
+  background-color: white;
+  color: black;
+}
+
+/* Header Responsive Media Queries */
+/* Large Desktop (1925px and up) */
+@media (min-width: 1925px) {
+  .header {
+    margin: 40px 80px;
+    height: 40px;
+  }
+  
+  .header-logo {
+    height: 40px;
+  }
+  
+  .header-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Desktop (1024px to 1925px) */
+@media (min-width: 1024px) and (max-width: 1925px) {
+  .header {
+    margin: 40px 80px;
+    height: 36px;
+  }
+  
+  .header-logo {
+    height: 36px;
+  }
+  
+  .header-button {
+    padding: 11px 16px;
+    font-size: 12.8px;
+  }
+}
+
+/* Tablet (768px to 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .header {
+    margin: 20px 40px;
+    height: 32px;
+  }
+  
+  .header-logo {
+    height: 32px;
+  }
+  
+  .header-button {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile Large (481px to 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .header {
+    margin: 15px 20px;
+    height: 28px;
+  }
+  
+  .header-logo {
+    height: 28px;
+  }
+  
+  .header-button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+}
+
+/* Mobile Small (320px to 480px) */
+@media (max-width: 480px) {
+  .header {
+    margin: 16px 20px;
+  }
+  
+  .header-logo {
+    height: 24px;
+  }
+  
+  .header-button {
+    padding: 10px 16px;
+    font-size: 12.8px;
+  }
+}
+
+/* Extra Small Mobile (below 320px) */
+@media (max-width: 319px) {
+  .header {
+    margin: 8px 10px;
+    height: 20px;
+  }
+  
+  .header-logo {
+    height: 20px;
+  }
+  
+  .header-button {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+}
+
+/* Scrollable content container */
+.scroll-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Section styles */
+.section {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  flex-direction: row;
+}
+
+.section.footer {
+  justify-content: flex-end;
+  flex-direction: column;
+}
+
+/* Footer styles */
+.footer-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 60px 80px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.footer-logo-bg {
+  position: absolute;
+  top: -120px;
+  left: 4rem;
+  width: 286px;
+  height: 317px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.1;
+}
+
+.footer-tagline {
+  margin-bottom: 117px;
+}
+
+.footer-tagline-text {
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1.1;
+  margin: 0;
+  color: #FFFFFF;
+}
+
+.footer-tagline-line {
+  display: block;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 92px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 100px;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer-column-title {
+  font-family: "JetBrains Mono";
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin: 0 0 12px 0;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  color: #838485;
+}
+
+.footer-link {
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #818181;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  text-align: left;
+  display: block;
+}
+
+.footer-link:hover {
+  color: #FFFFFF;
+}
+
+.footer-linkedin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #838485;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  text-align: left;
+}
+
+.footer-linkedin:hover {
+  color: #FFFFFF;
+}
+
+.footer-linkedin-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(51%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}
+
+/* .footer-linkedin-text inherits styles from parent .footer-linkedin */
+
+.footer-logo-section {
+  display: flex;
+  height: 100%;
+  align-items: flex-end;
+}
+
+.footer-logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.footer-copyright {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-copyright-text {
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #414243;
+}
+
+/* Footer Responsive Media Queries */
+/* Large Desktop (1925px and up) */
+@media (min-width: 1925px) {
+  .footer-container {
+    padding: 60px 80px;
+  }
+  
+  .footer-tagline {
+    margin-bottom: 140px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 64px;
+  }
+  
+  .footer-content {
+    margin-bottom: 110px;
+  }
+  
+  .footer-links {
+    gap: 120px;
+  }
+  
+  .footer-column-title {
+    font-size: 16px;
+  }
+  
+  .footer-link {
+    font-size: 22px;
+  }
+  
+  .footer-linkedin {
+    font-size: 22px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .footer-copyright-text {
+    font-size: 22px;
+  }
+
+  .footer-logo-bg {
+    top: -120px !important;
+    left: 80px !important;
+  }
+}
+
+/* Desktop (1024px to 1925px) */
+@media (min-width: 1024px) and (max-width: 1925px) {
+  .footer-container {
+    padding: 60px 80px;
+  } 
+  
+  .footer-tagline {
+    margin-bottom: 117px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 56px;
+  }
+  
+  .footer-content {
+    margin-bottom: 92px;
+  }
+  
+  .footer-links {
+    gap: 100px;
+  }
+  
+  .footer-column-title {
+    font-size: 14px;
+  }
+  
+  .footer-link {
+    font-size: 20px;
+  }
+  
+  .footer-linkedin {
+    font-size: 20px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .footer-copyright-text {
+    font-size: 20px;
+  }
+}
+
+/* Tablet (768px to 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .footer-container {
+    padding: 50px 60px;
+  }
+  
+  .footer-tagline {
+    margin-bottom: 80px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 48px;
+  }
+  
+  .footer-content {
+    margin-bottom: 70px;
+  }
+  
+  .footer-links {
+    gap: 60px;
+  }
+  
+  .footer-column-title {
+    font-size: 13px;
+  }
+  
+  .footer-link {
+    font-size: 18px;
+  }
+  
+  .footer-linkedin {
+    font-size: 18px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .footer-copyright-text {
+    font-size: 18px;
+  }
+  
+  .footer-logo-bg {
+    width: 180px !important;
+    height: 200px !important;
+    top: -90px !important;
+    left: 2.5rem !important;
+  }
+}
+
+/* Mobile Large (481px to 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .footer-container {
+    padding: 40px 30px;
+  }
+  
+  .footer-tagline {
+    margin-bottom: 60px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 36px;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    align-items: left;
+    gap: 40px;
+    margin-bottom: 50px;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 30px;
+    align-items: left;
+    width: 100%;
+  }
+  
+  .footer-column {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .footer-column-title {
+    font-size: 12px;
+  }
+  
+  .footer-link {
+    font-size: 16px;
+  }
+  
+  .footer-linkedin {
+    font-size: 16px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .footer-logo-section {
+    justify-content: center;
+  }
+  
+  .footer-copyright {
+    flex-direction: column-reverse;
+    gap: 10px;
+    text-align: left;
+  }
+  
+  .footer-copyright-text {
+    font-size: 16px;
+  }
+  .footer-logo-bg {
+    width: 150px !important;
+    height: 165px !important;
+    top: -80px !important;
+    left: 2rem !important;
+  }
+}
+
+/* Mobile Small (320px to 480px) */
+@media (max-width: 480px) {
+  .footer-container {
+    padding: 30px 20px;
+  }
+  
+  .footer-tagline {
+    margin-bottom: 75px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 32px;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    align-items: left;
+    gap: 103px;
+    margin-bottom: 18px;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 36px;
+    align-items: left;
+    width: 100%;
+  }
+  
+  .footer-column {
+    text-align: center;
+  }
+  
+  .footer-column-title {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  .footer-links-list{
+    gap: 4px;
+  }
+  
+  .footer-link {
+    font-size: 14px;
+  }
+  
+  .footer-linkedin {
+    font-size: 16px;
+    gap: 4px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .footer-logo-section {
+    justify-content: center;
+  }
+
+  .footer-logo-container img{
+    height: 28px;
+  }
+  
+  .footer-copyright {
+    flex-direction: column-reverse;
+    gap: 2px;
+    align-items: flex-start;
+  }
+  
+  .footer-copyright-text {
+    font-size: 12px;
+  }
+  
+  .footer-logo-bg {
+    width: 120px !important;
+    height: 130px !important;
+    top: -60px !important;
+    left: 1.5rem !important;
+  }
+}
+
+/* Extra Small Mobile (below 320px) */
+@media (max-width: 319px) {
+  .footer-container {
+    padding: 25px 15px;
+  }
+  
+  .footer-tagline {
+    margin-bottom: 30px;
+  }
+  
+  .footer-tagline-text {
+    font-size: 24px;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    align-items: left;
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 20px;
+    align-items: left;
+    width: 100%;
+  }
+  
+  .footer-column {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .footer-column-title {
+    font-size: 10px;
+  }
+  
+  .footer-link {
+    font-size: 12px;
+  }
+  
+  .footer-linkedin {
+    font-size: 12px;
+  }
+  
+  .footer-linkedin-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .footer-logo-section {
+    justify-content: center;
+  }
+  
+  .footer-copyright {
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+  
+  .footer-copyright-text {
+    font-size: 12px;
+  }
+  
+  .footer-logo-bg {
+    width: 100px !important;
+    height: 110px !important;
+    top: -50px !important;
+    left: 1rem !important;
+  }
+}
+
+/* Regular section content */
+.section-content {
+  text-align: center;
+  z-index: 10;
+  padding: 2rem;
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.section-number {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.section-title {
+  font-size: 3.75rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.section-scroll-hint {
+  margin-top: 1.5rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.section-scroll-text {
+  font-size: 0.875rem;
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+/* Debug controls */
+.debug-controls {
+  position: fixed;
+  top: 6rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.debug-controls.top-right {
+  right: 2rem;
+}
+
+.debug-controls.top-left {
+  left: 2rem;
+}
+
+.debug-button {
+  padding: 0.5rem;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.debug-button.primary {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.debug-button.purple {
+  background-color: rgba(168, 85, 247, 0.7);
+}
+
+.debug-button.red {
+  background-color: rgba(239, 68, 68, 0.7);
+}
+
+.debug-button.green {
+  background-color: rgba(34, 197, 94, 0.7);
+}
+
+.debug-button.blue {
+  background-color: rgba(59, 130, 246, 0.7);
+}
+
