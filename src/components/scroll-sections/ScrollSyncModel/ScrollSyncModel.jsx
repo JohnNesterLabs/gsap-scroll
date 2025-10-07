@@ -330,14 +330,14 @@ function ScrollSyncModel({
         top: 0,
         left: 0,
         right: 0,
-        height: '80px',
+        height: '36px',
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 2rem',
+        margin: '40px 80px',
         zIndex: 15,
         transition: 'opacity 0.3s ease',
         opacity: headerVisible ? 1 : 0,
@@ -353,7 +353,7 @@ function ScrollSyncModel({
             src="/kahuna-logo.svg" 
             alt="Kahuna Logo" 
             style={{
-              height: '40px',
+              height: '36px',
               width: 'auto',
               filter: 'brightness(0) invert(1)' // Make logo white
             }}
@@ -371,24 +371,25 @@ function ScrollSyncModel({
             // Add your contact/navigation logic here
           }}
           style={{
-            backgroundColor: 'transparent',
+            backgroundColor: '#0020B0',
             color: 'white',
-            border: '2px solid white',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '600',
+            borderRadius: '4px',
+            padding: '11px 16px',
+            fontSize: '12.8px',
+            fontWeight: '400',
+            fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             textTransform: 'none',
-            letterSpacing: '0.5px'
+            letterSpacing: '0.5px',
+            border:"none"
           }}
           onMouseEnter={(e) => {
             e.target.style.backgroundColor = 'white';
             e.target.style.color = 'black';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
+            e.target.style.backgroundColor = '#0020B0';
             e.target.style.color = 'white';
           }}
         >
@@ -418,7 +419,7 @@ function ScrollSyncModel({
               background: section.background,
               border: section.border,
               boxSizing: 'border-box',
-              paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
+              // paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
               flexDirection: section.isFooter ? 'column' : 'row'
             }}
           >
