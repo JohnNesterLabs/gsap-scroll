@@ -13,7 +13,7 @@ loadProdigySansFonts();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ScrollSyncModel/>
+    <ScrollSyncModel />
     {/* <ScrollSyncModelGsap/> */}
     {/* <App /> */}
   </React.StrictMode>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
-function ScrollSyncModel({ 
-  showScrollIndicator = false, 
+function ScrollSyncModel({
+  showScrollIndicator = false,
   showDebugControls = false,
   showDebugInfo = false,
   showHeader = true,
@@ -18,6 +18,124 @@ function ScrollSyncModel({
   const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
+  const [textRevealComplete, setTextRevealComplete] = React.useState(false);
+  const [isScrollLocked, setIsScrollLocked] = React.useState(true);
+  const [textRevealProgress, setTextRevealProgress] = React.useState(0);
+
+  // Auto-unlock scroll after 5 seconds to prevent permanent lock
+  useEffect(() => {
+    const autoUnlockTimer = setTimeout(() => {
+      if (isScrollLocked && !textRevealComplete) {
+        console.log('Auto-unlocking scroll after 5 seconds');
+        setTextRevealComplete(true);
+        setIsScrollLocked(false);
+      }
+    }, 5000);
+
+    return () => clearTimeout(autoUnlockTimer);
+  }, [isScrollLocked, textRevealComplete]);
+
+  // Letter reveal animation effect
+  useEffect(() => {
+    const wrapLetters = (element) => {
+      const text = element.textContent;
+      element.innerHTML = "";
+      for (let char of text) {
+        const span = document.createElement("span");
+        span.classList.add("letter");
+        if (char === ' ') {
+          span.innerHTML = "&nbsp;";
+        } else {
+          span.textContent = char;
+        }
+        element.appendChild(span);
+      }
+    };
+
+    // Initialize letter wrapping for reveal text
+    const revealTexts = document.querySelectorAll(".reveal-text");
+    revealTexts.forEach(line => wrapLetters(line));
+
+    const letters = document.querySelectorAll(".letter");
+
+    // Set initial state - all letters invisible
+    letters.forEach(letter => {
+      letter.style.opacity = "0";
+      letter.style.color = "#fff";
+    });
+
+    // Simple scroll handler for text reveal - no blocking
+    const handleTextRevealScroll = (e) => {
+      if (scrollContainerRef.current) {
+        const scrollContainer = scrollContainerRef.current;
+        const scrollTop = scrollContainer.scrollTop;
+        const firstSectionHeight = scrollContainer.clientHeight;
+
+        // Only handle text reveal if we're in the first section and scroll is locked
+        if (isScrollLocked && !textRevealComplete && scrollTop < firstSectionHeight - 10) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Convert scroll delta to progress (both forward and backward)
+          const delta = e.deltaY;
+          setTextRevealProgress(prevProgress => {
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.01)));
+            console.log('Text reveal scroll:', newProgress, 'Delta:', delta);
+            return newProgress;
+          });
+
+          return false;
+        }
+      }
+    };
+
+    // Add scroll listener for text reveal - only on container
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('wheel', handleTextRevealScroll, { passive: false });
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('wheel', handleTextRevealScroll);
+      }
+    };
+  }, [isInitialized, isScrollLocked, textRevealComplete]);
+
+  // Trigger text reveal when progress changes
+  useEffect(() => {
+    if (isInitialized) {
+      const letters = document.querySelectorAll(".letter");
+      if (letters.length > 0) {
+        const revealCount = Math.floor(textRevealProgress * letters.length);
+
+        // Only unlock when ALL letters are revealed
+        const allLettersRevealed = revealCount >= letters.length;
+
+        if (allLettersRevealed && !textRevealComplete) {
+          setTextRevealComplete(true);
+          setIsScrollLocked(false);
+          console.log('Text reveal complete! Scroll unlocked. Reveal count:', revealCount, 'Total letters:', letters.length);
+        }
+
+        letters.forEach((span, i) => {
+          if (i < revealCount) {
+            span.style.opacity = "1";
+            span.style.color = "#fff";
+            span.classList.remove("active");
+          } else if (i === revealCount && revealCount < letters.length) {
+            span.style.opacity = "1";
+            span.style.color = "#0020B0"; // Kahuna blue
+            span.classList.add("active");
+          } else {
+            span.style.opacity = "0";
+            span.style.color = "#fff";
+            span.classList.remove("active");
+          }
+        });
+      }
+    }
+  }, [textRevealProgress, isInitialized, textRevealComplete]);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -85,6 +203,8 @@ function ScrollSyncModel({
       }
     };
 
+    // Removed problematic wheel event handler - scroll is now free
+
     // Robust scroll setup function
     const setupScrollListener = async () => {
       try {
@@ -144,6 +264,13 @@ function ScrollSyncModel({
         return;
       }
 
+      // Auto-unlock scroll when user scrolls past first section
+      if (isScrollLocked && !textRevealComplete && scrollTop > scrollContainer.clientHeight + 50) {
+        console.log('Auto-unlocking scroll as user scrolled past first section');
+        setTextRevealComplete(true);
+        setIsScrollLocked(false);
+      }
+
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
       console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
@@ -189,7 +316,7 @@ function ScrollSyncModel({
       }
 
       // Dynamic video sizing based on section
-      const sizeKeys = showFooter ? 
+      const sizeKeys = showFooter ?
         ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
         ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
@@ -208,10 +335,10 @@ function ScrollSyncModel({
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.2);
 
-      console.log('Video position and size updated:', { 
-        x: newX, 
-        y: newY, 
-        scale, 
+      console.log('Video position and size updated:', {
+        x: newX,
+        y: newY,
+        scale,
         width: newWidth,
         section: currentSection,
         progress: sectionProgress,
@@ -237,11 +364,11 @@ function ScrollSyncModel({
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
 
-    // Cleanup
-    return () => {
+        // Cleanup
+        return () => {
           isMounted = false;
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+          if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', handleScroll);
           }
         };
       } catch (error) {
@@ -261,10 +388,10 @@ function ScrollSyncModel({
 
 
   const sections = [
-    { 
-      title: 'Section 1', 
-      subtitle: 'Model at Center', 
-      background: '#000000', 
+    {
+      title: 'Section 1',
+      subtitle: 'Model at Center',
+      background: '#000000',
       border: '2px solid #ffffff',
       hasHeader: showHeader // Use prop for header visibility
     },
@@ -272,10 +399,10 @@ function ScrollSyncModel({
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
     { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
-    ...(showFooter ? [{ 
-      title: 'Footer', 
-      subtitle: 'Contact & Links', 
-      background: '#0A0A0A', 
+    ...(showFooter ? [{
+      title: 'Footer',
+      subtitle: 'Contact & Links',
+      background: '#0A0A0A',
       border: '2px solid #ffffff',
       isFooter: true // Add footer flag for section 6
     }] : [])
@@ -283,6 +410,20 @@ function ScrollSyncModel({
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      {/* CSS for letter animation */}
+      <style>
+        {`
+          .letter {
+            opacity: 0;
+            display: inline-block;
+            color: #fff;
+            transition: color 0.2s ease-out, opacity 0.2s ease-out;
+          }
+          .letter.active {
+            color: #0020B0;
+          }
+        `}
+      </style>
       {/* Debug Info */}
       {showDebugInfo && (
         <div style={{
@@ -349,9 +490,9 @@ function ScrollSyncModel({
           alignItems: 'center',
           height: '100%'
         }}>
-          <img 
+          <img
             src="/kahuna-logo-3.svg"
-            alt="Kahuna Logo" 
+            alt="Kahuna Logo"
             style={{
               height: '36px',
               width: 'auto',
@@ -360,7 +501,7 @@ function ScrollSyncModel({
         </div>
 
         {/* Right Let's Talk Button */}
-        <button 
+        <button
           onClick={() => {
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
@@ -377,7 +518,7 @@ function ScrollSyncModel({
             transition: 'all 0.3s ease',
             textTransform: 'none',
             letterSpacing: '0.5px',
-            border:"none"
+            border: "none"
           }}
           onMouseEnter={(e) => {
             e.target.style.backgroundColor = 'white';
@@ -391,9 +532,9 @@ function ScrollSyncModel({
           Let's Talk
         </button>
       </div>
-      
+
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         style={{
           position: 'relative',
@@ -409,12 +550,12 @@ function ScrollSyncModel({
             style={{
               height: '100vh',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: section.isFooter ? 'flex-end' : 'left',
+              alignItems: index === 0 ? 'flex-start' : 'center',
+              justifyContent: section.isFooter ? 'flex-end' : 'center',
               background: section.background,
               border: section.border,
               boxSizing: 'border-box',
-              // paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
+              paddingTop: index === 0 ? '100px' : '0', // Add top padding for first section
               flexDirection: section.isFooter ? 'column' : 'row'
             }}
           >
@@ -431,9 +572,9 @@ function ScrollSyncModel({
                 position: "relative"
               }}>
                 {/* Main Tagline Section */}
-                <img 
-                  src="/final-logo.svg" 
-                  alt="Kahuna Labs" 
+                <img
+                  src="/final-logo.svg"
+                  alt="Kahuna Labs"
                   style={{
                     position: 'absolute',
                     top: '-120px',
@@ -471,7 +612,7 @@ function ScrollSyncModel({
                     {/* Technology Column */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <h3 style={{
-                         fontFamily: "JetBrains Mono",
+                        fontFamily: "JetBrains Mono",
                         // fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                         fontSize: '14px',
                         fontWeight: '400',
@@ -508,15 +649,15 @@ function ScrollSyncModel({
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '20px', fontWeight: '500', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
-                        <img 
-                          src="/LinkedIn-Icon.png" 
-                          alt="LinkedIn" 
-                          style={{ 
-                            width: '24px', 
-                            height: '24px', 
+                        <img
+                          src="/LinkedIn-Icon.png"
+                          alt="LinkedIn"
+                          style={{
+                            width: '24px',
+                            height: '24px',
                             objectFit: 'contain',
                             filter: 'brightness(0) saturate(100%) invert(51%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)'
-                          }} 
+                          }}
                         />
                         <span>LinkedIn</span>
                       </a>
@@ -525,7 +666,7 @@ function ScrollSyncModel({
 
                   {/* Kahuna Labs Logo */}
                   <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', alignItems: 'center'}}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                       <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
                       {/* <span style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span> */}
                     </div>
@@ -544,37 +685,68 @@ function ScrollSyncModel({
               </div>
             ) : (
               // Regular section content
-            <div style={{
-              textAlign: 'center',
-              zIndex: 10,
-              padding: '2rem',
-              backdropFilter: 'blur(12px)',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
+              <div style={{
+                textAlign: 'center',
+                zIndex: 10,
+                padding: '2rem',
+                backdropFilter: 'blur(12px)',
+                backgroundColor: 'transparent',
+                borderRadius: '1rem',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                width: index === 0 ? '80%' : 'auto',
+                maxWidth: index === 0 ? '800px' : 'none'
               }}>
-                <div style={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginBottom: '1rem',
-                  fontWeight: 'bold'
-                }}>SECTION {index + 1}</div>
-              <h2 style={{
-                fontSize: '3.75rem',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '1rem'
-              }}>{section.title}</h2>
-              <p style={{
-                fontSize: '1.5rem',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>{section.subtitle}</p>
-              <div style={{ marginTop: '1.5rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                <p style={{ fontSize: '0.875rem' }}>
-                  Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
-                </p>
+                {index === 0 ? (
+                  // Custom text for first section with reveal animation
+                  <div>
+                    <h1 className="reveal-text" style={{
+                      fontSize: '3rem',
+                      letterSpacing: '2px',
+                      textAlign: 'center',
+                      margin: '10px 0',
+                      whiteSpace: 'nowrap',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                    }}>Vast and intricate</h1>
+                    <h1 className="reveal-text" style={{
+                      fontSize: '3rem',
+                      letterSpacing: '2px',
+                      textAlign: 'center',
+                      margin: '10px 0',
+                      whiteSpace: 'nowrap',
+                      fontWeight: '600',
+                      color: 'white',
+                      fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                    }}>product never stop evolving</h1>
+                  </div>
+                ) : (
+                  // Original content for other sections
+                  <div>
+                    <div style={{
+                      fontSize: '1rem',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      marginBottom: '1rem',
+                      fontWeight: 'bold'
+                    }}>SECTION {index + 1}</div>
+                    <h2 style={{
+                      fontSize: '3.75rem',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      marginBottom: '1rem'
+                    }}>{section.title}</h2>
+                    <p style={{
+                      fontSize: '1.5rem',
+                      color: 'rgba(255, 255, 255, 0.8)'
+                    }}>{section.subtitle}</p>
+                    <div style={{ marginTop: '1.5rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                      <p style={{ fontSize: '0.875rem' }}>
+                        Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
             )}
           </div>
         ))}
@@ -582,16 +754,79 @@ function ScrollSyncModel({
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div style={{
-        position: 'fixed',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: '0.875rem'
-      }}>
-          {scrollIndicatorText}
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: '0.875rem'
+        }}>
+          {isScrollLocked && !textRevealComplete ? `Scroll to reveal text... (${(textRevealProgress * 100).toFixed(0)}%)` : scrollIndicatorText}
+        </div>
+      )}
+
+      {/* Scroll Lock Indicator */}
+      {isScrollLocked && !textRevealComplete && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          right: '2rem',
+          transform: 'translateY(-50%)',
+          zIndex: 20,
+          color: '#0020B0',
+          fontSize: '0.875rem',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          border: '1px solid #0020B0'
+        }}>
+          🔒 Scroll Locked
+        </div>
+      )}
+
+      {/* Text Reveal Progress Bar */}
+      {isScrollLocked && !textRevealComplete && (
+        <div style={{
+          position: 'fixed',
+          bottom: '5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          width: '300px',
+          height: '4px',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '2px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${textRevealProgress * 100}%`,
+            height: '100%',
+            backgroundColor: '#0020B0',
+            transition: 'width 0.1s ease-out'
+          }}></div>
+        </div>
+      )}
+
+      {/* Debug Info for Text Reveal */}
+      {showDebugInfo && (
+        <div style={{
+          position: 'fixed',
+          top: '10rem',
+          left: '2rem',
+          zIndex: 20,
+          color: 'white',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem'
+        }}>
+          <div>Text Reveal Status</div>
+          <div>Scroll Locked: {isScrollLocked ? 'Yes' : 'No'}</div>
+          <div>Text Complete: {textRevealComplete ? 'Yes' : 'No'}</div>
+          <div>Reveal Progress: {(textRevealProgress * 100).toFixed(1)}%</div>
+          <div>Letters Count: {document.querySelectorAll('.letter').length}</div>
         </div>
       )}
 
@@ -607,190 +842,190 @@ function ScrollSyncModel({
           flexDirection: 'column',
           gap: '0.5rem'
         }}>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1 });
-            console.log('Manual position set to right');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Move Right
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1 });
-            console.log('Manual position set to center');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Move Center
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 300, height: 'auto' });
-            console.log('Video size set to small');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Small Size
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 600, height: 'auto' });
-            console.log('Video size set to large');
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Large Size
-        </button>
-        <button
-          onClick={() => {
-            // Test immediate size change
-            const testSizes = [300, 400, 500, 600, 700];
-            let index = 0;
-            const interval = setInterval(() => {
-              setVideoSize({ width: testSizes[index], height: 'auto' });
-              console.log('Test size change to:', testSizes[index]);
-              index++;
-              if (index >= testSizes.length) {
-                clearInterval(interval);
-              }
-            }, 200);
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Test Size Cycle
-        </button>
-        <button
-          onClick={() => {
-            setHeaderVisible(!headerVisible);
-            console.log('Header visibility toggled:', !headerVisible);
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          {headerVisible ? 'Hide Header' : 'Show Header'}
-        </button>
-        <button
-          onClick={() => {
-            console.log('Retrying initialization...');
-            setError(null);
-            setIsInitialized(false);
-            // Force re-render by updating a state
-            window.location.reload();
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255, 107, 107, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Retry Init
-        </button>
-        <button
-          onClick={() => {
-            // Find the video element and toggle play/pause
-            const videos = document.querySelectorAll('video');
-            console.log('Found videos:', videos.length);
-            videos.forEach((video, index) => {
-              console.log(`Video ${index}:`, {
-                src: video.src,
-                paused: video.paused,
-                currentTime: video.currentTime,
-                duration: video.duration,
-                readyState: video.readyState
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 75, y: 50, scale: 1 });
+              console.log('Manual position set to right');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Move Right
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1 });
+              console.log('Manual position set to center');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Move Center
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 300, height: 'auto' });
+              console.log('Video size set to small');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Small Size
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 600, height: 'auto' });
+              console.log('Video size set to large');
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Large Size
+          </button>
+          <button
+            onClick={() => {
+              // Test immediate size change
+              const testSizes = [300, 400, 500, 600, 700];
+              let index = 0;
+              const interval = setInterval(() => {
+                setVideoSize({ width: testSizes[index], height: 'auto' });
+                console.log('Test size change to:', testSizes[index]);
+                index++;
+                if (index >= testSizes.length) {
+                  clearInterval(interval);
+                }
+              }, 200);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Size Cycle
+          </button>
+          <button
+            onClick={() => {
+              setHeaderVisible(!headerVisible);
+              console.log('Header visibility toggled:', !headerVisible);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            {headerVisible ? 'Hide Header' : 'Show Header'}
+          </button>
+          <button
+            onClick={() => {
+              console.log('Retrying initialization...');
+              setError(null);
+              setIsInitialized(false);
+              // Force re-render by updating a state
+              window.location.reload();
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(255, 107, 107, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Retry Init
+          </button>
+          <button
+            onClick={() => {
+              // Find the video element and toggle play/pause
+              const videos = document.querySelectorAll('video');
+              console.log('Found videos:', videos.length);
+              videos.forEach((video, index) => {
+                console.log(`Video ${index}:`, {
+                  src: video.src,
+                  paused: video.paused,
+                  currentTime: video.currentTime,
+                  duration: video.duration,
+                  readyState: video.readyState
+                });
+                if (video.paused) {
+                  video.play().catch(err => console.log('Play failed:', err));
+                } else {
+                  video.pause();
+                }
               });
-              if (video.paused) {
-                video.play().catch(err => console.log('Play failed:', err));
-              } else {
-                video.pause();
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Toggle Video
+          </button>
+          <button
+            onClick={() => {
+              console.log('Video element:', videoRef.current);
+              console.log('Video position state:', videoPosition);
+              console.log('Scroll progress:', scrollProgress);
+              if (videoRef.current) {
+                console.log('Video properties:', {
+                  src: videoRef.current.src,
+                  paused: videoRef.current.paused,
+                  currentTime: videoRef.current.currentTime,
+                  duration: videoRef.current.duration,
+                  readyState: videoRef.current.readyState,
+                  videoWidth: videoRef.current.videoWidth,
+                  videoHeight: videoRef.current.videoHeight
+                });
               }
-            });
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Toggle Video
-        </button>
-        <button
-          onClick={() => {
-            console.log('Video element:', videoRef.current);
-            console.log('Video position state:', videoPosition);
-            console.log('Scroll progress:', scrollProgress);
-            if (videoRef.current) {
-              console.log('Video properties:', {
-                src: videoRef.current.src,
-                paused: videoRef.current.paused,
-                currentTime: videoRef.current.currentTime,
-                duration: videoRef.current.duration,
-                readyState: videoRef.current.readyState,
-                videoWidth: videoRef.current.videoWidth,
-                videoHeight: videoRef.current.videoHeight
-              });
-            }
-          }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
-        >
-          Debug Info
-        </button>
-      </div>
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Debug Info
+          </button>
+        </div>
       )}
     </div>
   );
