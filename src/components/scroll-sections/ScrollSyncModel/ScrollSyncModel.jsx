@@ -21,22 +21,177 @@ function ScrollSyncModel({
   const [headerVisible, setHeaderVisible] = React.useState(true);
 
   useEffect(() => {
-    // Video size configuration for different sections
-    const videoSizeConfig = {
-      // Section 1: Small and centered
-      section1: { width: 1100, height: 'auto' },
-      // Section 2: Medium size when moving right
-      section2: { width: 1100, height: 'auto' },
-      // Section 3: Large when at bottom
-      section3: { width: 1300, height: 'auto' },
-      // Section 4: Medium when moving left
-      section4: { width: 600, height: 'auto' },
-      // Section 5: Extra large when at top
-      section5: { width: 600, height: 'auto' },
-      // Section 6: Footer section - hide video (only if footer is enabled)
-      ...(showFooter && { section6: { width: 0, height: 'auto' } })
+    // Get viewport dimensions for responsive video sizing
+    const getViewportSize = () => {
+      const width = window.innerWidth;
+      
+      if (width <= 480) {
+        return 'mobile-small';
+      } else if (width <= 767) {
+        return 'mobile-large';
+      } else if (width <= 1023) {
+        return 'tablet';
+      } else if (width <= 1924) {
+        return 'desktop';
+      } else {
+        return 'large-desktop';
+      }
     };
+
+    // Responsive video size configuration based on viewport
+    const getVideoSizeConfig = () => {
+      const viewport = getViewportSize();
+      
+      const configs = {
+        'mobile-small': {
+          section1: { width: 980, height: 'auto' },
+          section2: { width: 900, height: 'auto' },
+          section3: { width: 320, height: 'auto' },
+          section4: { width: 250, height: 'auto' },
+          section5: { width: 200, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'mobile-large': {
+          section1: { width: 400, height: 'auto' },
+          section2: { width: 450, height: 'auto' },
+          section3: { width: 500, height: 'auto' },
+          section4: { width: 350, height: 'auto' },
+          section5: { width: 300, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'tablet': {
+          section1: { width: 600, height: 'auto' },
+          section2: { width: 650, height: 'auto' },
+          section3: { width: 750, height: 'auto' },
+          section4: { width: 500, height: 'auto' },
+          section5: { width: 450, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'desktop': {
+          section1: { width: 1100, height: 'auto' },
+          section2: { width: 1100, height: 'auto' },
+          section3: { width: 1300, height: 'auto' },
+          section4: { width: 600, height: 'auto' },
+          section5: { width: 600, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'large-desktop': {
+          section1: { width: 1900, height: 'auto' },
+          section2: { width: 1500, height: 'auto' },
+          section3: { width: 2100, height: 'auto' },
+          section4: { width: 1300, height: 'auto' },
+          section5: { width: 1300, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        }
+      };
+      
+      return configs[viewport] || configs['desktop'];
+    };
+
+    const videoSizeConfig = getVideoSizeConfig();
     let isMounted = true;
+
+    // Get responsive position configuration based on viewport
+    const getPositionConfig = () => {
+      const viewport = getViewportSize();
+      
+      const positionConfigs = {
+        'mobile-small': [
+          { x: 50, y: 50 },      // Section 1 - Center (mobile optimized)
+          { x: 85, y: 50 },      // Section 2 - Right (closer to center on mobile)
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 15, y: 50 },      // Section 4 - Left (closer to center on mobile)
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'mobile-large': [
+          { x: 50, y: 50 },      // Section 1 - Center
+          { x: 90, y: 50 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 10, y: 50 },      // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'tablet': [
+          { x: 50, y: 50 },      // Section 1 - Center
+          { x: 92, y: 55 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 8, y: 50 },       // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'desktop': [
+          { x: 50, y: 135 },     // Section 1 - Bottom (your laptop config)
+          { x: 95, y: 60 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 50, y: 50 },      // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Top
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'large-desktop': [
+          { x: 50, y: 120 },     // Section 1 - Slightly higher for large screens
+          { x: 96, y: 55 },      // Section 2 - Right (more extreme)
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 4, y: 50 },       // Section 4 - Left (more extreme)
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ]
+      };
+      
+      return positionConfigs[viewport] || positionConfigs['desktop'];
+    };
+
+    // Add window resize listener to recalculate video sizes and positions on viewport change
+    const handleResize = () => {
+      console.log('Viewport resized, recalculating video sizes and positions...');
+      const newConfig = getVideoSizeConfig();
+      const newPositions = getPositionConfig();
+      
+      // Update video size and position if we're currently in a section
+      if (videoRef.current && scrollContainerRef.current) {
+        const scrollContainer = scrollContainerRef.current;
+        const scrollTop = scrollContainer.scrollTop;
+        const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+        
+        const totalSections = showFooter ? 6 : 5;
+        const sectionIndex = scrollProgress * (totalSections - 1);
+        const currentSection = Math.floor(sectionIndex);
+        const nextSection = Math.min(currentSection + 1, totalSections - 1);
+        const sectionProgress = sectionIndex - currentSection;
+        
+        // Update video size
+        const sizeKeys = showFooter ? 
+          ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
+          ['section1', 'section2', 'section3', 'section4', 'section5'];
+        const currentSizeKey = sizeKeys[currentSection];
+        const nextSizeKey = sizeKeys[nextSection];
+        
+        if (newConfig[currentSizeKey] && newConfig[nextSizeKey]) {
+          const currentSize = newConfig[currentSizeKey];
+          const nextSize = newConfig[nextSizeKey];
+          const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
+          setVideoSize({ width: newWidth, height: 'auto' });
+        }
+        
+        // Update video position
+        const currentPos = newPositions[currentSection];
+        const nextPos = newPositions[nextSection];
+        const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
+        const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+        
+        // Scale effect - set section 5 to 0.8 scale, hide video in section 6
+        let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
+        if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
+          scale = 0.8;
+        }
+        if (currentSection === 5) {
+          scale = 0;
+        }
+        
+        setVideoPosition({ x: newX, y: newY, scale });
+      }
+    };
 
     // Simple video initialization
     const initializeVideo = async () => {
@@ -118,6 +273,10 @@ function ScrollSyncModel({
 
         // Use passive listener for better performance during scroll
         scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Add window resize listener for responsive video sizing
+        window.addEventListener('resize', handleResize, { passive: true });
+        
         handleScroll(); // Set initial position
 
         console.log('Scroll listener attached successfully');
@@ -152,15 +311,7 @@ function ScrollSyncModel({
       // Update state for UI display
       setScrollProgress(scrollProgress);
 
-      // Define positions for each section (convert to CSS percentages)
-      const positions = [
-        { x: 50, y: 135 },      // Section 1 - Bottom
-        { x: 95, y: 60 },      // Section 2 - Right
-        { x: 50, y: 50 },      // Section 3 - center
-        { x: 50, y: 50 },      // Section 4 - Left
-        { x: 50, y: 50 },      // Section 5 - Top
-        { x: 50, y: 50 }       // Section 6 - Footer (center)
-      ];
+      const positions = getPositionConfig();
 
       // Calculate which section we're in and interpolate
       const totalSections = showFooter ? 6 : 5; // Dynamic sections based on footer
@@ -207,7 +358,7 @@ function ScrollSyncModel({
       setVideoSize({ width: newWidth, height: 'auto' });
 
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
-      setHeaderVisible(showHeader && scrollProgress < 0.2);
+      setHeaderVisible(showHeader && scrollProgress < 0.04);
 
       console.log('Video position and size updated:', { 
         x: newX, 
@@ -243,6 +394,7 @@ function ScrollSyncModel({
           isMounted = false;
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
           }
         };
       } catch (error) {
