@@ -104,23 +104,24 @@ function ScrollSyncModel({
     };
   }, [isInitialized, isScrollLocked, textRevealComplete]);
 
-  // Trigger text reveal when progress changes - Simple 4 Phase System
+  // Trigger text reveal when progress changes - Single Unified Timeline
   useEffect(() => {
     if (isInitialized) {
       const letters = document.querySelectorAll(".letter");
       if (letters.length > 0) {
         const totalLetters = letters.length;
-        // Custom phase calculation: Phase 1 (0-25%), Phase 2 (25-50%), Phase 3 (50-100%)
+
+        // Single timeline: 0-40% reveal first text, 40-60% hide first text, 60-100% reveal second text
         let phaseNumber, currentPhaseProgress;
-        if (textRevealProgress < 0.25) {
+        if (textRevealProgress < 0.4) {
           phaseNumber = 1;
-          currentPhaseProgress = textRevealProgress / 0.25;
-        } else if (textRevealProgress < 0.5) {
+          currentPhaseProgress = textRevealProgress / 0.4; // 0-100% of first text reveal
+        } else if (textRevealProgress < 0.6) {
           phaseNumber = 2;
-          currentPhaseProgress = (textRevealProgress - 0.25) / 0.25;
+          currentPhaseProgress = (textRevealProgress - 0.4) / 0.2; // 0-100% of first text hide
         } else {
           phaseNumber = 3;
-          currentPhaseProgress = (textRevealProgress - 0.5) / 0.5;
+          currentPhaseProgress = (textRevealProgress - 0.6) / 0.4; // 0-100% of second text reveal
         }
 
         // Update current phase
@@ -128,10 +129,10 @@ function ScrollSyncModel({
           setCurrentPhase(phaseNumber);
           console.log(`Phase ${phaseNumber} started`);
 
-          // Switch to new text at the start of Phase 3
+          // Switch to new text at the start of Phase 3 (60% progress)
           if (phaseNumber === 3 && currentTextSet === 0) {
             setCurrentTextSet(1);
-            console.log('Switching to new text set');
+            console.log('Switching to new text set at 60% progress');
 
             // Re-initialize letters for new text - ensure all start invisible
             setTimeout(() => {
@@ -159,7 +160,7 @@ function ScrollSyncModel({
           }
         }
 
-        // Phase 1: Reveal original text from "vast" to "evolving"
+        // Phase 1 (0-40%): Reveal original text "vast to evolving"
         if (phaseNumber === 1) {
           const revealCount = Math.floor(currentPhaseProgress * totalLetters);
 
@@ -180,7 +181,7 @@ function ScrollSyncModel({
           });
         }
 
-        // Phase 2: Hide original text from "vast" to "evolving"
+        // Phase 2 (40-60%): Hide original text "vast to evolving"
         else if (phaseNumber === 2) {
           const hideCount = Math.floor(currentPhaseProgress * totalLetters);
 
@@ -197,14 +198,11 @@ function ScrollSyncModel({
           });
         }
 
-        // Phase 3: Show new text from "vast" position - COMPLETE THE ENTIRE TEXT
+        // Phase 3 (60-100%): Show new text "enterprise to reality"
         else if (phaseNumber === 3) {
           // Get new letters after text switch
           const newLetters = document.querySelectorAll(".letter");
-          // Phase 3 should complete the entire text (0-100% of new text)
-          // Make progress more gradual and linear - use full 50-100% range
-          const totalProgress = Math.min(1, (textRevealProgress - 0.5) / 0.5); // Convert 50-100% to 0-100% gradually
-          const revealCount = Math.floor(totalProgress * newLetters.length);
+          const revealCount = Math.floor(currentPhaseProgress * newLetters.length);
 
           newLetters.forEach((span, i) => {
             if (i < revealCount) {
@@ -232,8 +230,6 @@ function ScrollSyncModel({
             console.log('Scroll unlocked! Word "reality" completely appeared in Phase 3.');
           }
         }
-
-        // No Phase 4 needed - Phase 3 handles everything from 50-100%
       }
     }
   }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet]);
@@ -889,10 +885,9 @@ function ScrollSyncModel({
           fontSize: '0.875rem'
         }}>
           {isScrollLocked && !textRevealComplete ?
-            `Phase ${currentPhase}/4 - ${currentPhase === 1 ? 'Revealing text...' :
-              currentPhase === 2 ? 'Hiding text...' :
-                currentPhase === 3 ? 'New text appearing...' :
-                  'Finalizing...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
+            `Phase ${currentPhase}/3 - ${currentPhase === 1 ? 'Revealing "vast to evolving"...' :
+              currentPhase === 2 ? 'Hiding first text...' :
+                'Revealing "enterprise to reality"...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
             scrollIndicatorText}
         </div>
       )}
@@ -955,7 +950,7 @@ function ScrollSyncModel({
           <div>Text Reveal Status</div>
           <div>Scroll Locked: {isScrollLocked ? 'Yes' : 'No'}</div>
           <div>Text Complete: {textRevealComplete ? 'Yes' : 'No'}</div>
-          <div>Current Phase: {currentPhase}/4</div>
+          <div>Current Phase: {currentPhase}/3</div>
           <div>Text Set: {currentTextSet === 0 ? 'Original' : 'New'}</div>
           <div>Reveal Progress: {(textRevealProgress * 100).toFixed(1)}%</div>
           <div>Letters Count: {document.querySelectorAll('.letter').length}</div>
@@ -1179,10 +1174,10 @@ function ScrollSyncModel({
           </button>
           <button
             onClick={() => {
-              console.log('Testing Phase 3...');
-              setCurrentPhase(3);
-              setCurrentTextSet(1);
-              setTextRevealProgress(0.5); // Start of Phase 3
+              console.log('Testing Phase 2 (Hide first text)...');
+              setCurrentPhase(2);
+              setCurrentTextSet(0);
+              setTextRevealProgress(0.5); // Middle of Phase 2
               setTextRevealComplete(false);
               setIsScrollLocked(true);
             }}
@@ -1195,14 +1190,14 @@ function ScrollSyncModel({
               cursor: 'pointer'
             }}
           >
-            Test Phase 3
+            Test Phase 2
           </button>
           <button
             onClick={() => {
-              console.log('Testing Phase 4...');
-              setCurrentPhase(4);
+              console.log('Testing Phase 3 (Reveal second text)...');
+              setCurrentPhase(3);
               setCurrentTextSet(1);
-              setTextRevealProgress(0.75); // Start of Phase 4
+              setTextRevealProgress(0.7); // Middle of Phase 3
               setTextRevealComplete(false);
               setIsScrollLocked(true);
             }}
@@ -1215,12 +1210,12 @@ function ScrollSyncModel({
               cursor: 'pointer'
             }}
           >
-            Test Phase 4
+            Test Phase 3
           </button>
           <button
             onClick={() => {
               console.log('Testing Reality Complete...');
-              setCurrentPhase(4);
+              setCurrentPhase(3);
               setCurrentTextSet(1);
               setTextRevealProgress(1.0); // Complete
               setTextRevealComplete(false);
