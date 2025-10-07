@@ -266,18 +266,18 @@ function ScrollSyncModel({
       title: 'Section 1', 
       subtitle: 'Model at Center', 
       background: '#000000', 
-      border: '2px solid #ffffff',
+      border: '1px solid #ffffff',
       hasHeader: showHeader // Use prop for header visibility
     },
-    { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
+    { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '1px solid #ffffff' },
+    { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '1px solid #ffffff' },
+    { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '1px solid #ffffff' },
+    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '1x solid #ffffff' },
     ...(showFooter ? [{ 
       title: 'Footer', 
       subtitle: 'Contact & Links', 
       background: '#0A0A0A', 
-      border: '2px solid #ffffff',
+      border: '1px solid #ffffff',
       isFooter: true // Add footer flag for section 6
     }] : [])
   ];
@@ -393,7 +393,7 @@ function ScrollSyncModel({
                           alt="LinkedIn" 
                           className="footer-linkedin-icon"
                         />
-                        <span className="footer-linkedin-text">LinkedIn</span>
+                        <span>LinkedIn</span>
                       </a>
                     </div>
                   </div>
