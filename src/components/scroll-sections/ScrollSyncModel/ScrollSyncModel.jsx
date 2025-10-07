@@ -81,7 +81,7 @@ function ScrollSyncModel({
           // Convert scroll delta to progress (both forward and backward)
           const delta = e.deltaY;
           setTextRevealProgress(prevProgress => {
-            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.01)));
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.002))); // Much slower: 0.005 -> 0.002
             console.log('Text reveal scroll:', newProgress, 'Delta:', delta);
             return newProgress;
           });
@@ -110,9 +110,18 @@ function ScrollSyncModel({
       const letters = document.querySelectorAll(".letter");
       if (letters.length > 0) {
         const totalLetters = letters.length;
-        const progressPerPhase = 0.25; // Each phase is 25% of total progress
-        const currentPhaseProgress = (textRevealProgress % progressPerPhase) / progressPerPhase;
-        const phaseNumber = Math.floor(textRevealProgress / progressPerPhase) + 1;
+        // Custom phase calculation: Phase 1 (0-25%), Phase 2 (25-50%), Phase 3 (50-100%)
+        let phaseNumber, currentPhaseProgress;
+        if (textRevealProgress < 0.25) {
+          phaseNumber = 1;
+          currentPhaseProgress = textRevealProgress / 0.25;
+        } else if (textRevealProgress < 0.5) {
+          phaseNumber = 2;
+          currentPhaseProgress = (textRevealProgress - 0.25) / 0.25;
+        } else {
+          phaseNumber = 3;
+          currentPhaseProgress = (textRevealProgress - 0.5) / 0.5;
+        }
 
         // Update current phase
         if (phaseNumber !== currentPhase) {
@@ -193,7 +202,8 @@ function ScrollSyncModel({
           // Get new letters after text switch
           const newLetters = document.querySelectorAll(".letter");
           // Phase 3 should complete the entire text (0-100% of new text)
-          const totalProgress = (textRevealProgress - 0.5) / 0.5; // Convert 50-75% to 0-100%
+          // Make progress more gradual and linear - use full 50-100% range
+          const totalProgress = Math.min(1, (textRevealProgress - 0.5) / 0.5); // Convert 50-100% to 0-100% gradually
           const revealCount = Math.floor(totalProgress * newLetters.length);
 
           newLetters.forEach((span, i) => {
@@ -223,25 +233,7 @@ function ScrollSyncModel({
           }
         }
 
-        // Phase 4: Just maintain the completed text (no new animation needed)
-        else if (phaseNumber === 4) {
-          const newLetters = document.querySelectorAll(".letter");
-
-          // Keep all letters visible
-          newLetters.forEach((span, i) => {
-            span.style.opacity = "1";
-            span.style.color = "#fff";
-            span.style.visibility = "visible";
-            span.classList.remove("active");
-          });
-
-          // Ensure scroll is unlocked
-          if (!textRevealComplete) {
-            setTextRevealComplete(true);
-            setIsScrollLocked(false);
-            console.log('Scroll unlocked! Phase 4 - text complete.');
-          }
-        }
+        // No Phase 4 needed - Phase 3 handles everything from 50-100%
       }
     }
   }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet]);
