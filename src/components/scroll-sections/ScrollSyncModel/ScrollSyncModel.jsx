@@ -21,19 +21,21 @@ function ScrollSyncModel({
   const [textRevealComplete, setTextRevealComplete] = React.useState(false);
   const [isScrollLocked, setIsScrollLocked] = React.useState(true);
   const [textRevealProgress, setTextRevealProgress] = React.useState(0);
+  const [currentPhase, setCurrentPhase] = React.useState(1); // 1, 2, 3, 4
+  const [currentTextSet, setCurrentTextSet] = React.useState(0); // 0 for original, 1 for new
 
-  // Auto-unlock scroll after 5 seconds to prevent permanent lock
+  // Auto-unlock scroll after 10 seconds to prevent permanent lock (only if not in middle of animation)
   useEffect(() => {
     const autoUnlockTimer = setTimeout(() => {
-      if (isScrollLocked && !textRevealComplete) {
-        console.log('Auto-unlocking scroll after 5 seconds');
+      if (isScrollLocked && !textRevealComplete && currentPhase === 4 && textRevealProgress >= 0.99) {
+        console.log('Auto-unlocking scroll after 10 seconds - Phase 4 nearly complete');
         setTextRevealComplete(true);
         setIsScrollLocked(false);
       }
-    }, 5000);
+    }, 10000);
 
     return () => clearTimeout(autoUnlockTimer);
-  }, [isScrollLocked, textRevealComplete]);
+  }, [isScrollLocked, textRevealComplete, currentPhase, textRevealProgress]);
 
   // Letter reveal animation effect
   useEffect(() => {
@@ -102,40 +104,147 @@ function ScrollSyncModel({
     };
   }, [isInitialized, isScrollLocked, textRevealComplete]);
 
-  // Trigger text reveal when progress changes
+  // Trigger text reveal when progress changes - Simple 4 Phase System
   useEffect(() => {
     if (isInitialized) {
       const letters = document.querySelectorAll(".letter");
       if (letters.length > 0) {
-        const revealCount = Math.floor(textRevealProgress * letters.length);
+        const totalLetters = letters.length;
+        const progressPerPhase = 0.25; // Each phase is 25% of total progress
+        const currentPhaseProgress = (textRevealProgress % progressPerPhase) / progressPerPhase;
+        const phaseNumber = Math.floor(textRevealProgress / progressPerPhase) + 1;
 
-        // Only unlock when ALL letters are revealed
-        const allLettersRevealed = revealCount >= letters.length;
+        // Update current phase
+        if (phaseNumber !== currentPhase) {
+          setCurrentPhase(phaseNumber);
+          console.log(`Phase ${phaseNumber} started`);
 
-        if (allLettersRevealed && !textRevealComplete) {
-          setTextRevealComplete(true);
-          setIsScrollLocked(false);
-          console.log('Text reveal complete! Scroll unlocked. Reveal count:', revealCount, 'Total letters:', letters.length);
+          // Switch to new text at the start of Phase 3
+          if (phaseNumber === 3 && currentTextSet === 0) {
+            setCurrentTextSet(1);
+            console.log('Switching to new text set');
+
+            // Re-initialize letters for new text - ensure all start invisible
+            setTimeout(() => {
+              const newRevealTexts = document.querySelectorAll(".reveal-text");
+              newRevealTexts.forEach(line => {
+                const text = line.textContent;
+                line.innerHTML = "";
+                for (let char of text) {
+                  const span = document.createElement("span");
+                  span.classList.add("letter");
+                  if (char === ' ') {
+                    span.innerHTML = "&nbsp;";
+                  } else {
+                    span.textContent = char;
+                  }
+                  // Ensure all letters start completely invisible
+                  span.style.opacity = "0";
+                  span.style.color = "#fff";
+                  span.style.visibility = "hidden";
+                  line.appendChild(span);
+                }
+              });
+              console.log('New text letters initialized - all invisible');
+            }, 1);
+          }
         }
 
-        letters.forEach((span, i) => {
-          if (i < revealCount) {
-            span.style.opacity = "1";
-            span.style.color = "#fff";
-            span.classList.remove("active");
-          } else if (i === revealCount && revealCount < letters.length) {
-            span.style.opacity = "1";
-            span.style.color = "#0020B0"; // Kahuna blue
-            span.classList.add("active");
-          } else {
-            span.style.opacity = "0";
-            span.style.color = "#fff";
-            span.classList.remove("active");
+        // Phase 1: Reveal original text from "vast" to "evolving"
+        if (phaseNumber === 1) {
+          const revealCount = Math.floor(currentPhaseProgress * totalLetters);
+
+          letters.forEach((span, i) => {
+            if (i < revealCount) {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            } else if (i === revealCount && revealCount < totalLetters) {
+              span.style.opacity = "1";
+              span.style.color = "#0020B0"; // Kahuna blue
+              span.classList.add("active");
+            } else {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            }
+          });
+        }
+
+        // Phase 2: Hide original text from "vast" to "evolving"
+        else if (phaseNumber === 2) {
+          const hideCount = Math.floor(currentPhaseProgress * totalLetters);
+
+          letters.forEach((span, i) => {
+            if (i < hideCount) {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            } else {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            }
+          });
+        }
+
+        // Phase 3: Show new text from "vast" position - COMPLETE THE ENTIRE TEXT
+        else if (phaseNumber === 3) {
+          // Get new letters after text switch
+          const newLetters = document.querySelectorAll(".letter");
+          // Phase 3 should complete the entire text (0-100% of new text)
+          const totalProgress = (textRevealProgress - 0.5) / 0.5; // Convert 50-75% to 0-100%
+          const revealCount = Math.floor(totalProgress * newLetters.length);
+
+          newLetters.forEach((span, i) => {
+            if (i < revealCount) {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.style.visibility = "visible";
+              span.classList.remove("active");
+            } else if (i === revealCount && revealCount < newLetters.length) {
+              span.style.opacity = "1";
+              span.style.color = "#0020B0"; // Kahuna blue
+              span.style.visibility = "visible";
+              span.classList.add("active");
+            } else {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.style.visibility = "hidden";
+              span.classList.remove("active");
+            }
+          });
+
+          // Unlock scroll when ALL letters are revealed (including complete "reality")
+          if (revealCount >= newLetters.length) {
+            setTextRevealComplete(true);
+            setIsScrollLocked(false);
+            console.log('Scroll unlocked! Word "reality" completely appeared in Phase 3.');
           }
-        });
+        }
+
+        // Phase 4: Just maintain the completed text (no new animation needed)
+        else if (phaseNumber === 4) {
+          const newLetters = document.querySelectorAll(".letter");
+
+          // Keep all letters visible
+          newLetters.forEach((span, i) => {
+            span.style.opacity = "1";
+            span.style.color = "#fff";
+            span.style.visibility = "visible";
+            span.classList.remove("active");
+          });
+
+          // Ensure scroll is unlocked
+          if (!textRevealComplete) {
+            setTextRevealComplete(true);
+            setIsScrollLocked(false);
+            console.log('Scroll unlocked! Phase 4 - text complete.');
+          }
+        }
       }
     }
-  }, [textRevealProgress, isInitialized, textRevealComplete]);
+  }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet]);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -264,12 +373,7 @@ function ScrollSyncModel({
         return;
       }
 
-      // Auto-unlock scroll when user scrolls past first section
-      if (isScrollLocked && !textRevealComplete && scrollTop > scrollContainer.clientHeight + 50) {
-        console.log('Auto-unlocking scroll as user scrolled past first section');
-        setTextRevealComplete(true);
-        setIsScrollLocked(false);
-      }
+      // Scroll remains locked until Phase 4 is complete - no auto-unlock
 
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
@@ -697,28 +801,57 @@ function ScrollSyncModel({
                 maxWidth: index === 0 ? '800px' : 'none'
               }}>
                 {index === 0 ? (
-                  // Custom text for first section with reveal animation
+                  // Custom text for first section with 4-phase reveal animation
                   <div>
-                    <h1 className="reveal-text" style={{
-                      fontSize: '3rem',
-                      letterSpacing: '2px',
-                      textAlign: 'center',
-                      margin: '10px 0',
-                      whiteSpace: 'nowrap',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                    }}>Vast and intricate</h1>
-                    <h1 className="reveal-text" style={{
-                      fontSize: '3rem',
-                      letterSpacing: '2px',
-                      textAlign: 'center',
-                      margin: '10px 0',
-                      whiteSpace: 'nowrap',
-                      fontWeight: '600',
-                      color: 'white',
-                      fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                    }}>product never stop evolving</h1>
+                    {currentTextSet === 0 ? (
+                      // Original text set
+                      <>
+                        <h1 className="reveal-text" style={{
+                          fontSize: '3rem',
+                          letterSpacing: '2px',
+                          textAlign: 'center',
+                          margin: '10px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                        }}>Vast and intricate</h1>
+                        <h1 className="reveal-text" style={{
+                          fontSize: '3rem',
+                          letterSpacing: '2px',
+                          textAlign: 'center',
+                          margin: '10px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                        }}>product never stop evolving</h1>
+                      </>
+                    ) : (
+                      // New text set
+                      <>
+                        <h1 className="reveal-text" style={{
+                          fontSize: '3rem',
+                          letterSpacing: '2px',
+                          textAlign: 'center',
+                          margin: '10px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                        }}>Enterprise customers have an</h1>
+                        <h1 className="reveal-text" style={{
+                          fontSize: '3rem',
+                          letterSpacing: '2px',
+                          textAlign: 'center',
+                          margin: '10px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                        }}>endless spectrum of reality</h1>
+                      </>
+                    )}
                   </div>
                 ) : (
                   // Original content for other sections
@@ -763,7 +896,12 @@ function ScrollSyncModel({
           color: 'rgba(255, 255, 255, 0.6)',
           fontSize: '0.875rem'
         }}>
-          {isScrollLocked && !textRevealComplete ? `Scroll to reveal text... (${(textRevealProgress * 100).toFixed(0)}%)` : scrollIndicatorText}
+          {isScrollLocked && !textRevealComplete ?
+            `Phase ${currentPhase}/4 - ${currentPhase === 1 ? 'Revealing text...' :
+              currentPhase === 2 ? 'Hiding text...' :
+                currentPhase === 3 ? 'New text appearing...' :
+                  'Finalizing...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
+            scrollIndicatorText}
         </div>
       )}
 
@@ -825,6 +963,8 @@ function ScrollSyncModel({
           <div>Text Reveal Status</div>
           <div>Scroll Locked: {isScrollLocked ? 'Yes' : 'No'}</div>
           <div>Text Complete: {textRevealComplete ? 'Yes' : 'No'}</div>
+          <div>Current Phase: {currentPhase}/4</div>
+          <div>Text Set: {currentTextSet === 0 ? 'Original' : 'New'}</div>
           <div>Reveal Progress: {(textRevealProgress * 100).toFixed(1)}%</div>
           <div>Letters Count: {document.querySelectorAll('.letter').length}</div>
         </div>
@@ -1024,6 +1164,86 @@ function ScrollSyncModel({
             }}
           >
             Debug Info
+          </button>
+          <button
+            onClick={() => {
+              console.log('Testing Phase Reset...');
+              setCurrentPhase(1);
+              setCurrentTextSet(0);
+              setTextRevealProgress(0);
+              setTextRevealComplete(false);
+              setIsScrollLocked(true);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Reset Phases
+          </button>
+          <button
+            onClick={() => {
+              console.log('Testing Phase 3...');
+              setCurrentPhase(3);
+              setCurrentTextSet(1);
+              setTextRevealProgress(0.5); // Start of Phase 3
+              setTextRevealComplete(false);
+              setIsScrollLocked(true);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Phase 3
+          </button>
+          <button
+            onClick={() => {
+              console.log('Testing Phase 4...');
+              setCurrentPhase(4);
+              setCurrentTextSet(1);
+              setTextRevealProgress(0.75); // Start of Phase 4
+              setTextRevealComplete(false);
+              setIsScrollLocked(true);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Phase 4
+          </button>
+          <button
+            onClick={() => {
+              console.log('Testing Reality Complete...');
+              setCurrentPhase(4);
+              setCurrentTextSet(1);
+              setTextRevealProgress(1.0); // Complete
+              setTextRevealComplete(false);
+              setIsScrollLocked(true);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(16, 185, 129, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Reality Complete
           </button>
         </div>
       )}
