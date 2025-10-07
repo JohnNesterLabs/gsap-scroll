@@ -8,7 +8,7 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/hero1.mp4"
+  videoSrc = "/hero5555.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
