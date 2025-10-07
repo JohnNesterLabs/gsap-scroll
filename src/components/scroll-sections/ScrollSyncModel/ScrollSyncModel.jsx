@@ -451,7 +451,7 @@ function ScrollSyncModel({
                 />
                 <div style={{ marginBottom: '50px' }}>
                   <div style={{
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                     fontSize: '3.5rem',
                     fontWeight: '600',
                     lineHeight: '1.1',
@@ -475,7 +475,7 @@ function ScrollSyncModel({
                     {/* Technology Column */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <h3 style={{
-                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                         fontSize: '0.875rem',
                         fontWeight: '500',
                         letterSpacing: '0.1em',
@@ -485,15 +485,15 @@ function ScrollSyncModel({
                         margin: '0 0 12px 0'
                       }}>TECHNOLOGY</h3>
                       <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/technology/frontline-productivity" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Frontline Productivity</a></li>
-                        <li><a href="/technology/agentic-ai-impact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Estimate Agentic AI Impact</a></li>
+                        <li><a href="/technology/frontline-productivity" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Frontline Productivity</a></li>
+                        <li><a href="/technology/agentic-ai-impact" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Estimate Agentic AI Impact</a></li>
                       </ul>
                     </div>
 
                     {/* Company Column */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <h3 style={{
-                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                         fontSize: '0.875rem',
                         fontWeight: '500',
                         letterSpacing: '0.1em',
@@ -503,15 +503,15 @@ function ScrollSyncModel({
                         margin: '0 0 12px 0'
                       }}>COMPANY</h3>
                       <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/contact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Contact us</a></li>
-                        <li><a href="/careers" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Careers</a></li>
+                        <li><a href="/contact" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Contact us</a></li>
+                        <li><a href="/careers" style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Careers</a></li>
                       </ul>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
+                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
                         <div style={{ width: '20px', height: '20px', backgroundColor: '#838485', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000000', fontFamily: "'Inter', sans-serif" }}>in</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000000', fontFamily: "'Prodigy Sans', sans-serif" }}>in</span>
                         </div>
                         <span>LinkedIn</span>
                       </a>
@@ -522,17 +522,17 @@ function ScrollSyncModel({
                   <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <img src="/final-logo.svg" alt="Kahuna Labs" style={{ width: '34px', height: '38px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                      <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span>
+                      <span style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Copyright Line */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
+                  <div style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
                     All rights reserved to Kahuna Labs. Copyright © 2025.
                   </div>
-                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
+                  <div style={{ fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
                     Made by Nester Labs
                   </div>
                 </div>
