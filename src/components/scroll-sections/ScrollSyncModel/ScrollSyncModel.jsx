@@ -19,11 +19,6 @@ function ScrollSyncModel({
   const [videoVisible, setVideoVisible] = React.useState(false);
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
-  const [overlayVisible, setOverlayVisible] = React.useState(true);
-  const [overlayElements, setOverlayElements] = React.useState({
-    text1: { opacity: 0, y: -100 },
-    text2: { opacity: 0, y: -100 }
-  });
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -217,30 +212,6 @@ function ScrollSyncModel({
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.2);
 
-      // Animate transparent overlay text sliding down from top when page loads
-      if (scrollProgress < 0.1) {
-        const animationProgress = Math.min(scrollProgress / 0.1, 1); // 0 to 1 over first 10% of scroll
-
-        setOverlayElements({
-          text1: {
-            opacity: animationProgress,
-            y: -100 + (100 * animationProgress) // Slide from -100px to 0px
-          },
-          text2: {
-            opacity: animationProgress, // Same timing as text1
-            y: -100 + (100 * animationProgress)
-          }
-        });
-      } else {
-        // Keep elements visible after animation completes
-        setOverlayElements({
-          text1: { opacity: 1, y: 0 },
-          text2: { opacity: 1, y: 0 }
-        });
-      }
-
-      // Hide overlay after animation completes (after 20% scroll)
-      setOverlayVisible(scrollProgress < 0.2);
 
       console.log('Video position and size updated:', {
         x: newX,
@@ -317,59 +288,6 @@ function ScrollSyncModel({
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
-      {/* Transparent Text Overlay - Slides down from top when page loads */}
-      {overlayVisible && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'transparent',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          transition: 'opacity 0.5s ease-out',
-          pointerEvents: 'none'
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '1rem',
-            textAlign: 'center'
-          }}>
-            <h1 style={{
-              fontSize: '4rem',
-              fontWeight: '300',
-              color: 'white',
-              margin: '0',
-              lineHeight: '1.1',
-              letterSpacing: '-0.02em',
-              opacity: overlayElements.text1.opacity,
-              transform: `translateY(${overlayElements.text1.y}px)`,
-              transition: 'all 0.1s ease-out'
-            }}>
-              vast and intricate
-            </h1>
-            <h2 style={{
-              fontSize: '3rem',
-              fontWeight: '300',
-              color: 'rgba(255, 255, 255, 0.8)',
-              margin: '0',
-              lineHeight: '1.2',
-              letterSpacing: '-0.01em',
-              opacity: overlayElements.text2.opacity,
-              transform: `translateY(${overlayElements.text2.y}px)`,
-              transition: 'all 0.1s ease-out'
-            }}>
-              product never stops evolving
-            </h2>
-          </div>
-        </div>
-      )}
       {/* Debug Info */}
       {showDebugInfo && (
         <div style={{
