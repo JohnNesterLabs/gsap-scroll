@@ -104,7 +104,7 @@ function ScrollSyncModel({
     };
   }, [isInitialized, isScrollLocked, textRevealComplete]);
 
-  // Trigger text reveal when progress changes - Single Unified Timeline
+  // Trigger text reveal when progress changes - Single Unified Timeline with proper rewind support
   useEffect(() => {
     if (isInitialized) {
       const letters = document.querySelectorAll(".letter");
@@ -129,10 +129,10 @@ function ScrollSyncModel({
           setCurrentPhase(phaseNumber);
           console.log(`Phase ${phaseNumber} started`);
 
-          // Switch to new text at the start of Phase 3 (60% progress)
+          // Switch to new text at the start of Phase 3 (60% progress) - FORWARD DIRECTION
           if (phaseNumber === 3 && currentTextSet === 0) {
             setCurrentTextSet(1);
-            console.log('Switching to new text set at 60% progress');
+            console.log('Switching to new text set at 60% progress (forward)');
 
             // Re-initialize letters for new text - ensure all start invisible
             setTimeout(() => {
@@ -158,6 +158,35 @@ function ScrollSyncModel({
               console.log('New text letters initialized - all invisible');
             }, 1);
           }
+          // Switch back to original text when going back to Phase 2 (60% progress) - REVERSE DIRECTION
+          else if (phaseNumber === 2 && currentTextSet === 1) {
+            setCurrentTextSet(0);
+            console.log('Switching back to original text set at 60% progress (reverse)');
+
+            // Re-initialize letters for original text - ensure all start invisible
+            setTimeout(() => {
+              const newRevealTexts = document.querySelectorAll(".reveal-text");
+              newRevealTexts.forEach(line => {
+                const text = line.textContent;
+                line.innerHTML = "";
+                for (let char of text) {
+                  const span = document.createElement("span");
+                  span.classList.add("letter");
+                  if (char === ' ') {
+                    span.innerHTML = "&nbsp;";
+                  } else {
+                    span.textContent = char;
+                  }
+                  // Ensure all letters start completely invisible
+                  span.style.opacity = "0";
+                  span.style.color = "#fff";
+                  span.style.visibility = "hidden";
+                  line.appendChild(span);
+                }
+              });
+              console.log('Original text letters re-initialized - all invisible');
+            }, 1);
+          }
         }
 
         // Phase 1 (0-40%): Reveal original text "vast to evolving"
@@ -168,49 +197,9 @@ function ScrollSyncModel({
             if (i < revealCount) {
               span.style.opacity = "1";
               span.style.color = "#fff";
-              span.classList.remove("active");
-            } else if (i === revealCount && revealCount < totalLetters) {
-              span.style.opacity = "1";
-              span.style.color = "#0020B0"; // Kahuna blue
-              span.classList.add("active");
-            } else {
-              span.style.opacity = "0";
-              span.style.color = "#fff";
-              span.classList.remove("active");
-            }
-          });
-        }
-
-        // Phase 2 (40-60%): Hide original text "vast to evolving"
-        else if (phaseNumber === 2) {
-          const hideCount = Math.floor(currentPhaseProgress * totalLetters);
-
-          letters.forEach((span, i) => {
-            if (i < hideCount) {
-              span.style.opacity = "0";
-              span.style.color = "#fff";
-              span.classList.remove("active");
-            } else {
-              span.style.opacity = "1";
-              span.style.color = "#fff";
-              span.classList.remove("active");
-            }
-          });
-        }
-
-        // Phase 3 (60-100%): Show new text "enterprise to reality"
-        else if (phaseNumber === 3) {
-          // Get new letters after text switch
-          const newLetters = document.querySelectorAll(".letter");
-          const revealCount = Math.floor(currentPhaseProgress * newLetters.length);
-
-          newLetters.forEach((span, i) => {
-            if (i < revealCount) {
-              span.style.opacity = "1";
-              span.style.color = "#fff";
               span.style.visibility = "visible";
               span.classList.remove("active");
-            } else if (i === revealCount && revealCount < newLetters.length) {
+            } else if (i === revealCount && revealCount < totalLetters) {
               span.style.opacity = "1";
               span.style.color = "#0020B0"; // Kahuna blue
               span.style.visibility = "visible";
@@ -223,11 +212,76 @@ function ScrollSyncModel({
             }
           });
 
-          // Unlock scroll when ALL letters are revealed (including complete "reality")
-          if (revealCount >= newLetters.length) {
+          // Re-lock scroll when going back to Phase 1
+          if (textRevealComplete) {
+            setTextRevealComplete(false);
+            setIsScrollLocked(true);
+            console.log('Scroll re-locked! Going back to Phase 1.');
+          }
+        }
+
+        // Phase 2 (40-60%): Hide original text "vast to evolving" - works in both directions
+        else if (phaseNumber === 2) {
+          const hideCount = Math.floor(currentPhaseProgress * totalLetters);
+
+          letters.forEach((span, i) => {
+            if (i < hideCount) {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.style.visibility = "hidden";
+              span.classList.remove("active");
+            } else {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.style.visibility = "visible";
+              span.classList.remove("active");
+            }
+          });
+
+          // Re-lock scroll when going back to Phase 2
+          if (textRevealComplete) {
+            setTextRevealComplete(false);
+            setIsScrollLocked(true);
+            console.log('Scroll re-locked! Going back to Phase 2.');
+          }
+        }
+
+        // Phase 3 (60-100%): Show new text "enterprise to reality" - works in both directions
+        else if (phaseNumber === 3) {
+          // Get current letters (could be new text or original text depending on direction)
+          const currentLetters = document.querySelectorAll(".letter");
+          const revealCount = Math.floor(currentPhaseProgress * currentLetters.length);
+
+          currentLetters.forEach((span, i) => {
+            if (i < revealCount) {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.style.visibility = "visible";
+              span.classList.remove("active");
+            } else if (i === revealCount && revealCount < currentLetters.length) {
+              span.style.opacity = "1";
+              span.style.color = "#0020B0"; // Kahuna blue
+              span.style.visibility = "visible";
+              span.classList.add("active");
+            } else {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.style.visibility = "hidden";
+              span.classList.remove("active");
+            }
+          });
+
+          // Unlock scroll when ALL letters are revealed (including complete "reality") - only in forward direction
+          if (revealCount >= currentLetters.length && currentTextSet === 1) {
             setTextRevealComplete(true);
             setIsScrollLocked(false);
             console.log('Scroll unlocked! Word "reality" completely appeared in Phase 3.');
+          }
+          // Re-lock scroll when going back from complete state
+          else if (revealCount < currentLetters.length && textRevealComplete) {
+            setTextRevealComplete(false);
+            setIsScrollLocked(true);
+            console.log('Scroll re-locked! Going back from complete state.');
           }
         }
       }
