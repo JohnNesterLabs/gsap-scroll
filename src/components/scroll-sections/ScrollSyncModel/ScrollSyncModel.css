@@ -31,6 +31,23 @@
   object-fit: contain;
 }
 
+/* Full-screen PNG sequence canvas */
+.frame-sequence-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  pointer-events: none;
+  object-fit: cover;
+  image-rendering: high-quality;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+}
+
 /* Header styles */
 .header {
   position: fixed;

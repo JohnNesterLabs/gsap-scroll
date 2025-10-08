@@ -43,20 +43,57 @@ function ScrollSyncModel({
     const ctx = canvas.getContext('2d');
     const img = preloadFrame(frameNumber);
 
-    img.onload = () => {
-      // Set canvas size to match image
-      canvas.width = img.width;
-      canvas.height = img.height;
+    const drawImageToFullScreen = () => {
+      // Set canvas size to full viewport
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      
+      // Calculate scaling to completely fill screen (crop if necessary)
+      const imgAspect = img.width / img.height;
+      const canvasAspect = canvas.width / canvas.height;
+      
+      let drawWidth, drawHeight, sourceX, sourceY, sourceWidth, sourceHeight;
+      
+      if (imgAspect > canvasAspect) {
+        // Image is wider - crop sides to fill height
+        drawHeight = canvas.height;
+        drawWidth = canvas.width;
+        
+        // Calculate source crop area to maintain aspect ratio
+        sourceHeight = img.height;
+        sourceWidth = img.height * canvasAspect;
+        sourceX = (img.width - sourceWidth) / 2;
+        sourceY = 0;
+      } else {
+        // Image is taller - crop top/bottom to fill width
+        drawWidth = canvas.width;
+        drawHeight = canvas.height;
+        
+        // Calculate source crop area to maintain aspect ratio
+        sourceWidth = img.width;
+        sourceHeight = img.width / canvasAspect;
+        sourceX = 0;
+        sourceY = (img.height - sourceHeight) / 2;
+      }
+      
+      // Draw image scaled and cropped to fill entire screen
+      ctx.drawImage(
+        img,
+        sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle (crop area)
+        0, 0, drawWidth, drawHeight                   // Destination rectangle (full screen)
+      );
+    };
+
+    img.onload = () => {
+      drawImageToFullScreen();
     };
 
     // If image is already loaded, draw it immediately
     if (img.complete) {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      drawImageToFullScreen();
     }
   };
 
@@ -73,6 +110,20 @@ function ScrollSyncModel({
     renderFrame(currentFrame);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFrame]);
+
+  // Handle window resize for full-screen canvas
+  useEffect(() => {
+    const handleResize = () => {
+      if (isInSection5 && currentFrame > 0) {
+        // Redraw the current frame when window resizes
+        renderFrame(currentFrame);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInSection5, currentFrame]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
@@ -243,6 +294,46 @@ function ScrollSyncModel({
       };
       
       return rotationConfigs[viewport] || rotationConfigs['desktop'];
+    };
+
+    // Get PNG sequence configuration based on viewport
+    const getPNGSequenceConfig = () => {
+      const viewport = getViewportSize();
+      
+      const pngSequenceConfigs = {
+        'mobile-small': {
+          startSection: 4,        // Start in Section 5 (index 4)
+          startProgress: 0.2,     // Start when 20% into Section 5
+          endSection: 4,          // End in Section 5 (index 4)
+          endProgress: 1.0        // End at 100% of Section 5
+        },
+        'mobile-large': {
+          startSection: 4,
+          startProgress: 0.2,
+          endSection: 4,
+          endProgress: 1.0
+        },
+        'tablet': {
+          startSection: 4,
+          startProgress: 0.2,
+          endSection: 4,
+          endProgress: 1.0
+        },
+        'desktop': {
+          startSection: 4,        // Start in Section 5 (index 4)
+          startProgress: 0.0,     // Start immediately when entering Section 5
+          endSection: 4,          // End in Section 5 (index 4)
+          endProgress: 1.0        // End at 100% of Section 5
+        },
+        'large-desktop': {
+          startSection: 4,
+          startProgress: 0.0,
+          endSection: 4,
+          endProgress: 1.0
+        }
+      };
+      
+      return pngSequenceConfigs[viewport] || pngSequenceConfigs['desktop'];
     };
 
     // Add window resize listener to recalculate video sizes and positions on viewport change
@@ -476,26 +567,51 @@ function ScrollSyncModel({
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.04);
 
-      // Calculate frame for section 5 based on scroll progress within that section
-      if (currentSection === 4) {
-        // Section 5 (index 4)
+      // Calculate PNG sequence visibility and frame based on configuration
+      const pngConfig = getPNGSequenceConfig();
+      const shouldShowPNG = (() => {
+        // Check if we're in the start section and past the start progress
+        if (currentSection === pngConfig.startSection && sectionProgress >= pngConfig.startProgress) {
+          return true;
+        }
+        // Check if we're transitioning to the start section and should start
+        if (currentSection === pngConfig.startSection - 1 && nextSection === pngConfig.startSection && sectionProgress >= 0.8) {
+          return true;
+        }
+        // Check if we're past the end section or past the end progress
+        if (currentSection > pngConfig.endSection || 
+            (currentSection === pngConfig.endSection && sectionProgress > pngConfig.endProgress)) {
+          return false;
+        }
+        return false;
+      })();
+
+      if (shouldShowPNG) {
         setIsInSection5(true);
-        // Calculate frame based on progress within section 5 (0 to 1)
+        
+        // Calculate frame number based on progress within the PNG sequence range
+        let sequenceProgress = 0;
+        
+        if (currentSection === pngConfig.startSection) {
+          // We're in the start section
+          sequenceProgress = (sectionProgress - pngConfig.startProgress) / (pngConfig.endProgress - pngConfig.startProgress);
+        } else if (currentSection === pngConfig.startSection - 1 && nextSection === pngConfig.startSection) {
+          // We're transitioning to the start section
+          sequenceProgress = 0; // Start with first frame
+        }
+        
+        // Clamp sequence progress between 0 and 1
+        sequenceProgress = Math.max(0, Math.min(1, sequenceProgress));
+        
         const frameNumber = Math.min(
-          Math.max(1, Math.floor(sectionProgress * totalFrames) + 1),
+          Math.max(1, Math.floor(sequenceProgress * totalFrames) + 1),
           totalFrames
         );
+        
         setCurrentFrame(frameNumber);
         renderFrame(frameNumber);
-        console.log('Section 5 - Frame:', frameNumber, 'Progress:', sectionProgress);
-      } else if (currentSection === 3 && nextSection === 4) {
-        // Transitioning TO section 5 - start with frame 1
-        setIsInSection5(true);
-        setCurrentFrame(1);
-        renderFrame(1);
-        console.log('Transitioning to Section 5 - Frame:', 1);
+        console.log('PNG Sequence - Frame:', frameNumber, 'Sequence Progress:', sequenceProgress, 'Section Progress:', sectionProgress);
       } else {
-        // Not in section 5
         setIsInSection5(false);
       }
 
@@ -590,8 +706,24 @@ function ScrollSyncModel({
           <div>Rotation: {videoPosition.rotation.toFixed(1)}°</div>
           <div>Size: {videoSize.width}px</div>
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
-          <div>Section 5: {isInSection5 ? '✓' : '✗'}</div>
+          <div>PNG Sequence: {isInSection5 ? '✓' : '✗'}</div>
           <div>Frame: {currentFrame}/{totalFrames}</div>
+          <div>Start Section: {(() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0 } : { startSection: 4, startProgress: 0.2 };
+            return config.startSection + 1;
+          })()}</div>
+          <div>Start Progress: {(() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startProgress: 0.0 } : { startProgress: 0.2 };
+            return (config.startProgress * 100).toFixed(0) + '%';
+          })()}</div>
           {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
@@ -609,22 +741,19 @@ function ScrollSyncModel({
         }}
       />
 
-      {/* Frame Sequence Canvas for Section 5 */}
+      {/* Frame Sequence Canvas for Section 5 - Full Screen */}
       <canvas
         ref={canvasRef}
         className="frame-sequence-canvas"
         style={{
           position: 'fixed',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          width: 'auto',
-          height: 'auto',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
           zIndex: 10,
           pointerEvents: 'none',
-          // Show during section 5 using state variable
+          // Show PNG sequence based on configuration
           opacity: isInSection5 ? 1 : 0,
           transition: 'opacity 0.3s ease'
         }}
@@ -880,6 +1009,23 @@ function ScrollSyncModel({
         </button>
         <button
           onClick={() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0, endSection: 4, endProgress: 1.0 } : { startSection: 4, startProgress: 0.2, endSection: 4, endProgress: 1.0 };
+            console.log('PNG Sequence Config:', config);
+            console.log('Current Section:', Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+            console.log('Section Progress:', scrollProgress * (showFooter ? 6 : 5) - Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+            console.log('Should Show PNG:', isInSection5);
+            console.log('Current Frame:', currentFrame);
+          }}
+          className="debug-button blue"
+        >
+          PNG Debug Info
+        </button>
+        <button
+          onClick={() => {
             console.log('Video element:', videoRef.current);
             console.log('Video position state:', videoPosition);
             console.log('Scroll progress:', scrollProgress);
@@ -897,7 +1043,7 @@ function ScrollSyncModel({
           }}
           className="debug-button blue"
         >
-          Debug Info
+          Video Debug Info
         </button>
       </div>
       )}

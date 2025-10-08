@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
-import ScrollSyncModelGsap from './components/scroll-sections/ScrollSyncModelGsap/ScrollSyncModelGsap';
 import { loadProdigySansFonts } from './fonts';
 
 // Load fonts before rendering
@@ -13,9 +11,7 @@ loadProdigySansFonts();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ScrollSyncModel/>
-    {/* <ScrollSyncModelGsap/> */}
-    {/* <App /> */}
+    <App />
   </React.StrictMode>
 );
 
