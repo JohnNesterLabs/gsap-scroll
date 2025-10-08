@@ -68,10 +68,10 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
-          section1: { width: 1300, height: 'auto' },
-          section2: { width: 1300, height: 'auto' },
+          section1: { width: 1100, height: 'auto' },
+          section2: { width: 1100, height: 'auto' },
           section3: { width: 1600, height: 'auto' },
-          section4: { width: 800, height: 'auto' },
+          section4: { width: 680, height: 'auto' },
           section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
@@ -121,7 +121,7 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'desktop': [
-          { x: 50, y: 105 },     // Section 1 - Bottom (your laptop config)
+          { x: 50, y: 135 },     // Section 1 - Bottom (your laptop config)
           { x: 95, y: 75 },      // Section 2 - Right
           { x: 50, y: 50 },      // Section 3 - Center
           { x: 50, y: 50 },      // Section 4 - Left
@@ -129,7 +129,7 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'large-desktop': [
-          { x: 50, y: 120 },     // Section 1 - Slightly higher for large screens
+          { x: 50, y: 135 },     // Section 1 - Slightly higher for large screens
           { x: 96, y: 55 },      // Section 2 - Right (more extreme)
           { x: 50, y: 50 },      // Section 3 - Center
           { x: 50, y: 50 },       // Section 4 - Left (more extreme)
