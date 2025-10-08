@@ -418,6 +418,9 @@
   .footer-tagline {
     margin-bottom: 117px;
   }
+  .footer-logo-bg{
+    left: 80px;
+  }
   
   .footer-tagline-text {
     font-size: 56px;
@@ -500,7 +503,7 @@
     width: 180px !important;
     height: 200px !important;
     top: -90px !important;
-    left: 2.5rem !important;
+    left: 60px !important;
   }
 }
 

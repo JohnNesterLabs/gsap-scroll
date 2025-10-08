@@ -44,11 +44,11 @@ function ScrollSyncModel({
       
       const configs = {
         'mobile-small': {
-          section1: { width: 980, height: 'auto' },
+          section1: { width: 950, height: 'auto' },
           section2: { width: 900, height: 'auto' },
-          section3: { width: 320, height: 'auto' },
-          section4: { width: 250, height: 'auto' },
-          section5: { width: 200, height: 'auto' },
+          section3: { width: 920, height: 'auto' },
+          section4: { width: 350, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'mobile-large': {
@@ -60,19 +60,19 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'tablet': {
-          section1: { width: 600, height: 'auto' },
-          section2: { width: 650, height: 'auto' },
-          section3: { width: 750, height: 'auto' },
+          section1: { width: 900, height: 'auto' },
+          section2: { width: 950, height: 'auto' },
+          section3: { width: 1150, height: 'auto' },
           section4: { width: 500, height: 'auto' },
-          section5: { width: 450, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
-          section1: { width: 1100, height: 'auto' },
-          section2: { width: 1100, height: 'auto' },
-          section3: { width: 1300, height: 'auto' },
-          section4: { width: 600, height: 'auto' },
-          section5: { width: 600, height: 'auto' },
+          section1: { width: 1300, height: 'auto' },
+          section2: { width: 1300, height: 'auto' },
+          section3: { width: 1600, height: 'auto' },
+          section4: { width: 800, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
@@ -97,10 +97,10 @@ function ScrollSyncModel({
       
       const positionConfigs = {
         'mobile-small': [
-          { x: 50, y: 50 },      // Section 1 - Center (mobile optimized)
-          { x: 85, y: 50 },      // Section 2 - Right (closer to center on mobile)
+          { x: 50, y: 125 },      // Section 1 - Center (mobile optimized)
+          { x: 115, y: 70 },      // Section 2 - Right (closer to center on mobile)
           { x: 50, y: 50 },      // Section 3 - Center
-          { x: 15, y: 50 },      // Section 4 - Left (closer to center on mobile)
+          { x: 50, y: 50 },      // Section 4 - Left (closer to center on mobile)
           { x: 50, y: 50 },      // Section 5 - Center
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
@@ -113,16 +113,16 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'tablet': [
-          { x: 50, y: 50 },      // Section 1 - Center
-          { x: 92, y: 55 },      // Section 2 - Right
+          { x: 50, y: 100 },      // Section 1 - Center
+          { x: 92, y: 75 },      // Section 2 - Right
           { x: 50, y: 50 },      // Section 3 - Center
-          { x: 8, y: 50 },       // Section 4 - Left
+          { x: 50, y: 50 },       // Section 4 - Left
           { x: 50, y: 50 },      // Section 5 - Center
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'desktop': [
-          { x: 50, y: 135 },     // Section 1 - Bottom (your laptop config)
-          { x: 95, y: 60 },      // Section 2 - Right
+          { x: 50, y: 105 },     // Section 1 - Bottom (your laptop config)
+          { x: 95, y: 75 },      // Section 2 - Right
           { x: 50, y: 50 },      // Section 3 - Center
           { x: 50, y: 50 },      // Section 4 - Left
           { x: 50, y: 50 },      // Section 5 - Top
@@ -132,7 +132,7 @@ function ScrollSyncModel({
           { x: 50, y: 120 },     // Section 1 - Slightly higher for large screens
           { x: 96, y: 55 },      // Section 2 - Right (more extreme)
           { x: 50, y: 50 },      // Section 3 - Center
-          { x: 4, y: 50 },       // Section 4 - Left (more extreme)
+          { x: 50, y: 50 },       // Section 4 - Left (more extreme)
           { x: 50, y: 50 },      // Section 5 - Center
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ]
