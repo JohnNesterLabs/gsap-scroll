@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import './ScrollSyncModel.css';
 
-function ScrollSyncModel({ 
-  showScrollIndicator = false, 
+function ScrollSyncModel({
+  showScrollIndicator = false,
   showDebugControls = false,
   showDebugInfo = false,
   showHeader = true,
@@ -71,14 +71,14 @@ function ScrollSyncModel({
   // Render frame when currentFrame changes
   useEffect(() => {
     renderFrame(currentFrame);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFrame]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
     const getViewportSize = () => {
       const width = window.innerWidth;
-      
+
       if (width <= 480) {
         return 'mobile-small';
       } else if (width <= 767) {
@@ -95,7 +95,7 @@ function ScrollSyncModel({
     // Responsive video size configuration based on viewport
     const getVideoSizeConfig = () => {
       const viewport = getViewportSize();
-      
+
       const configs = {
         'mobile-small': {
           section1: { width: 950, height: 'auto' },
@@ -138,7 +138,7 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         }
       };
-      
+
       return configs[viewport] || configs['desktop'];
     };
 
@@ -148,7 +148,7 @@ function ScrollSyncModel({
     // Get responsive position configuration based on viewport
     const getPositionConfig = () => {
       const viewport = getViewportSize();
-      
+
       const positionConfigs = {
         'mobile-small': [
           { x: 50, y: 125 },      // Section 1 - Center (mobile optimized)
@@ -191,14 +191,14 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ]
       };
-      
+
       return positionConfigs[viewport] || positionConfigs['desktop'];
     };
 
     // Get responsive rotation configuration based on viewport
     const getRotationConfig = () => {
       const viewport = getViewportSize();
-      
+
       const rotationConfigs = {
         'mobile-small': [
           0,      // Section 1 - Normal position
@@ -241,7 +241,7 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ]
       };
-      
+
       return rotationConfigs[viewport] || rotationConfigs['desktop'];
     };
 
@@ -251,45 +251,45 @@ function ScrollSyncModel({
       const newConfig = getVideoSizeConfig();
       const newPositions = getPositionConfig();
       const newRotations = getRotationConfig();
-      
+
       // Update video size and position if we're currently in a section
       if (videoRef.current && scrollContainerRef.current) {
         const scrollContainer = scrollContainerRef.current;
         const scrollTop = scrollContainer.scrollTop;
         const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
         const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
-        
+
         const totalSections = showFooter ? 6 : 5;
         const sectionIndex = scrollProgress * (totalSections - 1);
         const currentSection = Math.floor(sectionIndex);
         const nextSection = Math.min(currentSection + 1, totalSections - 1);
         const sectionProgress = sectionIndex - currentSection;
-        
+
         // Update video size
-        const sizeKeys = showFooter ? 
+        const sizeKeys = showFooter ?
           ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
           ['section1', 'section2', 'section3', 'section4', 'section5'];
         const currentSizeKey = sizeKeys[currentSection];
         const nextSizeKey = sizeKeys[nextSection];
-        
+
         if (newConfig[currentSizeKey] && newConfig[nextSizeKey]) {
           const currentSize = newConfig[currentSizeKey];
           const nextSize = newConfig[nextSizeKey];
           const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
           setVideoSize({ width: newWidth, height: 'auto' });
         }
-        
+
         // Update video position
         const currentPos = newPositions[currentSection];
         const nextPos = newPositions[nextSection];
         const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
         const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
-        
+
         // Update video rotation
         const currentRotation = newRotations[currentSection];
         const nextRotation = newRotations[nextSection];
         const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
-        
+
         // Scale effect - set section 5 to 0.8 scale, hide video in section 6
         let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
         if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
@@ -298,7 +298,7 @@ function ScrollSyncModel({
         if (currentSection === 5) {
           scale = 0;
         }
-        
+
         setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       }
     };
@@ -383,10 +383,10 @@ function ScrollSyncModel({
 
         // Use passive listener for better performance during scroll
         scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         // Add window resize listener for responsive video sizing
         window.addEventListener('resize', handleResize, { passive: true });
-        
+
         handleScroll(); // Set initial position
 
         console.log('Scroll listener attached successfully');
@@ -457,7 +457,7 @@ function ScrollSyncModel({
       }
 
       // Dynamic video sizing based on section
-      const sizeKeys = showFooter ? 
+      const sizeKeys = showFooter ?
         ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
         ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
@@ -499,10 +499,10 @@ function ScrollSyncModel({
         setIsInSection5(false);
       }
 
-      console.log('Video position and size updated:', { 
-        x: newX, 
-        y: newY, 
-        scale, 
+      console.log('Video position and size updated:', {
+        x: newX,
+        y: newY,
+        scale,
         rotation: newRotation,
         width: newWidth,
         section: currentSection,
@@ -530,12 +530,12 @@ function ScrollSyncModel({
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
 
-    // Cleanup
-    return () => {
+        // Cleanup
+        return () => {
           isMounted = false;
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('resize', handleResize);
+          if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleResize);
           }
         };
       } catch (error) {
@@ -551,15 +551,15 @@ function ScrollSyncModel({
     return () => {
       isMounted = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFooter, showHeader]);
 
 
   const sections = [
-    { 
-      title: 'Section 1', 
-      subtitle: 'Model at Center', 
-      background: '#000000', 
+    {
+      title: 'Section 1',
+      subtitle: 'Model at Center',
+      background: '#000000',
       border: '1px solid #ffffff',
       hasHeader: showHeader // Use prop for header visibility
     },
@@ -567,10 +567,10 @@ function ScrollSyncModel({
     { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '1px solid #ffffff' },
     { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '1px solid #ffffff' },
     { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '1x solid #ffffff' },
-    ...(showFooter ? [{ 
-      title: 'Footer', 
-      subtitle: 'Contact & Links', 
-      background: '#0A0A0A', 
+    ...(showFooter ? [{
+      title: 'Footer',
+      subtitle: 'Contact & Links',
+      background: '#0A0A0A',
       border: '1px solid #ffffff',
       isFooter: true // Add footer flag for section 6
     }] : [])
@@ -634,15 +634,15 @@ function ScrollSyncModel({
       <div className={`header ${headerVisible ? 'visible' : 'hidden'}`}>
         {/* Left Logo */}
         <div className="header-left">
-          <img 
+          <img
             src="/kahuna-logo-3.svg"
-            alt="Kahuna Logo" 
+            alt="Kahuna Logo"
             className="header-logo"
           />
         </div>
 
         {/* Right Let's Talk Button */}
-        <button 
+        <button
           onClick={() => {
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
@@ -652,9 +652,9 @@ function ScrollSyncModel({
           Let's Talk
         </button>
       </div>
-      
+
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="scroll-container"
       >
@@ -671,9 +671,9 @@ function ScrollSyncModel({
               // Footer UI from HeroScroll
               <div className="footer-container">
                 {/* Main Tagline Section */}
-                <img 
-                  src="/final-logo.svg" 
-                  alt="Kahuna Labs" 
+                <img
+                  src="/final-logo.svg"
+                  alt="Kahuna Labs"
                   className="footer-logo-bg"
                 />
                 <div className="footer-tagline">
@@ -706,9 +706,9 @@ function ScrollSyncModel({
 
                     <div className="footer-column">
                       <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
-                        <img 
-                          src="/LinkedIn-Icon.png" 
-                          alt="LinkedIn" 
+                        <img
+                          src="/LinkedIn-Icon.png"
+                          alt="LinkedIn"
                           className="footer-linkedin-icon"
                         />
                         <span>LinkedIn</span>
@@ -736,16 +736,26 @@ function ScrollSyncModel({
               </div>
             ) : (
               // Regular section content
-            <div className="section-content">
-                <div className="section-number">SECTION {index + 1}</div>
-              <h2 className="section-title">{section.title}</h2>
-              <p className="section-subtitle">{section.subtitle}</p>
-              <div className="section-scroll-hint">
-                <p className="section-scroll-text">
-                  Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
-                </p>
+              <div className={`section-content ${index === 0 ? 'section-first' : ''}`}>
+                {index === 0 ? (
+                  // Text content for first section
+                  <div className="hero-text-content">
+                    <div className="hero-line-1">Vast and intricate</div>
+                    <div className="hero-line-2">product never stop evolving.</div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="section-number">SECTION {index + 1}</div>
+                    <h2 className="section-title">{section.title}</h2>
+                    <p className="section-subtitle">{section.subtitle}</p>
+                    <div className="section-scroll-hint">
+                      <p className="section-scroll-text">
+                        Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
             )}
           </div>
         ))}
@@ -753,7 +763,7 @@ function ScrollSyncModel({
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div className="scroll-indicator">
+        <div className="scroll-indicator">
           {scrollIndicatorText}
         </div>
       )}
@@ -761,145 +771,145 @@ function ScrollSyncModel({
       {/* Debug Controls */}
       {showDebugControls && (
         <div className={`debug-controls ${debugControlsPosition}`}>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
-            console.log('Manual position set to right');
-          }}
-          className="debug-button primary"
-        >
-          Test Move Right
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
-            console.log('Manual position set to center');
-          }}
-          className="debug-button primary"
-        >
-          Test Move Center
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
-            console.log('Manual rotation set to 45 degrees');
-          }}
-          className="debug-button purple"
-        >
-          Test 45° Rotation
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
-            console.log('Manual rotation set to -30 degrees');
-          }}
-          className="debug-button purple"
-        >
-          Test -30° Rotation
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 300, height: 'auto' });
-            console.log('Video size set to small');
-          }}
-          className="debug-button purple"
-        >
-          Small Size
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 600, height: 'auto' });
-            console.log('Video size set to large');
-          }}
-          className="debug-button purple"
-        >
-          Large Size
-        </button>
-        <button
-          onClick={() => {
-            // Test immediate size change
-            const testSizes = [300, 400, 500, 600, 700];
-            let index = 0;
-            const interval = setInterval(() => {
-              setVideoSize({ width: testSizes[index], height: 'auto' });
-              console.log('Test size change to:', testSizes[index]);
-              index++;
-              if (index >= testSizes.length) {
-                clearInterval(interval);
-              }
-            }, 200);
-          }}
-          className="debug-button red"
-        >
-          Test Size Cycle
-        </button>
-        <button
-          onClick={() => {
-            setHeaderVisible(!headerVisible);
-            console.log('Header visibility toggled:', !headerVisible);
-          }}
-          className={`debug-button ${headerVisible ? 'green' : 'red'}`}
-        >
-          {headerVisible ? 'Hide Header' : 'Show Header'}
-        </button>
-        <button
-          onClick={() => {
-            console.log('Retrying initialization...');
-            setError(null);
-            setIsInitialized(false);
-            // Force re-render by updating a state
-            window.location.reload();
-          }}
-          className="debug-button red"
-        >
-          Retry Init
-        </button>
-        <button
-          onClick={() => {
-            // Find the video element and toggle play/pause
-            const videos = document.querySelectorAll('video');
-            console.log('Found videos:', videos.length);
-            videos.forEach((video, index) => {
-              console.log(`Video ${index}:`, {
-                src: video.src,
-                paused: video.paused,
-                currentTime: video.currentTime,
-                duration: video.duration,
-                readyState: video.readyState
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
+              console.log('Manual position set to right');
+            }}
+            className="debug-button primary"
+          >
+            Test Move Right
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
+              console.log('Manual position set to center');
+            }}
+            className="debug-button primary"
+          >
+            Test Move Center
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
+              console.log('Manual rotation set to 45 degrees');
+            }}
+            className="debug-button purple"
+          >
+            Test 45° Rotation
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
+              console.log('Manual rotation set to -30 degrees');
+            }}
+            className="debug-button purple"
+          >
+            Test -30° Rotation
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 300, height: 'auto' });
+              console.log('Video size set to small');
+            }}
+            className="debug-button purple"
+          >
+            Small Size
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 600, height: 'auto' });
+              console.log('Video size set to large');
+            }}
+            className="debug-button purple"
+          >
+            Large Size
+          </button>
+          <button
+            onClick={() => {
+              // Test immediate size change
+              const testSizes = [300, 400, 500, 600, 700];
+              let index = 0;
+              const interval = setInterval(() => {
+                setVideoSize({ width: testSizes[index], height: 'auto' });
+                console.log('Test size change to:', testSizes[index]);
+                index++;
+                if (index >= testSizes.length) {
+                  clearInterval(interval);
+                }
+              }, 200);
+            }}
+            className="debug-button red"
+          >
+            Test Size Cycle
+          </button>
+          <button
+            onClick={() => {
+              setHeaderVisible(!headerVisible);
+              console.log('Header visibility toggled:', !headerVisible);
+            }}
+            className={`debug-button ${headerVisible ? 'green' : 'red'}`}
+          >
+            {headerVisible ? 'Hide Header' : 'Show Header'}
+          </button>
+          <button
+            onClick={() => {
+              console.log('Retrying initialization...');
+              setError(null);
+              setIsInitialized(false);
+              // Force re-render by updating a state
+              window.location.reload();
+            }}
+            className="debug-button red"
+          >
+            Retry Init
+          </button>
+          <button
+            onClick={() => {
+              // Find the video element and toggle play/pause
+              const videos = document.querySelectorAll('video');
+              console.log('Found videos:', videos.length);
+              videos.forEach((video, index) => {
+                console.log(`Video ${index}:`, {
+                  src: video.src,
+                  paused: video.paused,
+                  currentTime: video.currentTime,
+                  duration: video.duration,
+                  readyState: video.readyState
+                });
+                if (video.paused) {
+                  video.play().catch(err => console.log('Play failed:', err));
+                } else {
+                  video.pause();
+                }
               });
-              if (video.paused) {
-                video.play().catch(err => console.log('Play failed:', err));
-              } else {
-                video.pause();
+            }}
+            className="debug-button green"
+          >
+            Toggle Video
+          </button>
+          <button
+            onClick={() => {
+              console.log('Video element:', videoRef.current);
+              console.log('Video position state:', videoPosition);
+              console.log('Scroll progress:', scrollProgress);
+              if (videoRef.current) {
+                console.log('Video properties:', {
+                  src: videoRef.current.src,
+                  paused: videoRef.current.paused,
+                  currentTime: videoRef.current.currentTime,
+                  duration: videoRef.current.duration,
+                  readyState: videoRef.current.readyState,
+                  videoWidth: videoRef.current.videoWidth,
+                  videoHeight: videoRef.current.videoHeight
+                });
               }
-            });
-          }}
-          className="debug-button green"
-        >
-          Toggle Video
-        </button>
-        <button
-          onClick={() => {
-            console.log('Video element:', videoRef.current);
-            console.log('Video position state:', videoPosition);
-            console.log('Scroll progress:', scrollProgress);
-            if (videoRef.current) {
-              console.log('Video properties:', {
-                src: videoRef.current.src,
-                paused: videoRef.current.paused,
-                currentTime: videoRef.current.currentTime,
-                duration: videoRef.current.duration,
-                readyState: videoRef.current.readyState,
-                videoWidth: videoRef.current.videoWidth,
-                videoHeight: videoRef.current.videoHeight
-              });
-            }
-          }}
-          className="debug-button blue"
-        >
-          Debug Info
-        </button>
-      </div>
+            }}
+            className="debug-button blue"
+          >
+            Debug Info
+          </button>
+        </div>
       )}
     </div>
   );
