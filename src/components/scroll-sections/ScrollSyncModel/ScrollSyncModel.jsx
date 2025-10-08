@@ -734,8 +734,22 @@ function ScrollSyncModel({
                   </div>
                 </div>
               </div>
+            ) : index === 1 ? (
+              // Section 2 - No text box, just direct text content with higher z-index
+              <div className="hero-text-content section-2-text">
+                {/* First set of text */}
+                <div className="hero-line-1 section-2">The support landscape is</div>
+                <div className="hero-line-2 section-2">boundless and shifting</div>
+
+                {/* Second set of text */}
+                <div className="hero-line-3 section-2">You're lost</div>
+                <div className="hero-line-4 section-2">&nbsp;</div>
+                <div className="hero-line-5 section-2">Outdated, laborious</div>
+                <div className="hero-line-6 section-2">and fractional knowledge</div>
+                <div className="hero-line-7 section-2">cripple frontline actions</div>
+              </div>
             ) : (
-              // Regular section content
+              // Regular section content for other sections
               <div className={`section-content ${index === 0 ? 'section-first' : ''}`}>
                 {index === 0 ? (
                   // Text content for first section

@@ -756,11 +756,91 @@
   border: none;
 }
 
+/* Second section content positioning */
+.section-content.section-second {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1200px;
+  height: auto;
+  background-color: transparent;
+  backdrop-filter: none;
+  border: none;
+}
+
 /* Hero text content styling */
 .hero-text-content {
   text-align: center;
   color: white;
   font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Section 2 text - higher z-index to appear above video */
+.hero-text-content.section-2-text {
+  position: relative;
+  z-index: 15;
+  text-align: left;
+  padding-left: 4rem;
+}
+
+/* Section 2 specific font sizes - smaller than default */
+.hero-text-content.section-2-text .hero-line-1.section-2,
+.hero-text-content.section-2-text .hero-line-2.section-2,
+.hero-text-content.section-2-text .hero-line-3.section-2,
+.hero-text-content.section-2-text .hero-line-4.section-2,
+.hero-text-content.section-2-text .hero-line-5.section-2,
+.hero-text-content.section-2-text .hero-line-6.section-2,
+.hero-text-content.section-2-text .hero-line-7.section-2 {
+  font-size: 40px;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+/* "You're lost" specific left padding */
+.hero-text-content.section-2-text .hero-line-3.section-2 {
+  padding-left: 4rem;
+}
+
+/* Section 2 First set animation - starts at 10% scroll */
+.hero-text-content.section-2-text .hero-line-1.section-2,
+.hero-text-content.section-2-text .hero-line-2.section-2 {
+  animation: textLoop1Section2 12s ease-in-out infinite;
+  animation-delay: 1.2s;
+  /* 10% of 12s = 1.2s delay */
+}
+
+/* Section 2 Second set animation - starts at 10% scroll */
+.hero-text-content.section-2-text .hero-line-3.section-2 {
+  animation: textLoop2Section2 12s ease-in-out infinite;
+  animation-delay: 1.2s;
+  /* 10% of 12s = 1.2s delay */
+}
+
+.hero-text-content.section-2-text .hero-line-4.section-2 {
+  animation: textLoop2Section2 12s ease-in-out infinite;
+  animation-delay: 1.2s;
+  /* 10% of 12s = 1.2s delay */
+}
+
+.hero-text-content.section-2-text .hero-line-5.section-2 {
+  animation: textLoop2Section2 12s ease-in-out infinite;
+  animation-delay: 3.2s;
+  /* 2 seconds after "You're lost" */
+}
+
+.hero-text-content.section-2-text .hero-line-6.section-2 {
+  animation: textLoop2Section2 12s ease-in-out infinite;
+  animation-delay: 3.4s;
+  /* Slightly after "Outdated" */
+}
+
+.hero-text-content.section-2-text .hero-line-7.section-2 {
+  animation: textLoop2Section2 12s ease-in-out infinite;
+  animation-delay: 3.6s;
+  /* Slightly after "and fractional" */
 }
 
 .hero-line-1 {
@@ -807,6 +887,26 @@
   top: 105px;
   left: 0;
   right: 0;
+}
+
+/* Section 2 text lines - First set with smaller font */
+.hero-line-1.section-2 {
+  font-size: 44px;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(50px);
+  animation: textLoop1Section2 12s ease-in-out infinite;
+}
+
+.hero-line-2.section-2 {
+  font-size: 44px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(50px);
+  animation: textLoop1Section2 12s ease-in-out infinite;
+  position: relative;
+  white-space: nowrap;
 }
 
 
@@ -875,6 +975,44 @@
   85% {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+/* Section 2 Loop animation for first set of text - starts slide at 10% */
+@keyframes textLoop1Section2 {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  10% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  45% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+
+  90% {
+    opacity: 0;
+    transform: translateY(-50px);
   }
 
   100% {
@@ -972,4 +1110,42 @@
 
 .debug-button.blue {
   background-color: rgba(59, 130, 246, 0.7);
+}
+
+/* Section 2 Second set Loop animation - starts slide at 10% */
+@keyframes textLoop2Section2 {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  10% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  40% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  75% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  85% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
 }
