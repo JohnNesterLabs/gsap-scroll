@@ -18,24 +18,11 @@ function ScrollSyncModel({
   const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
-  const [textRevealComplete, setTextRevealComplete] = React.useState(false);
-  const [isScrollLocked, setIsScrollLocked] = React.useState(true);
   const [textRevealProgress, setTextRevealProgress] = React.useState(0);
-  const [currentPhase, setCurrentPhase] = React.useState(1); // 1, 2, 3, 4
+  const [currentPhase, setCurrentPhase] = React.useState(1); // 1, 2, 3
   const [currentTextSet, setCurrentTextSet] = React.useState(0); // 0 for original, 1 for new
 
-  // Auto-unlock scroll after 10 seconds to prevent permanent lock (only if not in middle of animation)
-  useEffect(() => {
-    const autoUnlockTimer = setTimeout(() => {
-      if (isScrollLocked && !textRevealComplete && currentPhase === 4 && textRevealProgress >= 0.99) {
-        console.log('Auto-unlocking scroll after 10 seconds - Phase 4 nearly complete');
-        setTextRevealComplete(true);
-        setIsScrollLocked(false);
-      }
-    }, 10000);
-
-    return () => clearTimeout(autoUnlockTimer);
-  }, [isScrollLocked, textRevealComplete, currentPhase, textRevealProgress]);
+  // No more scroll locking - text reveals in sync with scroll like Terminal Industries
 
   // Letter reveal animation effect
   useEffect(() => {
@@ -66,43 +53,8 @@ function ScrollSyncModel({
       letter.style.color = "#fff";
     });
 
-    // Simple scroll handler for text reveal - no blocking
-    const handleTextRevealScroll = (e) => {
-      if (scrollContainerRef.current) {
-        const scrollContainer = scrollContainerRef.current;
-        const scrollTop = scrollContainer.scrollTop;
-        const firstSectionHeight = scrollContainer.clientHeight;
-
-        // Only handle text reveal if we're in the first section and scroll is locked
-        if (isScrollLocked && !textRevealComplete && scrollTop < firstSectionHeight - 10) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Convert scroll delta to progress (both forward and backward)
-          const delta = e.deltaY;
-          setTextRevealProgress(prevProgress => {
-            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.002))); // Much slower: 0.005 -> 0.002
-            console.log('Text reveal scroll:', newProgress, 'Delta:', delta);
-            return newProgress;
-          });
-
-          return false;
-        }
-      }
-    };
-
-    // Add scroll listener for text reveal - only on container
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('wheel', handleTextRevealScroll, { passive: false });
-    }
-
-    return () => {
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('wheel', handleTextRevealScroll);
-      }
-    };
-  }, [isInitialized, isScrollLocked, textRevealComplete]);
+    // No more wheel event blocking - text reveals based on scroll position
+  }, [isInitialized]);
 
   // Trigger text reveal when progress changes - Single Unified Timeline with proper rewind support
   useEffect(() => {
@@ -112,6 +64,7 @@ function ScrollSyncModel({
         const totalLetters = letters.length;
 
         // Single timeline: 0-40% reveal first text, 40-60% hide first text, 60-100% reveal second text
+        // Further adjusted timing to ensure enterprise text fully reveals before scroll up
         let phaseNumber, currentPhaseProgress;
         if (textRevealProgress < 0.4) {
           phaseNumber = 1;
@@ -121,7 +74,7 @@ function ScrollSyncModel({
           currentPhaseProgress = (textRevealProgress - 0.4) / 0.2; // 0-100% of first text hide
         } else {
           phaseNumber = 3;
-          currentPhaseProgress = (textRevealProgress - 0.6) / 0.4; // 0-100% of second text reveal
+          currentPhaseProgress = (textRevealProgress - 0.6) / 0.4; // 0-100% of second text reveal (40% time for enterprise text)
         }
 
         // Update current phase
@@ -211,13 +164,6 @@ function ScrollSyncModel({
               span.classList.remove("active");
             }
           });
-
-          // Re-lock scroll when going back to Phase 1
-          if (textRevealComplete) {
-            setTextRevealComplete(false);
-            setIsScrollLocked(true);
-            console.log('Scroll re-locked! Going back to Phase 1.');
-          }
         }
 
         // Phase 2 (40-60%): Hide original text "vast to evolving" - works in both directions
@@ -237,13 +183,6 @@ function ScrollSyncModel({
               span.classList.remove("active");
             }
           });
-
-          // Re-lock scroll when going back to Phase 2
-          if (textRevealComplete) {
-            setTextRevealComplete(false);
-            setIsScrollLocked(true);
-            console.log('Scroll re-locked! Going back to Phase 2.');
-          }
         }
 
         // Phase 3 (60-100%): Show new text "enterprise to reality" - works in both directions
@@ -270,23 +209,10 @@ function ScrollSyncModel({
               span.classList.remove("active");
             }
           });
-
-          // Unlock scroll when ALL letters are revealed (including complete "reality") - only in forward direction
-          if (revealCount >= currentLetters.length && currentTextSet === 1) {
-            setTextRevealComplete(true);
-            setIsScrollLocked(false);
-            console.log('Scroll unlocked! Word "reality" completely appeared in Phase 3.');
-          }
-          // Re-lock scroll when going back from complete state
-          else if (revealCount < currentLetters.length && textRevealComplete) {
-            setTextRevealComplete(false);
-            setIsScrollLocked(true);
-            console.log('Scroll re-locked! Going back from complete state.');
-          }
         }
       }
     }
-  }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet]);
+  }, [textRevealProgress, isInitialized, currentPhase, currentTextSet]);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -354,7 +280,55 @@ function ScrollSyncModel({
       }
     };
 
-    // Removed problematic wheel event handler - scroll is now free
+    // Wheel event handler to control scroll during text reveal
+    const handleWheel = (e) => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) return;
+
+      const scrollTop = scrollContainer.scrollTop;
+      const firstSectionHeight = scrollContainer.clientHeight;
+      const firstSectionScrollHeight = firstSectionHeight * 1.5; // Account for 150vh height
+      const isInFirstSection = scrollTop < firstSectionScrollHeight;
+
+      // Calculate text reveal progress - faster reveal
+      let textRevealProgress = 0;
+      if (isInFirstSection) {
+        textRevealProgress = Math.max(0, Math.min(1, scrollTop / (firstSectionScrollHeight * 0.15))); // Much faster reveal
+      }
+
+      // Calculate max scroll for text reveal
+      const maxScrollForTextReveal = firstSectionScrollHeight * 0.15;
+
+      // If we're in first section and text is not fully revealed, control scroll precisely
+      if (isInFirstSection && textRevealProgress < 1) {
+        // Prevent default scroll behavior
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate text reveal progress based on scroll input - faster and smoother
+        const scrollDelta = e.deltaY * 0.8; // Higher sensitivity for faster text reveal
+        const newScrollTop = Math.min(Math.max(scrollTop + scrollDelta, 0), maxScrollForTextReveal);
+
+        // Update scroll position for text reveal only
+        scrollContainer.scrollTop = newScrollTop;
+
+        console.log('Text revealing - controlling scroll for text reveal, progress:', textRevealProgress);
+        return false;
+      }
+
+      // If text is fully revealed, allow normal scrolling
+      if (isInFirstSection && textRevealProgress >= 1) {
+        console.log('Text fully revealed - allowing normal page scroll to next section');
+        // Don't prevent default - allow normal scroll behavior
+        return;
+      }
+
+      // If we're not in first section, allow normal scrolling
+      if (!isInFirstSection) {
+        console.log('Not in first section - allowing normal page scroll');
+        return;
+      }
+    };
 
     // Robust scroll setup function
     const setupScrollListener = async () => {
@@ -388,9 +362,16 @@ function ScrollSyncModel({
 
         // Use passive listener for better performance during scroll
         scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Add wheel event listener to control scroll during text reveal
+        scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+
+        // Add touch event listeners for mobile
+        scrollContainer.addEventListener('touchmove', handleWheel, { passive: false });
+
         handleScroll(); // Set initial position
 
-        console.log('Scroll listener attached successfully');
+        console.log('Scroll and wheel listeners attached successfully');
         return scrollContainer;
       } catch (error) {
         console.error('Scroll setup failed:', error);
@@ -415,14 +396,45 @@ function ScrollSyncModel({
         return;
       }
 
-      // Scroll remains locked until Phase 4 is complete - no auto-unlock
+      // Check if we're in the first section and text is still revealing
+      const firstSectionHeight = scrollContainer.clientHeight;
+      const firstSectionScrollHeight = firstSectionHeight * 1.5; // Account for 150vh height of first section
+      const isInFirstSection = scrollTop < firstSectionScrollHeight;
 
-      const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
+      // Calculate text reveal progress - faster and smoother
+      let textRevealProgress = 0;
+      if (isInFirstSection) {
+        const maxTextRevealScroll = firstSectionScrollHeight * 0.2; // Reduced from 0.3 to 0.2 for faster reveal
+        textRevealProgress = Math.max(0, Math.min(1, scrollTop / maxTextRevealScroll));
+        console.log('Text reveal calculation:', {
+          scrollTop,
+          maxTextRevealScroll,
+          textRevealProgress: (textRevealProgress * 100).toFixed(1) + '%'
+        });
+      }
 
-      console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
+      // Calculate max scroll for text reveal
+      const maxScrollForTextReveal = firstSectionScrollHeight * 0.15;
+
+      // Calculate scroll progress based on text reveal status
+      let scrollProgress;
+      if (isInFirstSection && textRevealProgress < 1) {
+        // Keep page completely static during text reveal
+        scrollProgress = 0; // Page stays at first section
+        console.log('Text still revealing, keeping page static at scroll progress:', scrollProgress);
+      } else {
+        // Normal scroll progress after text is fully revealed OR when not in first section
+        scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+        console.log('Text fully revealed or not in first section - normal scroll progress:', scrollProgress);
+      }
+
+      console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll, 'TextRevealProgress:', textRevealProgress);
 
       // Update state for UI display
       setScrollProgress(scrollProgress);
+
+      // Set text reveal progress
+      setTextRevealProgress(textRevealProgress);
 
       // Define positions for each section (convert to CSS percentages)
       const positions = [
@@ -445,8 +457,20 @@ function ScrollSyncModel({
       const currentPos = positions[currentSection];
       const nextPos = positions[nextSection];
 
-      const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
-      const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+      let newX, newY;
+
+      // If we're in first section and text is still revealing, keep video position static
+      if (isInFirstSection && textRevealProgress < 1) {
+        // Keep video at first section position during text reveal
+        newX = currentPos.x;
+        newY = currentPos.y;
+        console.log('Text revealing - keeping video position static at:', newX, newY);
+      } else {
+        // Normal video movement after text is fully revealed OR when not in first section
+        newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
+        newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+        console.log('Text fully revealed or not in first section - normal video movement to:', newX, newY);
+      }
 
       // Scale effect - set section 5 to 0.8 scale, hide video in section 6
       let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
@@ -472,14 +496,27 @@ function ScrollSyncModel({
       const nextSize = videoSizeConfig[nextSizeKey];
 
       // Interpolate between current and next size
-      const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
+      let newWidth;
+
+      // If we're in first section and text is still revealing, keep video size static
+      if (isInFirstSection && textRevealProgress < 1) {
+        // Keep video size static during text reveal
+        newWidth = currentSize.width;
+        console.log('Text revealing - keeping video size static at:', newWidth);
+      } else {
+        // Normal video size change after text is fully revealed OR when not in first section
+        newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
+        console.log('Text fully revealed or not in first section - normal video size change to:', newWidth);
+      }
 
       // Update video position and size state
       setVideoPosition({ x: newX, y: newY, scale });
       setVideoSize({ width: newWidth, height: 'auto' });
 
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
-      setHeaderVisible(showHeader && scrollProgress < 0.2);
+      // Also keep header visible during text reveal
+      const shouldShowHeader = showHeader && (scrollProgress < 0.2 || (isInFirstSection && textRevealProgress < 1));
+      setHeaderVisible(shouldShowHeader);
 
       console.log('Video position and size updated:', {
         x: newX,
@@ -515,6 +552,8 @@ function ScrollSyncModel({
           isMounted = false;
           if (scrollContainer) {
             scrollContainer.removeEventListener('scroll', handleScroll);
+            scrollContainer.removeEventListener('wheel', handleWheel);
+            scrollContainer.removeEventListener('touchmove', handleWheel);
           }
         };
       } catch (error) {
@@ -563,7 +602,7 @@ function ScrollSyncModel({
             opacity: 0;
             display: inline-block;
             color: #fff;
-            transition: color 0.2s ease-out, opacity 0.2s ease-out;
+            transition: color 0.1s ease-out, opacity 0.1s ease-out; // Faster, smoother transitions
           }
           .letter.active {
             color: #0020B0;
@@ -687,22 +726,24 @@ function ScrollSyncModel({
           width: '100%',
           height: '100vh',
           overflowY: 'auto',
-          scrollBehavior: 'smooth'
+          scrollBehavior: 'smooth',
+          scrollSnapType: 'y mandatory'
         }}
       >
         {sections.map((section, index) => (
           <div
             key={index}
             style={{
-              height: '100vh',
+              height: index === 0 ? '150vh' : '100vh', // Reduced height for faster page scroll
               display: 'flex',
-              alignItems: index === 0 ? 'flex-start' : 'center',
+              alignItems: 'center', // Always center content
               justifyContent: section.isFooter ? 'flex-end' : 'center',
               background: section.background,
               border: section.border,
               boxSizing: 'border-box',
-              paddingTop: index === 0 ? '100px' : '0', // Add top padding for first section
-              flexDirection: section.isFooter ? 'column' : 'row'
+              paddingTop: '0', // Remove padding to center properly
+              flexDirection: section.isFooter ? 'column' : 'row',
+              scrollSnapAlign: 'start'
             }}
           >
             {section.isFooter ? (
@@ -840,7 +881,14 @@ function ScrollSyncModel({
                 borderRadius: '1rem',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 width: index === 0 ? '80%' : 'auto',
-                maxWidth: index === 0 ? '800px' : 'none'
+                maxWidth: index === 0 ? '800px' : 'none',
+                // Text container positioning - relative for all sections
+                position: 'relative',
+                top: 'auto',
+                left: 'auto',
+                transform: 'none',
+                transition: 'all 0.3s ease',
+                zIndex: 10
               }}>
                 {index === 0 ? (
                   // Custom text for first section with 4-phase reveal animation
@@ -938,53 +986,7 @@ function ScrollSyncModel({
           color: 'rgba(255, 255, 255, 0.6)',
           fontSize: '0.875rem'
         }}>
-          {isScrollLocked && !textRevealComplete ?
-            `Phase ${currentPhase}/3 - ${currentPhase === 1 ? 'Revealing "vast to evolving"...' :
-              currentPhase === 2 ? 'Hiding first text...' :
-                'Revealing "enterprise to reality"...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
-            scrollIndicatorText}
-        </div>
-      )}
-
-      {/* Scroll Lock Indicator */}
-      {isScrollLocked && !textRevealComplete && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          right: '2rem',
-          transform: 'translateY(-50%)',
-          zIndex: 20,
-          color: '#0020B0',
-          fontSize: '0.875rem',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #0020B0'
-        }}>
-          🔒 Scroll Locked
-        </div>
-      )}
-
-      {/* Text Reveal Progress Bar */}
-      {isScrollLocked && !textRevealComplete && (
-        <div style={{
-          position: 'fixed',
-          bottom: '5rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 20,
-          width: '300px',
-          height: '4px',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          borderRadius: '2px',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            width: `${textRevealProgress * 100}%`,
-            height: '100%',
-            backgroundColor: '#0020B0',
-            transition: 'width 0.1s ease-out'
-          }}></div>
+          {scrollIndicatorText}
         </div>
       )}
 
@@ -1002,8 +1004,6 @@ function ScrollSyncModel({
           fontSize: '0.875rem'
         }}>
           <div>Text Reveal Status</div>
-          <div>Scroll Locked: {isScrollLocked ? 'Yes' : 'No'}</div>
-          <div>Text Complete: {textRevealComplete ? 'Yes' : 'No'}</div>
           <div>Current Phase: {currentPhase}/3</div>
           <div>Text Set: {currentTextSet === 0 ? 'Original' : 'New'}</div>
           <div>Reveal Progress: {(textRevealProgress * 100).toFixed(1)}%</div>
@@ -1212,8 +1212,6 @@ function ScrollSyncModel({
               setCurrentPhase(1);
               setCurrentTextSet(0);
               setTextRevealProgress(0);
-              setTextRevealComplete(false);
-              setIsScrollLocked(true);
             }}
             style={{
               padding: '0.5rem',
@@ -1232,8 +1230,6 @@ function ScrollSyncModel({
               setCurrentPhase(2);
               setCurrentTextSet(0);
               setTextRevealProgress(0.5); // Middle of Phase 2
-              setTextRevealComplete(false);
-              setIsScrollLocked(true);
             }}
             style={{
               padding: '0.5rem',
@@ -1252,8 +1248,6 @@ function ScrollSyncModel({
               setCurrentPhase(3);
               setCurrentTextSet(1);
               setTextRevealProgress(0.7); // Middle of Phase 3
-              setTextRevealComplete(false);
-              setIsScrollLocked(true);
             }}
             style={{
               padding: '0.5rem',
@@ -1272,8 +1266,6 @@ function ScrollSyncModel({
               setCurrentPhase(3);
               setCurrentTextSet(1);
               setTextRevealProgress(1.0); // Complete
-              setTextRevealComplete(false);
-              setIsScrollLocked(true);
             }}
             style={{
               padding: '0.5rem',
