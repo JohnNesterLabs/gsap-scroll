@@ -25,6 +25,13 @@ function ScrollSyncModel({
   const [currentTextSet, setCurrentTextSet] = React.useState(0); // 0 for original, 1 for new
   const [isReturningToFirstSection, setIsReturningToFirstSection] = React.useState(false);
 
+  // Section 2 text reveal states
+  const [section2TextRevealProgress, setSection2TextRevealProgress] = React.useState(0);
+  const [section2CurrentPhase, setSection2CurrentPhase] = React.useState(1); // 1, 2, 3, 4
+  const [section2CurrentTextSet, setSection2CurrentTextSet] = React.useState(0); // 0 for original, 1 for new
+  const [section2TextRevealComplete, setSection2TextRevealComplete] = React.useState(false);
+  const [isReturningToSecondSection, setIsReturningToSecondSection] = React.useState(false);
+
   // Auto-unlock scroll after 10 seconds to prevent permanent lock (only if not in middle of animation)
   useEffect(() => {
     const autoUnlockTimer = setTimeout(() => {
@@ -67,16 +74,29 @@ function ScrollSyncModel({
       letter.style.color = "#fff";
     });
 
-    // Simple scroll handler for text reveal - no blocking
-    const handleTextRevealScroll = (e) => {
+    // Section detection and state management logic
+    const handleSectionDetection = () => {
       if (scrollContainerRef.current) {
         const scrollContainer = scrollContainerRef.current;
         const scrollTop = scrollContainer.scrollTop;
-        const firstSectionHeight = scrollContainer.clientHeight;
+        const sectionHeight = scrollContainer.clientHeight;
 
-        // Check if user is returning to first section
-        const isInFirstSection = scrollTop < firstSectionHeight - 10;
+        // Check which section we're in
+        const isInFirstSection = scrollTop < sectionHeight - 10;
+        const isInSecondSection = scrollTop >= sectionHeight - 10 && scrollTop < (sectionHeight * 2) - 10;
 
+        // Debug logging
+        if (isInSecondSection) {
+          console.log('In section 2:', {
+            scrollTop,
+            sectionHeight,
+            section2TextRevealComplete,
+            section2TextRevealProgress,
+            isScrollLocked
+          });
+        }
+
+        // Handle first section
         if (isInFirstSection && textRevealComplete) {
           // User returned to first section after completing text reveal
           console.log('User returned to first section - starting rewind');
@@ -85,7 +105,32 @@ function ScrollSyncModel({
           setIsScrollLocked(true);
         }
 
-        // Only handle text reveal if we're in the first section and scroll is locked
+        // Handle second section
+        if (isInSecondSection && section2TextRevealComplete) {
+          // User returned to second section after completing text reveal
+          console.log('User returned to second section - starting rewind');
+          setIsReturningToSecondSection(true);
+          setSection2TextRevealComplete(false);
+          setIsScrollLocked(true);
+        }
+
+        // Start section 2 text reveal when entering section 2 for the first time
+        if (isInSecondSection && !section2TextRevealComplete && section2TextRevealProgress === 0 && textRevealComplete) {
+          console.log('Starting section 2 text reveal');
+          setIsScrollLocked(true);
+        }
+
+        return { isInFirstSection, isInSecondSection };
+      }
+      return { isInFirstSection: false, isInSecondSection: false };
+    };
+
+    // Simple scroll handler for text reveal - no blocking
+    const handleTextRevealScroll = (e) => {
+      if (scrollContainerRef.current) {
+        const { isInFirstSection, isInSecondSection } = handleSectionDetection();
+
+        // Handle first section text reveal
         if (isScrollLocked && !textRevealComplete && isInFirstSection) {
           e.preventDefault();
           e.stopPropagation();
@@ -93,8 +138,24 @@ function ScrollSyncModel({
           // Convert scroll delta to progress (both forward and backward)
           const delta = e.deltaY;
           setTextRevealProgress(prevProgress => {
-            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.002))); // Much slower: 0.005 -> 0.002
-            console.log('Text reveal scroll:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToFirstSection);
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.0008))); // Much slower: 0.002 -> 0.0008
+            console.log('Section 1 text reveal scroll:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToFirstSection);
+            return newProgress;
+          });
+
+          return false;
+        }
+
+        // Handle second section text reveal
+        if (isScrollLocked && !section2TextRevealComplete && isInSecondSection) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Convert scroll delta to progress (both forward and backward)
+          const delta = e.deltaY;
+          setSection2TextRevealProgress(prevProgress => {
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.0008))); // Same speed as section 1
+            console.log('Section 2 text reveal scroll:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToSecondSection);
             return newProgress;
           });
 
@@ -103,18 +164,113 @@ function ScrollSyncModel({
       }
     };
 
+    // Touch event handlers for mobile
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchMove = (e) => {
+      if (scrollContainerRef.current) {
+        const { isInFirstSection, isInSecondSection } = handleSectionDetection();
+
+        // Handle first section text reveal
+        if (isScrollLocked && !textRevealComplete && isInFirstSection) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const touchCurrentY = e.touches[0].clientY;
+          const deltaY = touchStartY - touchCurrentY; // Inverted for natural scroll direction
+          const delta = deltaY * 2; // Scale factor for touch sensitivity
+
+          setTextRevealProgress(prevProgress => {
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.0008)));
+            console.log('Section 1 text reveal touch:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToFirstSection);
+            return newProgress;
+          });
+
+          touchStartY = touchCurrentY; // Update for next move
+          return false;
+        }
+
+        // Handle second section text reveal
+        if (isScrollLocked && !section2TextRevealComplete && isInSecondSection) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const touchCurrentY = e.touches[0].clientY;
+          const deltaY = touchStartY - touchCurrentY; // Inverted for natural scroll direction
+          const delta = deltaY * 2; // Scale factor for touch sensitivity
+
+          setSection2TextRevealProgress(prevProgress => {
+            const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.0008)));
+            console.log('Section 2 text reveal touch:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToSecondSection);
+            return newProgress;
+          });
+
+          touchStartY = touchCurrentY; // Update for next move
+          return false;
+        }
+
+        // Allow normal scrolling when not in text reveal mode
+        // Don't prevent default - let the browser handle normal scrolling
+      }
+    };
+
     // Add scroll listener for text reveal - only on container
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer) {
       scrollContainer.addEventListener('wheel', handleTextRevealScroll, { passive: false });
+      scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      // Add scroll listener for section detection (for normal scrolling)
+      scrollContainer.addEventListener('scroll', handleSectionDetection, { passive: true });
     }
 
     return () => {
       if (scrollContainer) {
         scrollContainer.removeEventListener('wheel', handleTextRevealScroll);
+        scrollContainer.removeEventListener('touchstart', handleTouchStart);
+        scrollContainer.removeEventListener('touchmove', handleTouchMove);
+        scrollContainer.removeEventListener('scroll', handleSectionDetection);
       }
     };
-  }, [isInitialized, isScrollLocked, textRevealComplete, isReturningToFirstSection]);
+  }, [isInitialized, isScrollLocked, textRevealComplete, isReturningToFirstSection, section2TextRevealComplete, section2TextRevealProgress, isReturningToSecondSection]);
+
+  // Initialize section 2 letters when text is rendered
+  useEffect(() => {
+    if (isInitialized) {
+      const section2RevealTexts = document.querySelectorAll(".section2-reveal-text");
+      if (section2RevealTexts.length > 0) {
+        section2RevealTexts.forEach(line => {
+          const text = line.textContent;
+          line.innerHTML = "";
+          for (let char of text) {
+            const span = document.createElement("span");
+            span.classList.add("section2-letter");
+            if (char === ' ') {
+              span.innerHTML = "&nbsp;";
+            } else {
+              span.textContent = char;
+            }
+            line.appendChild(span);
+          }
+        });
+
+        // Set initial state - all section 2 letters invisible
+        const section2Letters = document.querySelectorAll(".section2-letter");
+        section2Letters.forEach(letter => {
+          letter.style.opacity = "0";
+          letter.style.color = "#fff";
+        });
+
+        console.log('Section 2 letters initialized:', section2Letters.length);
+      }
+    }
+  }, [isInitialized, section2CurrentTextSet]);
 
   // Trigger text reveal when progress changes - Single Unified Timeline
   useEffect(() => {
@@ -252,6 +408,157 @@ function ScrollSyncModel({
       }
     }
   }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet, isReturningToFirstSection]);
+
+  // Trigger text reveal for section 2 when progress changes - 4 Phase Timeline
+  useEffect(() => {
+    if (isInitialized) {
+      const section2Letters = document.querySelectorAll(".section2-letter");
+      if (section2Letters.length > 0) {
+        const totalLetters = section2Letters.length;
+
+        // 4-phase timeline: 0-25% reveal first text, 25-50% hide first text, 50-75% reveal second text, 75-100% complete
+        let phaseNumber, currentPhaseProgress;
+        if (section2TextRevealProgress < 0.25) {
+          phaseNumber = 1;
+          currentPhaseProgress = section2TextRevealProgress / 0.25; // 0-100% of first text reveal
+        } else if (section2TextRevealProgress < 0.5) {
+          phaseNumber = 2;
+          currentPhaseProgress = (section2TextRevealProgress - 0.25) / 0.25; // 0-100% of first text hide
+        } else if (section2TextRevealProgress < 0.75) {
+          phaseNumber = 3;
+          currentPhaseProgress = (section2TextRevealProgress - 0.5) / 0.25; // 0-100% of second text reveal
+        } else {
+          phaseNumber = 4;
+          currentPhaseProgress = (section2TextRevealProgress - 0.75) / 0.25; // 0-100% of completion
+        }
+
+        // Update current phase
+        if (phaseNumber !== section2CurrentPhase) {
+          setSection2CurrentPhase(phaseNumber);
+          console.log(`Section 2 Phase ${phaseNumber} started`);
+
+          // Switch to new text at the start of Phase 3 (50% progress) - only when going forward
+          if (phaseNumber === 3 && section2CurrentTextSet === 0 && !isReturningToSecondSection) {
+            setSection2CurrentTextSet(1);
+            console.log('Section 2 switching to new text set at 50% progress');
+
+            // Re-initialize letters for new text - ensure all start invisible
+            setTimeout(() => {
+              const newRevealTexts = document.querySelectorAll(".section2-reveal-text");
+              newRevealTexts.forEach(line => {
+                const text = line.textContent;
+                line.innerHTML = "";
+                for (let char of text) {
+                  const span = document.createElement("span");
+                  span.classList.add("section2-letter");
+                  if (char === ' ') {
+                    span.innerHTML = "&nbsp;";
+                  } else {
+                    span.textContent = char;
+                  }
+                  // Ensure all letters start completely invisible
+                  span.style.opacity = "0";
+                  span.style.color = "#fff";
+                  span.style.visibility = "hidden";
+                  line.appendChild(span);
+                }
+              });
+              console.log('Section 2 new text letters initialized - all invisible');
+            }, 1);
+          }
+
+          // Switch back to original text when rewinding to Phase 1
+          if (phaseNumber === 1 && section2CurrentTextSet === 1 && isReturningToSecondSection) {
+            setSection2CurrentTextSet(0);
+            console.log('Section 2 switching back to original text set during rewind');
+            setIsReturningToSecondSection(false);
+          }
+        }
+
+        // Phase 1 (0-25%): Reveal original text "The support landscape" / "boundless and shifting"
+        if (phaseNumber === 1) {
+          const revealCount = Math.floor(currentPhaseProgress * totalLetters);
+
+          section2Letters.forEach((span, i) => {
+            if (i < revealCount) {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            } else if (i === revealCount && revealCount < totalLetters) {
+              span.style.opacity = "1";
+              span.style.color = "#0020B0"; // Kahuna blue
+              span.classList.add("active");
+            } else {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            }
+          });
+        }
+
+        // Phase 2 (25-50%): Hide original text "The support landscape" / "boundless and shifting"
+        else if (phaseNumber === 2) {
+          const hideCount = Math.floor(currentPhaseProgress * totalLetters);
+
+          section2Letters.forEach((span, i) => {
+            if (i < hideCount) {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            } else {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.classList.remove("active");
+            }
+          });
+        }
+
+        // Phase 3 (50-75%): Show new text "You're lost" / "Outdated and Laborious" / "and fraction knowledge" / "cripple frontline actions"
+        else if (phaseNumber === 3) {
+          // Get new letters after text switch
+          const newLetters = document.querySelectorAll(".section2-letter");
+          const revealCount = Math.floor(currentPhaseProgress * newLetters.length);
+
+          newLetters.forEach((span, i) => {
+            if (i < revealCount) {
+              span.style.opacity = "1";
+              span.style.color = "#fff";
+              span.style.visibility = "visible";
+              span.classList.remove("active");
+            } else if (i === revealCount && revealCount < newLetters.length) {
+              span.style.opacity = "1";
+              span.style.color = "#0020B0"; // Kahuna blue
+              span.style.visibility = "visible";
+              span.classList.add("active");
+            } else {
+              span.style.opacity = "0";
+              span.style.color = "#fff";
+              span.style.visibility = "hidden";
+              span.classList.remove("active");
+            }
+          });
+        }
+
+        // Phase 4 (75-100%): Complete - all text visible
+        else if (phaseNumber === 4) {
+          const newLetters = document.querySelectorAll(".section2-letter");
+          newLetters.forEach((span) => {
+            span.style.opacity = "1";
+            span.style.color = "#fff";
+            span.style.visibility = "visible";
+            span.classList.remove("active");
+          });
+
+          // Complete text reveal when reaching Phase 4
+          if (section2TextRevealProgress >= 0.99) {
+            setSection2TextRevealComplete(true);
+            setIsScrollLocked(false);
+            console.log('Section 2 text reveal complete!');
+          }
+        }
+      }
+    }
+  }, [section2TextRevealProgress, isInitialized, section2TextRevealComplete, section2CurrentPhase, section2CurrentTextSet, isReturningToSecondSection]);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -533,6 +840,15 @@ function ScrollSyncModel({
           .letter.active {
             color: #0020B0;
           }
+          .section2-letter {
+            opacity: 0;
+            display: inline-block;
+            color: #fff;
+            transition: color 0.2s ease-out, opacity 0.2s ease-out;
+          }
+          .section2-letter.active {
+            color: #0020B0;
+          }
         `}
       </style>
       {/* Debug Info */}
@@ -797,15 +1113,17 @@ function ScrollSyncModel({
             ) : (
               // Regular section content
               <div style={{
-                textAlign: 'center',
+                textAlign: index === 1 ? 'left' : 'center', // Section 2 (index 1) left-aligned, others center
                 zIndex: 10,
                 padding: '2rem',
                 backdropFilter: 'blur(12px)',
                 backgroundColor: 'transparent',
                 borderRadius: '1rem',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                width: index === 0 ? '80%' : 'auto',
-                maxWidth: index === 0 ? '800px' : 'none'
+                width: (index === 0 || index === 1) ? '80%' : 'auto', // Both section 1 and 2 have 80% width
+                maxWidth: (index === 0 || index === 1) ? '800px' : 'none', // Both section 1 and 2 have max 800px width
+                marginLeft: index === 1 ? '2rem' : 'auto', // Add left margin for section 2
+                marginRight: index === 1 ? 'auto' : 'auto'
               }}>
                 {index === 0 ? (
                   // Custom text for first section with 4-phase reveal animation
@@ -814,49 +1132,132 @@ function ScrollSyncModel({
                       // Original text set
                       <>
                         <h1 className="reveal-text" style={{
-                          fontSize: '3rem',
-                          letterSpacing: '2px',
+                          fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
+                          letterSpacing: '1px',
                           textAlign: 'center',
-                          margin: '10px 0',
+                          margin: '8px 0',
                           whiteSpace: 'nowrap',
                           fontWeight: '600',
                           color: 'white',
-                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.2'
                         }}>Vast and intricate</h1>
                         <h1 className="reveal-text" style={{
-                          fontSize: '3rem',
-                          letterSpacing: '2px',
+                          fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
+                          letterSpacing: '1px',
                           textAlign: 'center',
-                          margin: '10px 0',
+                          margin: '8px 0',
                           whiteSpace: 'nowrap',
                           fontWeight: '600',
                           color: 'white',
-                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.2'
                         }}>product never stop evolving</h1>
                       </>
                     ) : (
                       // New text set
                       <>
                         <h1 className="reveal-text" style={{
-                          fontSize: '3rem',
-                          letterSpacing: '2px',
+                          fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
+                          letterSpacing: '1px',
                           textAlign: 'center',
-                          margin: '10px 0',
+                          margin: '8px 0',
                           whiteSpace: 'nowrap',
                           fontWeight: '600',
                           color: 'white',
-                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.2'
                         }}>Enterprise customers have an</h1>
                         <h1 className="reveal-text" style={{
-                          fontSize: '3rem',
-                          letterSpacing: '2px',
+                          fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
+                          letterSpacing: '1px',
                           textAlign: 'center',
-                          margin: '10px 0',
+                          margin: '8px 0',
                           whiteSpace: 'nowrap',
                           fontWeight: '600',
                           color: 'white',
-                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.2'
                         }}>endless spectrum of reality</h1>
+                      </>
+                    )}
+                  </div>
+                ) : index === 1 ? (
+                  // Section 2 with text reveal animation
+                  <div>
+                    {section2CurrentTextSet === 0 ? (
+                      // Original text set for section 2
+                      <>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>The support landscape is</h1>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>boundless and shifting</h1>
+                      </>
+                    ) : (
+                      // New text set for section 2
+                      <>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>You're lost</h1>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>Outdated and Laborious</h1>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>and fraction knowledge</h1>
+                        <h1 className="section2-reveal-text" style={{
+                          fontSize: 'clamp(1.1rem, 3.5vw, 2.2rem)',
+                          letterSpacing: '1px',
+                          textAlign: 'left',
+                          margin: '6px 0',
+                          whiteSpace: 'nowrap',
+                          fontWeight: '600',
+                          color: 'white',
+                          fontFamily: "'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                          lineHeight: '1.3'
+                        }}>cripple frontline actions</h1>
                       </>
                     )}
                   </div>
@@ -903,16 +1304,21 @@ function ScrollSyncModel({
           color: 'rgba(255, 255, 255, 0.6)',
           fontSize: '0.875rem'
         }}>
-          {isScrollLocked && !textRevealComplete ?
-            `Phase ${currentPhase}/3 - ${currentPhase === 1 ? 'Revealing "vast to evolving"...' :
-              currentPhase === 2 ? 'Hiding first text...' :
-                'Revealing "enterprise to reality"...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
+          {isScrollLocked && (!textRevealComplete || !section2TextRevealComplete) ?
+            (scrollContainerRef.current && scrollContainerRef.current.scrollTop < scrollContainerRef.current.clientHeight - 10) ?
+              `Section 1 - Phase ${currentPhase}/3 - ${currentPhase === 1 ? 'Revealing "vast to evolving"...' :
+                currentPhase === 2 ? 'Hiding first text...' :
+                  'Revealing "enterprise to reality"...'} (${(textRevealProgress * 100).toFixed(0)}%)` :
+              `Section 2 - Phase ${section2CurrentPhase}/4 - ${section2CurrentPhase === 1 ? 'Revealing "support landscape"...' :
+                section2CurrentPhase === 2 ? 'Hiding first text...' :
+                  section2CurrentPhase === 3 ? 'Revealing "you\'re lost"...' :
+                    'Completing...'} (${(section2TextRevealProgress * 100).toFixed(0)}%)` :
             scrollIndicatorText}
         </div>
       )}
 
       {/* Scroll Lock Indicator */}
-      {isScrollLocked && !textRevealComplete && (
+      {isScrollLocked && (!textRevealComplete || !section2TextRevealComplete) && (
         <div style={{
           position: 'fixed',
           top: '50%',
@@ -931,7 +1337,7 @@ function ScrollSyncModel({
       )}
 
       {/* Text Reveal Progress Bar */}
-      {isScrollLocked && !textRevealComplete && (
+      {isScrollLocked && (!textRevealComplete || !section2TextRevealComplete) && (
         <div style={{
           position: 'fixed',
           bottom: '5rem',
@@ -945,7 +1351,8 @@ function ScrollSyncModel({
           overflow: 'hidden'
         }}>
           <div style={{
-            width: `${textRevealProgress * 100}%`,
+            width: `${(scrollContainerRef.current && scrollContainerRef.current.scrollTop < scrollContainerRef.current.clientHeight - 10) ?
+              textRevealProgress * 100 : section2TextRevealProgress * 100}%`,
             height: '100%',
             backgroundColor: '#0020B0',
             transition: 'width 0.1s ease-out'
