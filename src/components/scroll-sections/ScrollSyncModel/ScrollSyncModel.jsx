@@ -21,8 +21,9 @@ function ScrollSyncModel({
   const [textRevealComplete, setTextRevealComplete] = React.useState(false);
   const [isScrollLocked, setIsScrollLocked] = React.useState(true);
   const [textRevealProgress, setTextRevealProgress] = React.useState(0);
-  const [currentPhase, setCurrentPhase] = React.useState(1); // 1, 2, 3, 4
+  const [currentPhase, setCurrentPhase] = React.useState(1); // 1, 2, 3
   const [currentTextSet, setCurrentTextSet] = React.useState(0); // 0 for original, 1 for new
+  const [isReturningToFirstSection, setIsReturningToFirstSection] = React.useState(false);
 
   // Auto-unlock scroll after 10 seconds to prevent permanent lock (only if not in middle of animation)
   useEffect(() => {
@@ -73,8 +74,19 @@ function ScrollSyncModel({
         const scrollTop = scrollContainer.scrollTop;
         const firstSectionHeight = scrollContainer.clientHeight;
 
+        // Check if user is returning to first section
+        const isInFirstSection = scrollTop < firstSectionHeight - 10;
+
+        if (isInFirstSection && textRevealComplete) {
+          // User returned to first section after completing text reveal
+          console.log('User returned to first section - starting rewind');
+          setIsReturningToFirstSection(true);
+          setTextRevealComplete(false);
+          setIsScrollLocked(true);
+        }
+
         // Only handle text reveal if we're in the first section and scroll is locked
-        if (isScrollLocked && !textRevealComplete && scrollTop < firstSectionHeight - 10) {
+        if (isScrollLocked && !textRevealComplete && isInFirstSection) {
           e.preventDefault();
           e.stopPropagation();
 
@@ -82,7 +94,7 @@ function ScrollSyncModel({
           const delta = e.deltaY;
           setTextRevealProgress(prevProgress => {
             const newProgress = Math.max(0, Math.min(1, prevProgress + (delta * 0.002))); // Much slower: 0.005 -> 0.002
-            console.log('Text reveal scroll:', newProgress, 'Delta:', delta);
+            console.log('Text reveal scroll:', newProgress, 'Delta:', delta, 'Rewinding:', isReturningToFirstSection);
             return newProgress;
           });
 
@@ -102,7 +114,7 @@ function ScrollSyncModel({
         scrollContainer.removeEventListener('wheel', handleTextRevealScroll);
       }
     };
-  }, [isInitialized, isScrollLocked, textRevealComplete]);
+  }, [isInitialized, isScrollLocked, textRevealComplete, isReturningToFirstSection]);
 
   // Trigger text reveal when progress changes - Single Unified Timeline
   useEffect(() => {
@@ -129,8 +141,8 @@ function ScrollSyncModel({
           setCurrentPhase(phaseNumber);
           console.log(`Phase ${phaseNumber} started`);
 
-          // Switch to new text at the start of Phase 3 (60% progress)
-          if (phaseNumber === 3 && currentTextSet === 0) {
+          // Switch to new text at the start of Phase 3 (60% progress) - only when going forward
+          if (phaseNumber === 3 && currentTextSet === 0 && !isReturningToFirstSection) {
             setCurrentTextSet(1);
             console.log('Switching to new text set at 60% progress');
 
@@ -157,6 +169,13 @@ function ScrollSyncModel({
               });
               console.log('New text letters initialized - all invisible');
             }, 1);
+          }
+
+          // Switch back to original text when rewinding to Phase 1
+          if (phaseNumber === 1 && currentTextSet === 1 && isReturningToFirstSection) {
+            setCurrentTextSet(0);
+            console.log('Switching back to original text set during rewind');
+            setIsReturningToFirstSection(false);
           }
         }
 
@@ -232,7 +251,7 @@ function ScrollSyncModel({
         }
       }
     }
-  }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet]);
+  }, [textRevealProgress, isInitialized, textRevealComplete, currentPhase, currentTextSet, isReturningToFirstSection]);
 
   useEffect(() => {
     // Video size configuration for different sections
@@ -953,6 +972,7 @@ function ScrollSyncModel({
           <div>Current Phase: {currentPhase}/3</div>
           <div>Text Set: {currentTextSet === 0 ? 'Original' : 'New'}</div>
           <div>Reveal Progress: {(textRevealProgress * 100).toFixed(1)}%</div>
+          <div>Rewinding: {isReturningToFirstSection ? 'Yes' : 'No'}</div>
           <div>Letters Count: {document.querySelectorAll('.letter').length}</div>
         </div>
       )}
@@ -1231,6 +1251,33 @@ function ScrollSyncModel({
             }}
           >
             Test Reality Complete
+          </button>
+          <button
+            onClick={() => {
+              console.log('Simulating return to first section...');
+              setTextRevealComplete(true);
+              setIsScrollLocked(false);
+              setCurrentPhase(3);
+              setCurrentTextSet(1);
+              setTextRevealProgress(1.0);
+              // Simulate the return detection
+              setTimeout(() => {
+                setIsReturningToFirstSection(true);
+                setTextRevealComplete(false);
+                setIsScrollLocked(true);
+                setTextRevealProgress(0.8); // Start rewind from near end
+              }, 100);
+            }}
+            style={{
+              padding: '0.5rem',
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Test Rewind
           </button>
         </div>
       )}

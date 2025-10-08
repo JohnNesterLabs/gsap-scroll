@@ -29,7 +29,7 @@ const ScrollNavigation = () => {
               <small>Scroll twice per section</small>
             </span>
           </button> */}
-          
+
           {/* <button 
             className={`nav-button ${scrollType === 'full' ? 'active' : ''}`}
             onClick={() => handleScrollTypeChange('full')}
@@ -73,7 +73,7 @@ const ScrollNavigation = () => {
               <small>Testing component</small>
             </span>
           </button> */}
-          
+
           {/* <button 
             className={`nav-button ${scrollType === 'hero' ? 'active' : ''}`}
             onClick={() => handleScrollTypeChange('hero')}
