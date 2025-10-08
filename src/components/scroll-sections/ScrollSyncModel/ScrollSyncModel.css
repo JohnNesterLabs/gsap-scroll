@@ -749,7 +749,7 @@
   top: 20%;
   left: 50%;
   transform: translateX(-50%);
-  width: 600px;
+  width: 1200px;
   height: auto;
   background-color: transparent;
   backdrop-filter: none;
@@ -764,42 +764,52 @@
 }
 
 .hero-line-1 {
-  font-size: 2.5rem;
-  font-weight: 300;
+  font-size: 54px;
+  font-weight: 500;
   margin-bottom: 0.5rem;
   opacity: 0;
-  transform: translateY(-50px);
-  animation: slideInFromTop 0.6s ease-out 0.2s forwards;
+  transform: translateY(50px);
+  animation: textLoop1 12s ease-in-out infinite;
 }
 
 .hero-line-2 {
-  font-size: 2.5rem;
-  font-weight: 300;
+  font-size: 54px;
+  font-weight: 500;
   opacity: 0;
-  transform: translateY(-50px);
-  animation: slideInFromTop 0.6s ease-out 0.2s forwards;
+  transform: translateY(50px);
+  animation: textLoop1 12s ease-in-out infinite;
   position: relative;
+  white-space: nowrap;
 }
 
-.hero-line-2::after {
-  content: '';
+.hero-line-3 {
+  font-size: 54px;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(50px);
+  animation: textLoop2 12s ease-in-out infinite;
+  white-space: nowrap;
   position: absolute;
-  top: 50%;
+  top: 32px;
   left: 0;
   right: 0;
-  height: 12px;
-  background-color: #0528C7;
-  transform: scaleX(0);
-  transform-origin: left;
-  animation: strikeThrough 1.8s ease-out 0.8s forwards;
-  z-index: -1;
 }
 
-@keyframes strikeThrough {
-  to {
-    transform: scaleX(1);
-  }
+.hero-line-4 {
+  font-size: 54px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(50px);
+  animation: textLoop2 12s ease-in-out infinite;
+  white-space: nowrap;
+  position: absolute;
+  top: 105px;
+  left: 0;
+  right: 0;
 }
+
+
 
 /* Slide in animation from top */
 @keyframes slideInFromTop {
@@ -809,11 +819,74 @@
   }
 }
 
-/* Header slide in animation */
+/* Slide up animation from bottom */
+@keyframes slideUpFromBottom {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loop animation for first set of text */
+@keyframes textLoop1 {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+/* Loop animation for second set of text */
+@keyframes textLoop2 {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  40% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+/* Header static - no animation */
 .header {
-  opacity: 0;
-  transform: translateY(-50px);
-  animation: slideInFromTop 0.6s ease-out 0.1s forwards;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .section-number {

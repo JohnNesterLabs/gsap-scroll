@@ -740,8 +740,10 @@ function ScrollSyncModel({
                 {index === 0 ? (
                   // Text content for first section
                   <div className="hero-text-content">
-                    <div className="hero-line-1">Vast and intricate</div>
-                    <div className="hero-line-2">product never stop evolving.</div>
+                    <div className="hero-line-1">Vast and intricate,</div>
+                    <div className="hero-line-2">products never stop evolving</div>
+                    <div className="hero-line-3">Enterprise customers have an</div>
+                    <div className="hero-line-4">endless spectrum of realities</div>
                   </div>
                 ) : (
                   <>
