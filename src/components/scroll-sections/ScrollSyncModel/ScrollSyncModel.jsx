@@ -9,16 +9,70 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/hero5555.mp4"
+  videoSrc = "/map-alive-test.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = React.useState(0);
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
+  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1, rotation: 0 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
+  const [currentFrame, setCurrentFrame] = React.useState(1);
+  const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
+  const [isInSection5, setIsInSection5] = React.useState(false);
+  const canvasRef = useRef(null);
+  const frameImagesRef = useRef({});
+
+  // Preload frame images
+  const preloadFrame = (frameNumber) => {
+    if (!frameImagesRef.current[frameNumber]) {
+      const img = new Image();
+      img.src = `/frames/frame_${String(frameNumber).padStart(4, '0')}.png`;
+      frameImagesRef.current[frameNumber] = img;
+    }
+    return frameImagesRef.current[frameNumber];
+  };
+
+  // Render frame on canvas
+  const renderFrame = (frameNumber) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const img = preloadFrame(frameNumber);
+
+    img.onload = () => {
+      // Set canvas size to match image
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+
+    // If image is already loaded, draw it immediately
+    if (img.complete) {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    }
+  };
+
+  // Preload frames on mount
+  useEffect(() => {
+    // Preload first, middle, and last frames for better performance
+    preloadFrame(1);
+    preloadFrame(Math.floor(totalFrames / 2));
+    preloadFrame(totalFrames);
+  }, [totalFrames]);
+
+  // Render frame when currentFrame changes
+  useEffect(() => {
+    renderFrame(currentFrame);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFrame]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
@@ -76,8 +130,8 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
-          section1: { width: 1900, height: 'auto' },
-          section2: { width: 1500, height: 'auto' },
+          section1: { width: 3300, height: 'auto' },
+          section2: { width: 2800, height: 'auto' },
           section3: { width: 2100, height: 'auto' },
           section4: { width: 1300, height: 'auto' },
           section5: { width: 1300, height: 'auto' },
@@ -129,7 +183,7 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'large-desktop': [
-          { x: 50, y: 135 },     // Section 1 - Slightly higher for large screens
+          { x: 50, y: 115 },     // Section 1 - Slightly higher for large screens
           { x: 96, y: 55 },      // Section 2 - Right (more extreme)
           { x: 50, y: 50 },      // Section 3 - Center
           { x: 50, y: 50 },       // Section 4 - Left (more extreme)
@@ -141,11 +195,62 @@ function ScrollSyncModel({
       return positionConfigs[viewport] || positionConfigs['desktop'];
     };
 
+    // Get responsive rotation configuration based on viewport
+    const getRotationConfig = () => {
+      const viewport = getViewportSize();
+      
+      const rotationConfigs = {
+        'mobile-small': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'mobile-large': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'tablet': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'desktop': [
+          0,      // Section 1 - Normal position
+          45,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          -30,    // Section 4 - -30 degree rotation
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'large-desktop': [
+          -75,      // Section 1 - Normal position
+          -165,     // Section 2 - 45 degree rotation
+          -190,      // Section 3 - Normal position
+          -190,    // Section 4 - -30 degree rotation
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ]
+      };
+      
+      return rotationConfigs[viewport] || rotationConfigs['desktop'];
+    };
+
     // Add window resize listener to recalculate video sizes and positions on viewport change
     const handleResize = () => {
       console.log('Viewport resized, recalculating video sizes and positions...');
       const newConfig = getVideoSizeConfig();
       const newPositions = getPositionConfig();
+      const newRotations = getRotationConfig();
       
       // Update video size and position if we're currently in a section
       if (videoRef.current && scrollContainerRef.current) {
@@ -180,6 +285,11 @@ function ScrollSyncModel({
         const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
         const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
         
+        // Update video rotation
+        const currentRotation = newRotations[currentSection];
+        const nextRotation = newRotations[nextSection];
+        const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
+        
         // Scale effect - set section 5 to 0.8 scale, hide video in section 6
         let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
         if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
@@ -189,7 +299,7 @@ function ScrollSyncModel({
           scale = 0;
         }
         
-        setVideoPosition({ x: newX, y: newY, scale });
+        setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       }
     };
 
@@ -312,6 +422,7 @@ function ScrollSyncModel({
       setScrollProgress(scrollProgress);
 
       const positions = getPositionConfig();
+      const rotations = getRotationConfig();
 
       // Calculate which section we're in and interpolate
       const totalSections = showFooter ? 6 : 5; // Dynamic sections based on footer
@@ -326,6 +437,11 @@ function ScrollSyncModel({
 
       const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
       const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+
+      // Interpolate between current and next rotation
+      const currentRotation = rotations[currentSection];
+      const nextRotation = rotations[nextSection];
+      const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
 
       // Scale effect - set section 5 to 0.8 scale, hide video in section 6
       let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
@@ -354,22 +470,47 @@ function ScrollSyncModel({
       const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
 
       // Update video position and size state
-      setVideoPosition({ x: newX, y: newY, scale });
+      setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       setVideoSize({ width: newWidth, height: 'auto' });
 
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.04);
 
+      // Calculate frame for section 5 based on scroll progress within that section
+      if (currentSection === 4) {
+        // Section 5 (index 4)
+        setIsInSection5(true);
+        // Calculate frame based on progress within section 5 (0 to 1)
+        const frameNumber = Math.min(
+          Math.max(1, Math.floor(sectionProgress * totalFrames) + 1),
+          totalFrames
+        );
+        setCurrentFrame(frameNumber);
+        renderFrame(frameNumber);
+        console.log('Section 5 - Frame:', frameNumber, 'Progress:', sectionProgress);
+      } else if (currentSection === 3 && nextSection === 4) {
+        // Transitioning TO section 5 - start with frame 1
+        setIsInSection5(true);
+        setCurrentFrame(1);
+        renderFrame(1);
+        console.log('Transitioning to Section 5 - Frame:', 1);
+      } else {
+        // Not in section 5
+        setIsInSection5(false);
+      }
+
       console.log('Video position and size updated:', { 
         x: newX, 
         y: newY, 
         scale, 
+        rotation: newRotation,
         width: newWidth,
         section: currentSection,
         progress: sectionProgress,
         scrollProgress: scrollProgress,
         currentSize: currentSize.width,
-        nextSize: nextSize.width
+        nextSize: nextSize.width,
+        ...(currentSection === 4 && { frame: currentFrame })
       });
     };
 
@@ -410,6 +551,7 @@ function ScrollSyncModel({
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFooter, showHeader]);
 
 
@@ -445,8 +587,11 @@ function ScrollSyncModel({
           <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
           <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
           <div>Scale: {videoPosition.scale.toFixed(2)}</div>
+          <div>Rotation: {videoPosition.rotation.toFixed(1)}°</div>
           <div>Size: {videoSize.width}px</div>
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
+          <div>Section 5: {isInSection5 ? '✓' : '✗'}</div>
+          <div>Frame: {currentFrame}/{totalFrames}</div>
           {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
@@ -458,9 +603,30 @@ function ScrollSyncModel({
         style={{
           left: `${videoPosition.x}%`,
           top: `${videoPosition.y}%`,
-          transform: `translate(-50%, -50%) scale(${videoPosition.scale})`,
+          transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
           width: `${videoSize.width}px`,
           height: videoSize.height
+        }}
+      />
+
+      {/* Frame Sequence Canvas for Section 5 */}
+      <canvas
+        ref={canvasRef}
+        className="frame-sequence-canvas"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          width: 'auto',
+          height: 'auto',
+          zIndex: 10,
+          pointerEvents: 'none',
+          // Show during section 5 using state variable
+          opacity: isInSection5 ? 1 : 0,
+          transition: 'opacity 0.3s ease'
         }}
       />
 
@@ -597,7 +763,7 @@ function ScrollSyncModel({
         <div className={`debug-controls ${debugControlsPosition}`}>
         <button
           onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1 });
+            setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
             console.log('Manual position set to right');
           }}
           className="debug-button primary"
@@ -606,12 +772,30 @@ function ScrollSyncModel({
         </button>
         <button
           onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1 });
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
             console.log('Manual position set to center');
           }}
           className="debug-button primary"
         >
           Test Move Center
+        </button>
+        <button
+          onClick={() => {
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
+            console.log('Manual rotation set to 45 degrees');
+          }}
+          className="debug-button purple"
+        >
+          Test 45° Rotation
+        </button>
+        <button
+          onClick={() => {
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
+            console.log('Manual rotation set to -30 degrees');
+          }}
+          className="debug-button purple"
+        >
+          Test -30° Rotation
         </button>
         <button
           onClick={() => {
