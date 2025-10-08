@@ -5,7 +5,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+    background-color: black;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -170,6 +170,12 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .loader-logo-svg {
+        height: 80px; /* Reduced from 120px */
+        max-width: 280px; /* Reduced from 400px */
+        transform: scale(0.8); /* Additional scale reduction for mobile */
+    }
+
     .loader-title {
         font-size: 2.5rem;
     }
@@ -182,18 +188,18 @@
         padding: 1rem;
     }
 
-    .skip-button {
-        bottom: 1rem;
-        right: 1rem;
-        padding: 0.4rem 1rem;
-        font-size: 0.8rem;
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px) {
+    .loader-logo-svg {
+        /* height: 60px; Even smaller for very small screens */
+        /* max-width: 200px; */
+        transform: scale(0.6); /* More aggressive scaling for small screens */
     }
 }
 
-/* Fade out animation */
-.loader-container.fade-out {
-    /* animation: fadeOut 0.5s ease-out forwards; */
-}
+/* Fade out animation - currently disabled */
 
 @keyframes fadeOut {
     to {

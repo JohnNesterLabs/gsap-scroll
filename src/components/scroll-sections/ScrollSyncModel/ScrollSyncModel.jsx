@@ -858,9 +858,9 @@ function ScrollSyncModel({
                   <div className="footer-copyright-text">
                     All rights reserved to Kahuna Labs. Copyright © 2025.
                   </div>
-                  <div className="footer-copyright-text">
+                  {/* <div className="footer-copyright-text">
                     Made by Nester Labs
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ) : (

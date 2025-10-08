@@ -65,16 +65,16 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
                 </div>
 
                 {/* Loading text */}
-                <div className="loading-text">
+                {/* <div className="loading-text">
                     {loadingText}
-                </div>
+                </div> */}
 
                 {/* Animated dots */}
-                <div className="loading-dots">
+                {/* <div className="loading-dots">
                     <span className="dot" />
                     <span className="dot" />
                     <span className="dot" />
-                </div>
+                </div> */}
             </div>
 
             {/* Error message */}
@@ -85,15 +85,6 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
                 </div>
             )}
 
-            {/* Skip button (appears after 3 seconds or on error) */}
-            {(progress > 30 || error) && (
-                <button
-                    className="skip-button"
-                    onClick={onComplete}
-                >
-                    {error ? 'Continue Anyway' : 'Skip Loading'}
-                </button>
-            )}
         </div>
     );
 };
