@@ -122,17 +122,17 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
-          section1: { width: 1100, height: 'auto' },
-          section2: { width: 1100, height: 'auto' },
-          section3: { width: 1600, height: 'auto' },
-          section4: { width: 680, height: 'auto' },
+          section1: { width: 1500, height: 'auto' },
+          section2: { width: 1500, height: 'auto' },
+          section3: { width: 2500, height: 'auto' },
+          section4: { width: 1080, height: 'auto' },
           section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
           section1: { width: 3300, height: 'auto' },
           section2: { width: 2800, height: 'auto' },
-          section3: { width: 2100, height: 'auto' },
+          section3: { width: 3100, height: 'auto' },
           section4: { width: 1300, height: 'auto' },
           section5: { width: 1300, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
@@ -175,8 +175,8 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ],
         'desktop': [
-          { x: 50, y: 135 },     // Section 1 - Bottom (your laptop config)
-          { x: 95, y: 75 },      // Section 2 - Right
+          { x: 50, y: 105 },     // Section 1 - Bottom (your laptop config)
+          { x: 95, y: 55 },      // Section 2 - Right
           { x: 50, y: 50 },      // Section 3 - Center
           { x: 50, y: 50 },      // Section 4 - Left
           { x: 50, y: 50 },      // Section 5 - Top
@@ -225,10 +225,10 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ],
         'desktop': [
-          0,      // Section 1 - Normal position
-          45,     // Section 2 - 45 degree rotation
-          0,      // Section 3 - Normal position
-          -30,    // Section 4 - -30 degree rotation
+          -75,      // Section 1 - Normal position
+          -165,     // Section 2 - 45 degree rotation
+          -190,      // Section 3 - Normal position
+          -190,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ],
