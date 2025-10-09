@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import './ScrollSyncModel.css';
 
 function ScrollSyncModel({ 
@@ -22,8 +23,10 @@ function ScrollSyncModel({
   const [currentFrame, setCurrentFrame] = React.useState(1);
   const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
   const [isInSection5, setIsInSection5] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState(0);
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
+  const sectionRefs = useRef([]);
 
   // Preload frame images
   const preloadFrame = (frameNumber) => {
@@ -124,6 +127,153 @@ function ScrollSyncModel({
     return () => window.removeEventListener('resize', handleResize);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInSection5, currentFrame]);
+
+  // Text animation effect - triggers when active section changes
+  useEffect(() => {
+    const section = sections[activeSection];
+    if (!section || section.isFooter || !section.textSets) return;
+
+    const sectionElement = sectionRefs.current[activeSection];
+    if (!sectionElement) return;
+
+    const textElements = sectionElement.querySelectorAll('.text-set-line');
+    if (!textElements.length) return;
+
+    const config = section.animationConfig || {
+      type: 'fadeSlideUp',
+      staggerDelay: 0.2,
+      duration: 0.8,
+      ease: 'power2.out'
+    };
+
+    // Reset all text elements first
+    gsap.set(textElements, { 
+      opacity: 0,
+      y: 0,
+      x: 0,
+      scale: 1
+    });
+
+    // Apply animation based on type
+    switch (config.type) {
+      case 'fadeSlideUp':
+        gsap.fromTo(textElements, 
+          { 
+            opacity: 0, 
+            y: 50 
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+        break;
+
+      case 'fadeIn':
+        gsap.fromTo(textElements,
+          { 
+            opacity: 0 
+          },
+          {
+            opacity: 1,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+        break;
+
+      case 'slideLeft':
+        gsap.fromTo(textElements,
+          { 
+            opacity: 0, 
+            x: 100 
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+        break;
+
+      case 'slideRight':
+        gsap.fromTo(textElements,
+          { 
+            opacity: 0, 
+            x: -100 
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+        break;
+
+      case 'stagger':
+        gsap.fromTo(textElements,
+          { 
+            opacity: 0, 
+            y: 30,
+            scale: 0.95
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+        break;
+
+      case 'typewriter':
+        // For typewriter, we'll use a simple fade-in with char-by-char effect
+        textElements.forEach((element, index) => {
+          gsap.fromTo(element,
+            { 
+              opacity: 0,
+              x: -20
+            },
+            {
+              opacity: 1,
+              x: 0,
+              duration: config.duration,
+              ease: config.ease,
+              delay: index * config.staggerDelay
+            }
+          );
+        });
+        break;
+
+      default:
+        // Default fade slide up
+        gsap.fromTo(textElements,
+          { 
+            opacity: 0, 
+            y: 50 
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: config.duration,
+            ease: config.ease,
+            stagger: config.staggerDelay
+          }
+        );
+    }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
@@ -522,6 +672,11 @@ function ScrollSyncModel({
       const nextSection = Math.min(currentSection + 1, totalSections - 1);
       const sectionProgress = sectionIndex - currentSection;
 
+      // Track active section for animations
+      if (currentSection !== activeSection) {
+        setActiveSection(currentSection);
+      }
+
       // Interpolate between current and next position
       const currentPos = positions[currentSection];
       const nextPos = positions[nextSection];
@@ -725,49 +880,95 @@ function ScrollSyncModel({
 
   const sections = [
     { 
-      title: 'Vast and intricate, products never stop evolving.', 
+      // Option 1: Use textSets for animated multi-line text
+      textSets: [
+        'Vast and intricate,',
+        'products never stop evolving.'
+      ],
+      // Option 2: Or use traditional title/subtitle (if textSets is not provided)
+      // title: 'Vast and intricate, products never stop evolving.',
       // subtitle: 'Model at Center', 
       // description: 'Welcome to our immersive experience',
+      
+      // Animation configuration for this section's text
+      animationConfig: {
+        type: 'fadeSlideUp',     // Options: 'fadeSlideUp', 'fadeIn', 'slideLeft', 'slideRight', 'stagger', 'typewriter'
+        staggerDelay: 0.3,        // Delay between each text line (for stagger effect)
+        duration: 0.8,            // Animation duration
+        ease: 'power2.out'        // GSAP ease function
+      },
+      
       background: '#000000', 
       border: '1px solid #ffffff',
-      hasHeader: showHeader, // Use prop for header visibility
-      showNumber: true,
+      hasHeader: showHeader,
+      showNumber: false,
       showScrollHint: true
     },
     { 
-      title: 'Section 2', 
-      subtitle: 'Model moves Right', 
-      description: 'Explore the right side',
+      textSets: [
+        'Powerful Features',
+        'Built for Scale',
+        'Enterprise-grade security',
+        'and performance'
+      ],
+      animationConfig: {
+        type: 'stagger',
+        staggerDelay: 0.2,
+        duration: 0.6,
+        ease: 'power3.out'
+      },
       background: '#000000', 
       border: '1px solid #ffffff',
-      showNumber: true,
+      showNumber: false,
       showScrollHint: true
     },
     { 
-      title: 'Section 3', 
-      subtitle: 'Model moves Down', 
-      description: 'Dive deeper into the content',
+      textSets: [
+        'Innovation',
+        'at Every Turn'
+      ],
+      animationConfig: {
+        type: 'slideLeft',
+        staggerDelay: 0.4,
+        duration: 1,
+        ease: 'power2.inOut'
+      },
       background: '#000000', 
       border: '1px solid #ffffff',
-      showNumber: true,
+      showNumber: false,
       showScrollHint: true
     },
     { 
-      title: 'Section 4', 
-      subtitle: 'Model moves Left', 
-      description: 'Discover the left perspective',
+      textSets: [
+        'Discover',
+        'Transform',
+        'Succeed'
+      ],
+      animationConfig: {
+        type: 'fadeIn',
+        staggerDelay: 0.3,
+        duration: 0.7,
+        ease: 'power1.out'
+      },
       background: '#000000', 
       border: '1px solid #ffffff',
-      showNumber: true,
+      showNumber: false,
       showScrollHint: true
     },
     { 
-      title: 'Section 5', 
-      subtitle: 'Model moves Up', 
-      description: 'Experience the full view',
+      textSets: [
+        'Experience the',
+        'full view'
+      ],
+      animationConfig: {
+        type: 'fadeSlideUp',
+        staggerDelay: 0.25,
+        duration: 0.8,
+        ease: 'power2.out'
+      },
       background: '#000000', 
       border: '1x solid #ffffff',
-      showNumber: true,
+      showNumber: false,
       showScrollHint: true
     },
     ...(showFooter ? [{ 
@@ -775,7 +976,7 @@ function ScrollSyncModel({
       subtitle: 'Contact & Links', 
       background: '#0A0A0A', 
       border: '1px solid #ffffff',
-      isFooter: true // Add footer flag for section 6
+      isFooter: true
     }] : [])
   ];
 
@@ -880,6 +1081,7 @@ function ScrollSyncModel({
           return (
             <div
               key={index}
+              ref={(el) => (sectionRefs.current[index] = el)}
               className={`section ${section.isFooter ? 'footer' : ''} section-justify-${contentPosition.horizontal} section-align-${contentPosition.vertical}`}
               style={{
                 background: section.background,
@@ -959,11 +1161,31 @@ function ScrollSyncModel({
                   {section.showNumber !== false && (
                     <div className="section-number">SECTION {index + 1}</div>
                   )}
-                  <h2 className="section-title">{section.title}</h2>
-                  <p className="section-subtitle">{section.subtitle}</p>
-                  {section.description && (
-                    <p className="section-description">{section.description}</p>
+                  
+                  {/* Render textSets with animations if provided */}
+                  {section.textSets && section.textSets.length > 0 ? (
+                    <div className="text-sets-container">
+                      {section.textSets.map((text, textIndex) => (
+                        <div 
+                          key={textIndex} 
+                          className="text-set-line"
+                          style={{ opacity: 0 }}
+                        >
+                          {text}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Fallback to traditional title/subtitle if no textSets
+                    <>
+                      {section.title && <h2 className="section-title">{section.title}</h2>}
+                      {section.subtitle && <p className="section-subtitle">{section.subtitle}</p>}
+                      {section.description && (
+                        <p className="section-description">{section.description}</p>
+                      )}
+                    </>
                   )}
+                  
                   {section.showScrollHint !== false && (
                     <div className="section-scroll-hint">
                       <p className="section-scroll-text">
