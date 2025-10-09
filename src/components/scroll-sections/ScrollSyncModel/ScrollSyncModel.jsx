@@ -10,7 +10,7 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/map-alive-test.mp4"
+  videoSrc = "/final-hero-video1.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -379,17 +379,17 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
-          section1: { width: 1500, height: 'auto' },
-          section2: { width: 1500, height: 'auto' },
+          section1: { width: 1600, height: 'auto' },
+          section2: { width: 1600, height: 'auto' },
           section3: { width: 2500, height: 'auto' },
-          section4: { width: 1080, height: 'auto' },
+          section4: { width: 1280, height: 'auto' },
           section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
           section1: { width: 3300, height: 'auto' },
           section2: { width: 2800, height: 'auto' },
-          section3: { width: 3100, height: 'auto' },
+          section3: { width: 3400, height: 'auto' },
           section4: { width: 1300, height: 'auto' },
           section5: { width: 1300, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
@@ -482,18 +482,18 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ],
         'desktop': [
-          -75,      // Section 1 - Normal position
-          -165,     // Section 2 - 45 degree rotation
-          -190,      // Section 3 - Normal position
-          -190,    // Section 4 - -30 degree rotation
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ],
         'large-desktop': [
-          -75,      // Section 1 - Normal position
-          -165,     // Section 2 - 45 degree rotation
-          -190,      // Section 3 - Normal position
-          -190,    // Section 4 - -30 degree rotation
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ]
