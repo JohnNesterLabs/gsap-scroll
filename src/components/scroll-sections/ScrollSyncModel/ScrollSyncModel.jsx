@@ -24,9 +24,11 @@ function ScrollSyncModel({
   const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
   const [isInSection5, setIsInSection5] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState(0);
+  const [activeTextSetIndex, setActiveTextSetIndex] = React.useState({}); // Track which text set is active per section
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
   const sectionRefs = useRef([]);
+  const textSetTimersRef = useRef({}); // Store timers for text set cycling
 
   // Preload frame images
   const preloadFrame = (frameNumber) => {
@@ -128,17 +130,18 @@ function ScrollSyncModel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInSection5, currentFrame]);
 
-  // Text animation effect - triggers when active section changes
+  // Text animation effect - triggers when active section or text set index changes
   useEffect(() => {
     const section = sections[activeSection];
     if (!section || section.isFooter || !section.textSets) return;
 
     const sectionElement = sectionRefs.current[activeSection];
     if (!sectionElement) return;
+    
+    // Capture current timer reference for cleanup
+    const currentSectionTimers = textSetTimersRef.current;
 
-    const textElements = sectionElement.querySelectorAll('.text-set-line');
-    if (!textElements.length) return;
-
+    // Get animation config with defaults
     const config = section.animationConfig || {
       type: 'fadeSlideUp',
       staggerDelay: 0.2,
@@ -146,134 +149,181 @@ function ScrollSyncModel({
       ease: 'power2.out'
     };
 
-    // Reset all text elements first
-    gsap.set(textElements, { 
-      opacity: 0,
-      y: 0,
-      x: 0,
-      scale: 1
-    });
+    // Helper function to animate text elements
+    const animateTextElements = (textElements, animateIn = true) => {
+      if (!textElements || !textElements.length) return;
 
-    // Apply animation based on type
-    switch (config.type) {
-      case 'fadeSlideUp':
-        gsap.fromTo(textElements, 
-          { 
-            opacity: 0, 
-            y: 50 
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
-          }
-        );
-        break;
+      // Reset first
+      gsap.set(textElements, { 
+        opacity: 0,
+        y: 0,
+        x: 0,
+        scale: 1
+      });
 
-      case 'fadeIn':
-        gsap.fromTo(textElements,
-          { 
-            opacity: 0 
-          },
-          {
-            opacity: 1,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
-          }
-        );
-        break;
+      if (!animateIn) return; // If animating out, just keep them hidden
 
-      case 'slideLeft':
-        gsap.fromTo(textElements,
-          { 
-            opacity: 0, 
-            x: 100 
-          },
-          {
-            opacity: 1,
-            x: 0,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
-          }
-        );
-        break;
+      // Apply animation based on type
+      switch (config.type) {
+        case 'fadeSlideUp':
+          gsap.fromTo(textElements, 
+            { opacity: 0, y: 50 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: config.duration,
+              ease: config.ease,
+              stagger: config.staggerDelay
+            }
+          );
+          break;
 
-      case 'slideRight':
-        gsap.fromTo(textElements,
-          { 
-            opacity: 0, 
-            x: -100 
-          },
-          {
-            opacity: 1,
-            x: 0,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
-          }
-        );
-        break;
+        case 'fadeIn':
+          gsap.fromTo(textElements,
+            { opacity: 0 },
+            {
+              opacity: 1,
+              duration: config.duration,
+              ease: config.ease,
+              stagger: config.staggerDelay
+            }
+          );
+          break;
 
-      case 'stagger':
-        gsap.fromTo(textElements,
-          { 
-            opacity: 0, 
-            y: 30,
-            scale: 0.95
-          },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
-          }
-        );
-        break;
-
-      case 'typewriter':
-        // For typewriter, we'll use a simple fade-in with char-by-char effect
-        textElements.forEach((element, index) => {
-          gsap.fromTo(element,
-            { 
-              opacity: 0,
-              x: -20
-            },
+        case 'slideLeft':
+          gsap.fromTo(textElements,
+            { opacity: 0, x: 100 },
             {
               opacity: 1,
               x: 0,
               duration: config.duration,
               ease: config.ease,
-              delay: index * config.staggerDelay
+              stagger: config.staggerDelay
             }
           );
-        });
-        break;
+          break;
 
-      default:
-        // Default fade slide up
-        gsap.fromTo(textElements,
-          { 
-            opacity: 0, 
-            y: 50 
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: config.duration,
-            ease: config.ease,
-            stagger: config.staggerDelay
+        case 'slideRight':
+          gsap.fromTo(textElements,
+            { opacity: 0, x: -100 },
+            {
+              opacity: 1,
+              x: 0,
+              duration: config.duration,
+              ease: config.ease,
+              stagger: config.staggerDelay
+            }
+          );
+          break;
+
+        case 'stagger':
+          gsap.fromTo(textElements,
+            { opacity: 0, y: 30, scale: 0.95 },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: config.duration,
+              ease: config.ease,
+              stagger: config.staggerDelay
+            }
+          );
+          break;
+
+        case 'typewriter':
+          textElements.forEach((element, index) => {
+            gsap.fromTo(element,
+              { opacity: 0, x: -20 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: config.duration,
+                ease: config.ease,
+                delay: index * config.staggerDelay
+              }
+            );
+          });
+          break;
+
+        default:
+          gsap.fromTo(textElements,
+            { opacity: 0, y: 50 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: config.duration,
+              ease: config.ease,
+              stagger: config.staggerDelay
+            }
+          );
+      }
+    };
+
+    // Check if textSets is an object with multiple sets or a simple array
+    const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
+    
+    if (isMultipleSets) {
+      // Handle multiple text sets with cycling
+      const textSetKeys = Object.keys(section.textSets);
+      const currentIndex = activeTextSetIndex[activeSection] || 0;
+      const currentKey = textSetKeys[currentIndex];
+      
+      // Get timing config with defaults
+      const timingConfig = section.textSetTiming || {
+        displayDuration: 4000,      // How long to show each set (ms)
+        fadeOutDuration: 0.5,       // Fade out duration (seconds)
+        delayBetweenSets: 0.3,      // Delay between fade out and fade in (seconds)
+        loop: true                   // Whether to loop back to first set
+      };
+
+      // Animate in current text set
+      const currentTextElements = sectionElement.querySelectorAll(`.text-set-line[data-set="${currentKey}"]`);
+      animateTextElements(currentTextElements, true);
+
+      // Clear any existing timer for this section
+      if (textSetTimersRef.current[activeSection]) {
+        clearTimeout(textSetTimersRef.current[activeSection]);
+      }
+
+      // Set up timer to cycle to next text set
+      textSetTimersRef.current[activeSection] = setTimeout(() => {
+        // Fade out current text set
+        gsap.to(currentTextElements, {
+          opacity: 0,
+          duration: timingConfig.fadeOutDuration,
+          ease: 'power2.in',
+          onComplete: () => {
+            // Move to next text set after delay
+            setTimeout(() => {
+              const nextIndex = (currentIndex + 1) % textSetKeys.length;
+              
+              // Only cycle if loop is enabled or we haven't reached the end
+              if (timingConfig.loop || nextIndex > currentIndex) {
+                setActiveTextSetIndex(prev => ({
+                  ...prev,
+                  [activeSection]: nextIndex
+                }));
+              }
+            }, timingConfig.delayBetweenSets * 1000);
           }
-        );
+        });
+      }, timingConfig.displayDuration);
+
+    } else {
+      // Handle simple array of text (original behavior)
+      const textElements = sectionElement.querySelectorAll('.text-set-line');
+      animateTextElements(textElements, true);
     }
 
+    // Cleanup function
+    return () => {
+      if (currentSectionTimers && currentSectionTimers[activeSection]) {
+        clearTimeout(currentSectionTimers[activeSection]);
+      }
+    };
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection]);
+  }, [activeSection, activeTextSetIndex]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
@@ -880,15 +930,31 @@ function ScrollSyncModel({
 
   const sections = [
     { 
-      // Option 1: Use textSets for animated multi-line text
-      textSets: [
-        'Vast and intricate,',
-        'products never stop evolving.'
-      ],
-      // Option 2: Or use traditional title/subtitle (if textSets is not provided)
-      // title: 'Vast and intricate, products never stop evolving.',
-      // subtitle: 'Model at Center', 
-      // description: 'Welcome to our immersive experience',
+      // Option 1: Use textSets with multiple cycling sets (NEW!)
+      textSets: {
+        set1: [
+          'Vast and intricate,',
+          'products never stop evolving.'
+        ],
+        set2: [
+          'Enterprise customers have an',
+          'endless spectrum of realities.'
+        ]
+      },
+      
+      // Timing configuration for text set cycling
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: true                   // Loop back to first set after last
+      },
+      
+      // Option 2: Use simple array (original behavior - no cycling)
+      // textSets: [
+      //   'Vast and intricate,',
+      //   'products never stop evolving.'
+      // ],
       
       // Animation configuration for this section's text
       animationConfig: {
@@ -898,6 +964,9 @@ function ScrollSyncModel({
         ease: 'power2.out'        // GSAP ease function
       },
       
+      // Text alignment configuration
+      textAlign: 'center',       // Options: 'left', 'center', 'right'
+      
       background: '#000000', 
       border: '1px solid #ffffff',
       hasHeader: showHeader,
@@ -905,18 +974,25 @@ function ScrollSyncModel({
       showScrollHint: true
     },
     { 
-      textSets: [
-        'Powerful Features',
-        'Built for Scale',
-        'Enterprise-grade security',
-        'and performance'
-      ],
+      textSets: {
+        set1: [
+          'The support landscape is',
+          'boundless and shifting'
+        ],
+        set2: [
+          "You're lost.",
+          "",
+          'and fractional knowledge',
+          "cripple frontline actions."
+        ]
+      },
       animationConfig: {
         type: 'stagger',
         staggerDelay: 0.2,
         duration: 0.6,
         ease: 'power3.out'
       },
+      textAlign: 'left',         // Left-aligned text for section 2
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
@@ -924,8 +1000,7 @@ function ScrollSyncModel({
     },
     { 
       textSets: [
-        'Innovation',
-        'at Every Turn'
+        'Meet Kahuna AI',
       ],
       animationConfig: {
         type: 'slideLeft',
@@ -933,6 +1008,7 @@ function ScrollSyncModel({
         duration: 1,
         ease: 'power2.inOut'
       },
+      textAlign: 'center',       // Center-aligned text
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
@@ -950,6 +1026,7 @@ function ScrollSyncModel({
         duration: 0.7,
         ease: 'power1.out'
       },
+      textAlign: 'right',        // Right-aligned text
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
@@ -966,6 +1043,7 @@ function ScrollSyncModel({
         duration: 0.8,
         ease: 'power2.out'
       },
+      textAlign: 'center',       // Center-aligned text
       background: '#000000', 
       border: '1x solid #ffffff',
       showNumber: false,
@@ -1157,23 +1235,53 @@ function ScrollSyncModel({
                 </div>
               ) : (
                 // Regular section content
-                <div className="section-content">
+                <div 
+                  className="section-content"
+                  style={{ 
+                    textAlign: section.textAlign || 'center'  // Apply text alignment from config
+                  }}
+                >
                   {section.showNumber !== false && (
                     <div className="section-number">SECTION {index + 1}</div>
                   )}
                   
                   {/* Render textSets with animations if provided */}
-                  {section.textSets && section.textSets.length > 0 ? (
+                  {section.textSets ? (
                     <div className="text-sets-container">
-                      {section.textSets.map((text, textIndex) => (
-                        <div 
-                          key={textIndex} 
-                          className="text-set-line"
-                          style={{ opacity: 0 }}
-                        >
-                          {text}
-                        </div>
-                      ))}
+                      {/* Check if textSets is an object with multiple sets or a simple array */}
+                      {Array.isArray(section.textSets) ? (
+                        // Simple array - original behavior
+                        section.textSets.map((text, textIndex) => (
+                          <div 
+                            key={textIndex} 
+                            className="text-set-line"
+                            style={{ opacity: 0 }}
+                          >
+                            {text}
+                          </div>
+                        ))
+                      ) : (
+                        // Object with multiple sets - cycling behavior
+                        // Render all sets, each in its own absolutely positioned group
+                        Object.entries(section.textSets).map(([setKey, textArray]) => (
+                          <div 
+                            key={setKey}
+                            className="text-set-group"
+                            data-set={setKey}
+                          >
+                            {textArray.map((text, textIndex) => (
+                              <div 
+                                key={`${setKey}-${textIndex}`} 
+                                className="text-set-line"
+                                data-set={setKey}
+                                style={{ opacity: 0 }}
+                              >
+                                {text}
+                              </div>
+                            ))}
+                          </div>
+                        ))
+                      )}
                     </div>
                   ) : (
                     // Fallback to traditional title/subtitle if no textSets

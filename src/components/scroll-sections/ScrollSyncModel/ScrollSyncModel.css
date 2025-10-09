@@ -794,9 +794,21 @@
 .text-sets-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.5rem;
   width: 100%;
+  position: relative;
+  min-height: 150px; /* Reserve space for text cycling */
+}
+
+/* Text Set Group - for cycling multiple sets */
+.text-set-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .text-set-line {
@@ -807,8 +819,24 @@
   margin: 0;
   padding: 0;
   will-change: transform, opacity;
-  text-align: center;
   font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  width: 100%;
+}
+
+/* Text alignment classes - inherit from parent */
+.section-content[style*="text-align: left"] .text-sets-container,
+.section-content[style*="text-align: left"] .text-set-group {
+  align-items: flex-start;
+}
+
+.section-content[style*="text-align: center"] .text-sets-container,
+.section-content[style*="text-align: center"] .text-set-group {
+  align-items: center;
+}
+
+.section-content[style*="text-align: right"] .text-sets-container,
+.section-content[style*="text-align: right"] .text-set-group {
+  align-items: flex-end;
 }
 
 .section-number {
@@ -914,6 +942,7 @@
   .section-content {
     max-width: 1100px;
     padding: 2.5rem;
+    width: -webkit-fill-available;
   }
   
   .section-number {
@@ -934,6 +963,10 @@
   
   .text-set-line {
     font-size: 4.5rem;
+  }
+  
+  .text-sets-container {
+    min-height: 180px;
   }
   
   .section-justify-left {
@@ -976,6 +1009,10 @@
     font-size: 3.75rem;
   }
   
+  .text-sets-container {
+    min-height: 150px;
+  }
+  
   .section-justify-left {
     padding-left: 4rem;
   }
@@ -1014,6 +1051,10 @@
   
   .text-set-line {
     font-size: 2.5rem;
+  }
+  
+  .text-sets-container {
+    min-height: 120px;
   }
   
   .section-justify-left {
@@ -1057,6 +1098,10 @@
     font-size: 2rem;
   }
   
+  .text-sets-container {
+    min-height: 100px;
+  }
+  
   .section-justify-left {
     padding-left: 2rem;
   }
@@ -1096,6 +1141,10 @@
   
   .text-set-line {
     font-size: 1.75rem;
+  }
+  
+  .text-sets-container {
+    min-height: 90px;
   }
   
   .section-scroll-hint {
@@ -1149,6 +1198,10 @@
   
   .text-set-line {
     font-size: 1.5rem;
+  }
+  
+  .text-sets-container {
+    min-height: 80px;
   }
   
   .section-scroll-hint {
