@@ -22,6 +22,7 @@ function ScrollSyncModel({
   const [currentFrame, setCurrentFrame] = React.useState(1);
   const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
   const [isInSection5, setIsInSection5] = React.useState(false);
+  const [section3TextVisible, setSection3TextVisible] = React.useState(false);
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
 
@@ -476,6 +477,31 @@ function ScrollSyncModel({
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
       setHeaderVisible(showHeader && scrollProgress < 0.04);
 
+      // Handle Section 3 text animation - show "Meet Kahuna AI" when in center of section 3
+      if (currentSection === 2) {
+        // We're in section 3 (index 2), check if we're in the center (50% of section 3)
+        const section3StartProgress = 2 / (totalSections - 1); // Start of section 3
+        const section3EndProgress = 3 / (totalSections - 1); // End of section 3
+        const section3Progress = (scrollProgress - section3StartProgress) / (section3EndProgress - section3StartProgress);
+
+        console.log('Section 3 progress:', Math.floor(section3Progress * 100) + '%', 'Text visible:', section3TextVisible);
+
+        // Show text when we're in the center of section 3 (around 50% progress)
+        if (section3Progress >= .2 && section3Progress <= .4 && !section3TextVisible) {
+          setSection3TextVisible(true);
+          console.log('Section 3 "Meet Kahuna AI" zoom in animation started at center');
+        } else if ((section3Progress < 0.2 || section3Progress > 0.4) && section3TextVisible) {
+          setSection3TextVisible(false);
+          console.log('Section 3 "Meet Kahuna AI" animation ended');
+        }
+      } else if (currentSection !== 2) {
+        // Reset text visibility when not in section 3
+        if (section3TextVisible) {
+          setSection3TextVisible(false);
+          console.log('Section 3 text animation reset - currentSection:', currentSection);
+        }
+      }
+
       // Calculate frame for section 5 based on scroll progress within that section
       if (currentSection === 4) {
         // Section 5 (index 4)
@@ -510,6 +536,7 @@ function ScrollSyncModel({
         scrollProgress: scrollProgress,
         currentSize: currentSize.width,
         nextSize: nextSize.width,
+        section3TextVisible: section3TextVisible,
         ...(currentSection === 4 && { frame: currentFrame })
       });
     };
@@ -592,6 +619,7 @@ function ScrollSyncModel({
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
           <div>Section 5: {isInSection5 ? '✓' : '✗'}</div>
           <div>Frame: {currentFrame}/{totalFrames}</div>
+          <div>Section 3 Text: {section3TextVisible ? '✓ Visible' : '✗ Hidden'}</div>
           {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
@@ -747,6 +775,13 @@ function ScrollSyncModel({
                 <div className="hero-line-5 section-2">Outdated, laborious</div>
                 <div className="hero-line-6 section-2">and fractional knowledge</div>
                 <div className="hero-line-7 section-2">cripple frontline actions</div>
+              </div>
+            ) : index === 2 ? (
+              // Section 3 - "Meet Kahuna AI" text with zoom animation
+              <div className="section-3-text-container">
+                <div className={`section-3-text ${section3TextVisible ? 'animate' : ''}`}>
+                  Meet Kahuna AI
+                </div>
               </div>
             ) : (
               // Regular section content for other sections
