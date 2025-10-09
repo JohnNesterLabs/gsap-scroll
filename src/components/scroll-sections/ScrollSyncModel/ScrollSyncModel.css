@@ -745,8 +745,8 @@
 
 /* Section 3 text container */
 .section-3-text-container {
-  position: relative;
-  top: 70%;
+  position: fixed;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 20;
@@ -757,6 +757,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: left 0.8s ease, transform 0.8s ease, top 0.8s ease;
+}
+
+/* Section 3 text container - left position */
+.section-3-text-container.section-3-text-left {
+  left: 20%;
+  transform: translate(-50%, -50%);
+}
+
+/* Section 3 text container - bottom position */
+.section-3-text-container.section-3-text-bottom {
+  top: 90%;
 }
 
 /* Section 3 text styling */

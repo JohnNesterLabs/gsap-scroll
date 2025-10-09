@@ -23,6 +23,8 @@ function ScrollSyncModel({
   const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
   const [isInSection5, setIsInSection5] = React.useState(false);
   const [section3TextVisible, setSection3TextVisible] = React.useState(false);
+  const [section3TextPosition, setSection3TextPosition] = React.useState('center');
+  const [section3TextVertical, setSection3TextVertical] = React.useState('top');
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
 
@@ -489,15 +491,44 @@ function ScrollSyncModel({
         // Show text when we're in the center of section 3 (around 50% progress)
         if (section3Progress >= .2 && section3Progress <= .4 && !section3TextVisible) {
           setSection3TextVisible(true);
+          setSection3TextPosition('center');
+          setSection3TextVertical('top');
           console.log('Section 3 "Meet Kahuna AI" zoom in animation started at center');
-        } else if ((section3Progress < 0.2 || section3Progress > 0.4) && section3TextVisible) {
+        } else if (section3Progress > 0.4 && section3TextVisible) {
+          // Keep text in center until we reach section 4 center
+          setSection3TextPosition('center');
+          setSection3TextVertical('top');
+          console.log('Section 3 "Meet Kahuna AI" staying in center');
+        } else if (section3Progress < 0.2 && section3TextVisible) {
           setSection3TextVisible(false);
           console.log('Section 3 "Meet Kahuna AI" animation ended');
         }
-      } else if (currentSection !== 2) {
-        // Reset text visibility when not in section 3
+      } else if (currentSection === 3) {
+        // We're in section 4 (index 3), check if we're in the center
+        const section4StartProgress = 3 / (totalSections - 1); // Start of section 4
+        const section4EndProgress = 4 / (totalSections - 1); // End of section 4
+        const section4Progress = (scrollProgress - section4StartProgress) / (section4EndProgress - section4StartProgress);
+
+        console.log('Section 4 progress:', Math.floor(section4Progress * 100) + '%');
+
+        // Move text to left immediately when entering section 4
+        if (section4Progress < 0.8) {
+          if (!section3TextVisible) {
+            setSection3TextVisible(true);
+          }
+          setSection3TextPosition('left');
+          setSection3TextVertical('top');
+          console.log('Section 4 - "Meet Kahuna AI" moved to left immediately', 'Progress:', Math.floor(section4Progress * 100) + '%', 'Position:', 'left');
+        } else if (section4Progress >= 0.8) {
+          // Hide text when scrolling past section 4
+          setSection3TextVisible(false);
+          console.log('Section 4 end - "Meet Kahuna AI" disappeared');
+        }
+      } else if (currentSection !== 2 && currentSection !== 3) {
+        // Reset text visibility when not in section 3 or 4
         if (section3TextVisible) {
           setSection3TextVisible(false);
+          setSection3TextPosition('center');
           console.log('Section 3 text animation reset - currentSection:', currentSection);
         }
       }
@@ -619,7 +650,7 @@ function ScrollSyncModel({
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
           <div>Section 5: {isInSection5 ? '✓' : '✗'}</div>
           <div>Frame: {currentFrame}/{totalFrames}</div>
-          <div>Section 3 Text: {section3TextVisible ? '✓ Visible' : '✗ Hidden'}</div>
+          <div>Section 3 Text: {section3TextVisible ? '✓ Visible' : '✗ Hidden'} ({section3TextPosition}, {section3TextVertical})</div>
           {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
@@ -778,7 +809,14 @@ function ScrollSyncModel({
               </div>
             ) : index === 2 ? (
               // Section 3 - "Meet Kahuna AI" text with zoom animation
-              <div className="section-3-text-container">
+              <div className={`section-3-text-container ${section3TextPosition === 'left' ? 'section-3-text-left' : ''} ${section3TextVertical === 'bottom' ? 'section-3-text-bottom' : ''}`}>
+                <div className={`section-3-text ${section3TextVisible ? 'animate' : ''}`}>
+                  Meet Kahuna AI
+                </div>
+              </div>
+            ) : index === 3 ? (
+              // Section 4 - "Meet Kahuna AI" text on left side
+              <div className={`section-3-text-container ${section3TextPosition === 'left' ? 'section-3-text-left' : ''} ${section3TextVertical === 'bottom' ? 'section-3-text-bottom' : ''}`}>
                 <div className={`section-3-text ${section3TextVisible ? 'animate' : ''}`}>
                   Meet Kahuna AI
                 </div>
