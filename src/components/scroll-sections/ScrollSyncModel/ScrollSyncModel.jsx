@@ -285,29 +285,35 @@ function ScrollSyncModel({
         clearTimeout(textSetTimersRef.current[activeSection]);
       }
 
-      // Set up timer to cycle to next text set
-      textSetTimersRef.current[activeSection] = setTimeout(() => {
-        // Fade out current text set
-        gsap.to(currentTextElements, {
-          opacity: 0,
-          duration: timingConfig.fadeOutDuration,
-          ease: 'power2.in',
-          onComplete: () => {
-            // Move to next text set after delay
-            setTimeout(() => {
-              const nextIndex = (currentIndex + 1) % textSetKeys.length;
-              
-              // Only cycle if loop is enabled or we haven't reached the end
-              if (timingConfig.loop || nextIndex > currentIndex) {
+      // Check if we're on the last set
+      const isLastSet = currentIndex === textSetKeys.length - 1;
+      
+      // Only set up cycling timer if:
+      // - loop is enabled, OR
+      // - we're not on the last set yet
+      if (timingConfig.loop || !isLastSet) {
+        // Set up timer to cycle to next text set
+        textSetTimersRef.current[activeSection] = setTimeout(() => {
+          // Fade out current text set
+          gsap.to(currentTextElements, {
+            opacity: 0,
+            duration: timingConfig.fadeOutDuration,
+            ease: 'power2.in',
+            onComplete: () => {
+              // Move to next text set after delay
+              setTimeout(() => {
+                const nextIndex = (currentIndex + 1) % textSetKeys.length;
+                
                 setActiveTextSetIndex(prev => ({
                   ...prev,
                   [activeSection]: nextIndex
                 }));
-              }
-            }, timingConfig.delayBetweenSets * 1000);
-          }
-        });
-      }, timingConfig.displayDuration);
+              }, timingConfig.delayBetweenSets * 1000);
+            }
+          });
+        }, timingConfig.displayDuration);
+      }
+      // If loop is false and we're on the last set, keep it visible permanently
 
     } else {
       // Handle simple array of text (original behavior)
@@ -947,7 +953,7 @@ function ScrollSyncModel({
         displayDuration: 4000,      // Show each set for 4 seconds
         fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
         delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
-        loop: true                   // Loop back to first set after last
+        loop: false                   // Loop back to first set after last
       },
       
       // Option 2: Use simple array (original behavior - no cycling)
@@ -971,7 +977,7 @@ function ScrollSyncModel({
       border: '1px solid #ffffff',
       hasHeader: showHeader,
       showNumber: false,
-      showScrollHint: true
+      showScrollHint: false
     },
     { 
       textSets: {
@@ -986,6 +992,12 @@ function ScrollSyncModel({
           "cripple frontline actions."
         ]
       },
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
       animationConfig: {
         type: 'stagger',
         staggerDelay: 0.2,
@@ -996,12 +1008,18 @@ function ScrollSyncModel({
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
-      showScrollHint: true
+      showScrollHint: false
     },
     { 
       textSets: [
         'Meet Kahuna AI',
       ],
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
       animationConfig: {
         type: 'slideLeft',
         staggerDelay: 0.4,
@@ -1012,7 +1030,7 @@ function ScrollSyncModel({
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
-      showScrollHint: true
+      showScrollHint: false
     },
     { 
       textSets: [
@@ -1020,6 +1038,12 @@ function ScrollSyncModel({
         'Transform',
         'Succeed'
       ],
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
       animationConfig: {
         type: 'fadeIn',
         staggerDelay: 0.3,
@@ -1030,13 +1054,19 @@ function ScrollSyncModel({
       background: '#000000', 
       border: '1px solid #ffffff',
       showNumber: false,
-      showScrollHint: true
+      showScrollHint: false
     },
     { 
       textSets: [
         'Experience the',
         'full view'
       ],
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
       animationConfig: {
         type: 'fadeSlideUp',
         staggerDelay: 0.25,
@@ -1047,7 +1077,7 @@ function ScrollSyncModel({
       background: '#000000', 
       border: '1x solid #ffffff',
       showNumber: false,
-      showScrollHint: true
+      showScrollHint: false
     },
     ...(showFooter ? [{ 
       title: 'Footer', 

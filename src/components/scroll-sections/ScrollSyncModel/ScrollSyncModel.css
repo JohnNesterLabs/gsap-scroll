@@ -987,6 +987,7 @@
   .section-content {
     max-width: 900px;
     padding: 2rem;
+    width: -webkit-fill-available;
   }
   
   .section-number {
