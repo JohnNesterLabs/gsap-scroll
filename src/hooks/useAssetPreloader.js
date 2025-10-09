@@ -86,7 +86,7 @@ export const useAssetPreloader = () => {
 
         try {
             // Prioritize critical assets first
-            const criticalAssets = ASSETS_TO_PRELOAD.filter(asset => 
+            const criticalAssets = ASSETS_TO_PRELOAD.filter(asset =>
                 asset.includes('.mp4') || asset.includes('.svg') || asset.includes('.png')
             ).filter(asset => !asset.includes('/frames/frame_'));
 

@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import './ScrollSyncModel.css';
 
-function ScrollSyncModel({ 
-  showScrollIndicator = false, 
+function ScrollSyncModel({
+  showScrollIndicator = false,
   showDebugControls = false,
   showDebugInfo = false,
   showHeader = true,
@@ -25,10 +25,13 @@ function ScrollSyncModel({
   const [isInSection5, setIsInSection5] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState(0);
   const [activeTextSetIndex, setActiveTextSetIndex] = React.useState({}); // Track which text set is active per section
+  const [showArrow, setShowArrow] = React.useState(false); // Track arrow visibility
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
   const sectionRefs = useRef([]);
   const textSetTimersRef = useRef({}); // Store timers for text set cycling
+  const arrowTimerRef = useRef(null); // Timer for arrow appearance
+  const lastScrollTopRef = useRef(0); // Track previous scroll position
 
   // Preload frame images
   const preloadFrame = (frameNumber) => {
@@ -52,21 +55,21 @@ function ScrollSyncModel({
       // Set canvas size to full viewport
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      
+
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // Calculate scaling to completely fill screen (crop if necessary)
       const imgAspect = img.width / img.height;
       const canvasAspect = canvas.width / canvas.height;
-      
+
       let drawWidth, drawHeight, sourceX, sourceY, sourceWidth, sourceHeight;
-      
+
       if (imgAspect > canvasAspect) {
         // Image is wider - crop sides to fill height
         drawHeight = canvas.height;
         drawWidth = canvas.width;
-        
+
         // Calculate source crop area to maintain aspect ratio
         sourceHeight = img.height;
         sourceWidth = img.height * canvasAspect;
@@ -76,14 +79,14 @@ function ScrollSyncModel({
         // Image is taller - crop top/bottom to fill width
         drawWidth = canvas.width;
         drawHeight = canvas.height;
-        
+
         // Calculate source crop area to maintain aspect ratio
         sourceWidth = img.width;
         sourceHeight = img.width / canvasAspect;
         sourceX = 0;
         sourceY = (img.height - sourceHeight) / 2;
       }
-      
+
       // Draw image scaled and cropped to fill entire screen
       ctx.drawImage(
         img,
@@ -113,7 +116,7 @@ function ScrollSyncModel({
   // Render frame when currentFrame changes
   useEffect(() => {
     renderFrame(currentFrame);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFrame]);
 
   // Handle window resize for full-screen canvas
@@ -127,7 +130,7 @@ function ScrollSyncModel({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInSection5, currentFrame]);
 
   // Text animation effect - triggers when active section or text set index changes
@@ -137,7 +140,7 @@ function ScrollSyncModel({
 
     const sectionElement = sectionRefs.current[activeSection];
     if (!sectionElement) return;
-    
+
     // Capture current timer reference for cleanup
     const currentSectionTimers = textSetTimersRef.current;
 
@@ -154,7 +157,7 @@ function ScrollSyncModel({
       if (!textElements || !textElements.length) return;
 
       // Reset first
-      gsap.set(textElements, { 
+      gsap.set(textElements, {
         opacity: 0,
         y: 0,
         x: 0,
@@ -166,7 +169,7 @@ function ScrollSyncModel({
       // Apply animation based on type
       switch (config.type) {
         case 'fadeSlideUp':
-          gsap.fromTo(textElements, 
+          gsap.fromTo(textElements,
             { opacity: 0, y: 50 },
             {
               opacity: 1,
@@ -261,13 +264,13 @@ function ScrollSyncModel({
 
     // Check if textSets is an object with multiple sets or a simple array
     const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
-    
+
     if (isMultipleSets) {
       // Handle multiple text sets with cycling
       const textSetKeys = Object.keys(section.textSets);
       const currentIndex = activeTextSetIndex[activeSection] || 0;
       const currentKey = textSetKeys[currentIndex];
-      
+
       // Get timing config with defaults
       const timingConfig = section.textSetTiming || {
         displayDuration: 4000,      // How long to show each set (ms)
@@ -279,6 +282,28 @@ function ScrollSyncModel({
       // Animate in current text set
       const currentTextElements = sectionElement.querySelectorAll(`.text-set-line[data-set="${currentKey}"]`);
       animateTextElements(currentTextElements, true);
+
+      // Special logic for Section 1, set2 (Enterprise customers text)
+      if (activeSection === 0 && currentKey === 'set2') {
+        // Clear any existing arrow timer
+        if (arrowTimerRef.current) {
+          clearTimeout(arrowTimerRef.current);
+        }
+
+        // Calculate when text animation completes (animation duration + stagger delay * number of lines)
+        const animationDuration = config.duration || 0.8;
+        const staggerDelay = config.staggerDelay || 0.3;
+        const textLines = currentTextElements.length;
+        const totalAnimationTime = animationDuration + (staggerDelay * (textLines - 1));
+
+        // Show arrow immediately after text animation completes
+        arrowTimerRef.current = setTimeout(() => {
+          setShowArrow(true);
+        }, totalAnimationTime * 1000); // Convert to milliseconds
+      } else {
+        // Arrow hiding is now handled only in the scroll handler
+        // Keep arrow visible during text cycling within Section 1
+      }
 
       // Clear any existing timer for this section
       if (textSetTimersRef.current[activeSection]) {
@@ -296,7 +321,7 @@ function ScrollSyncModel({
             // Move to next text set after delay
             setTimeout(() => {
               const nextIndex = (currentIndex + 1) % textSetKeys.length;
-              
+
               // Only cycle if loop is enabled or we haven't reached the end
               if (timingConfig.loop || nextIndex > currentIndex) {
                 setActiveTextSetIndex(prev => ({
@@ -320,16 +345,19 @@ function ScrollSyncModel({
       if (currentSectionTimers && currentSectionTimers[activeSection]) {
         clearTimeout(currentSectionTimers[activeSection]);
       }
+      if (arrowTimerRef.current) {
+        clearTimeout(arrowTimerRef.current);
+      }
     };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection, activeTextSetIndex]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
     const getViewportSize = () => {
       const width = window.innerWidth;
-      
+
       if (width <= 480) {
         return 'mobile-small';
       } else if (width <= 767) {
@@ -346,7 +374,7 @@ function ScrollSyncModel({
     // Responsive video size configuration based on viewport
     const getVideoSizeConfig = () => {
       const viewport = getViewportSize();
-      
+
       const configs = {
         'mobile-small': {
           section1: { width: 950, height: 'auto' },
@@ -389,7 +417,7 @@ function ScrollSyncModel({
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         }
       };
-      
+
       return configs[viewport] || configs['desktop'];
     };
 
@@ -399,7 +427,7 @@ function ScrollSyncModel({
     // Get responsive position configuration based on viewport
     const getPositionConfig = () => {
       const viewport = getViewportSize();
-      
+
       const positionConfigs = {
         'mobile-small': [
           { x: 50, y: 125 },      // Section 1 - Center (mobile optimized)
@@ -442,14 +470,14 @@ function ScrollSyncModel({
           { x: 50, y: 50 }       // Section 6 - Footer (center)
         ]
       };
-      
+
       return positionConfigs[viewport] || positionConfigs['desktop'];
     };
 
     // Get responsive rotation configuration based on viewport
     const getRotationConfig = () => {
       const viewport = getViewportSize();
-      
+
       const rotationConfigs = {
         'mobile-small': [
           0,      // Section 1 - Normal position
@@ -492,14 +520,14 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ]
       };
-      
+
       return rotationConfigs[viewport] || rotationConfigs['desktop'];
     };
 
     // Get PNG sequence configuration based on viewport
     const getPNGSequenceConfig = () => {
       const viewport = getViewportSize();
-      
+
       const pngSequenceConfigs = {
         'mobile-small': {
           startSection: 4,        // Start in Section 5 (index 4)
@@ -532,7 +560,7 @@ function ScrollSyncModel({
           endProgress: 1.0
         }
       };
-      
+
       return pngSequenceConfigs[viewport] || pngSequenceConfigs['desktop'];
     };
 
@@ -542,45 +570,45 @@ function ScrollSyncModel({
       const newConfig = getVideoSizeConfig();
       const newPositions = getPositionConfig();
       const newRotations = getRotationConfig();
-      
+
       // Update video size and position if we're currently in a section
       if (videoRef.current && scrollContainerRef.current) {
         const scrollContainer = scrollContainerRef.current;
         const scrollTop = scrollContainer.scrollTop;
         const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
         const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
-        
+
         const totalSections = showFooter ? 6 : 5;
         const sectionIndex = scrollProgress * (totalSections - 1);
         const currentSection = Math.floor(sectionIndex);
         const nextSection = Math.min(currentSection + 1, totalSections - 1);
         const sectionProgress = sectionIndex - currentSection;
-        
+
         // Update video size
-        const sizeKeys = showFooter ? 
+        const sizeKeys = showFooter ?
           ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
           ['section1', 'section2', 'section3', 'section4', 'section5'];
         const currentSizeKey = sizeKeys[currentSection];
         const nextSizeKey = sizeKeys[nextSection];
-        
+
         if (newConfig[currentSizeKey] && newConfig[nextSizeKey]) {
           const currentSize = newConfig[currentSizeKey];
           const nextSize = newConfig[nextSizeKey];
           const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
           setVideoSize({ width: newWidth, height: 'auto' });
         }
-        
+
         // Update video position
         const currentPos = newPositions[currentSection];
         const nextPos = newPositions[nextSection];
         const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
         const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
-        
+
         // Update video rotation
         const currentRotation = newRotations[currentSection];
         const nextRotation = newRotations[nextSection];
         const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
-        
+
         // Scale effect - set section 5 to 0.8 scale, hide video in section 6
         let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
         if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
@@ -589,7 +617,7 @@ function ScrollSyncModel({
         if (currentSection === 5) {
           scale = 0;
         }
-        
+
         setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       }
     };
@@ -674,10 +702,24 @@ function ScrollSyncModel({
 
         // Use passive listener for better performance during scroll
         scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-        
+
+        // Add immediate scroll detection for arrow hiding
+        const handleArrowScroll = () => {
+          if (showArrow) {
+            console.log('Arrow scroll detected - hiding arrow immediately');
+            setShowArrow(false);
+            if (arrowTimerRef.current) {
+              clearTimeout(arrowTimerRef.current);
+            }
+            // Remove this listener after first use
+            scrollContainer.removeEventListener('scroll', handleArrowScroll);
+          }
+        };
+        scrollContainer.addEventListener('scroll', handleArrowScroll, { passive: true });
+
         // Add window resize listener for responsive video sizing
         window.addEventListener('resize', handleResize, { passive: true });
-        
+
         handleScroll(); // Set initial position
 
         console.log('Scroll listener attached successfully');
@@ -707,6 +749,18 @@ function ScrollSyncModel({
 
       const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
+      // Hide arrow immediately when user starts scrolling down
+      if (showArrow && scrollTop > 0) {
+        console.log('Hiding arrow - scroll detected:', scrollTop);
+        setShowArrow(false);
+        if (arrowTimerRef.current) {
+          clearTimeout(arrowTimerRef.current);
+        }
+      }
+
+      // Update the last scroll position
+      lastScrollTopRef.current = scrollTop;
+
       console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
 
       // Update state for UI display
@@ -725,6 +779,8 @@ function ScrollSyncModel({
       // Track active section for animations
       if (currentSection !== activeSection) {
         setActiveSection(currentSection);
+
+        // Arrow hiding is now handled in the scroll handler above
       }
 
       // Interpolate between current and next position
@@ -753,7 +809,7 @@ function ScrollSyncModel({
       }
 
       // Dynamic video sizing based on section
-      const sizeKeys = showFooter ? 
+      const sizeKeys = showFooter ?
         ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
         ['section1', 'section2', 'section3', 'section4', 'section5'];
       const currentSizeKey = sizeKeys[currentSection];
@@ -784,8 +840,8 @@ function ScrollSyncModel({
           return true;
         }
         // Check if we're past the end section or past the end progress
-        if (currentSection > pngConfig.endSection || 
-            (currentSection === pngConfig.endSection && sectionProgress > pngConfig.endProgress)) {
+        if (currentSection > pngConfig.endSection ||
+          (currentSection === pngConfig.endSection && sectionProgress > pngConfig.endProgress)) {
           return false;
         }
         return false;
@@ -793,10 +849,10 @@ function ScrollSyncModel({
 
       if (shouldShowPNG) {
         setIsInSection5(true);
-        
+
         // Calculate frame number based on progress within the PNG sequence range
         let sequenceProgress = 0;
-        
+
         if (currentSection === pngConfig.startSection) {
           // We're in the start section
           sequenceProgress = (sectionProgress - pngConfig.startProgress) / (pngConfig.endProgress - pngConfig.startProgress);
@@ -804,15 +860,15 @@ function ScrollSyncModel({
           // We're transitioning to the start section
           sequenceProgress = 0; // Start with first frame
         }
-        
+
         // Clamp sequence progress between 0 and 1
         sequenceProgress = Math.max(0, Math.min(1, sequenceProgress));
-        
+
         const frameNumber = Math.min(
           Math.max(1, Math.floor(sequenceProgress * totalFrames) + 1),
           totalFrames
         );
-        
+
         setCurrentFrame(frameNumber);
         renderFrame(frameNumber);
         console.log('PNG Sequence - Frame:', frameNumber, 'Sequence Progress:', sequenceProgress, 'Section Progress:', sectionProgress);
@@ -820,10 +876,10 @@ function ScrollSyncModel({
         setIsInSection5(false);
       }
 
-      console.log('Video position and size updated:', { 
-        x: newX, 
-        y: newY, 
-        scale, 
+      console.log('Video position and size updated:', {
+        x: newX,
+        y: newY,
+        scale,
         rotation: newRotation,
         width: newWidth,
         section: currentSection,
@@ -851,12 +907,12 @@ function ScrollSyncModel({
         setIsInitialized(true);
         console.log('ScrollSyncModel fully initialized');
 
-    // Cleanup
-    return () => {
+        // Cleanup
+        return () => {
           isMounted = false;
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('resize', handleResize);
+          if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleResize);
           }
         };
       } catch (error) {
@@ -872,8 +928,41 @@ function ScrollSyncModel({
     return () => {
       isMounted = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFooter, showHeader]);
+
+  // Cleanup arrow timer on unmount
+  useEffect(() => {
+    return () => {
+      if (arrowTimerRef.current) {
+        clearTimeout(arrowTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Watch for scroll changes and hide arrow immediately
+  useEffect(() => {
+    const handleScrollHide = () => {
+      if (showArrow && scrollContainerRef.current) {
+        const scrollTop = scrollContainerRef.current.scrollTop;
+        if (scrollTop > 0) {
+          console.log('useEffect scroll detected - hiding arrow:', scrollTop);
+          setShowArrow(false);
+          if (arrowTimerRef.current) {
+            clearTimeout(arrowTimerRef.current);
+          }
+        }
+      }
+    };
+
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScrollHide, { passive: true });
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScrollHide);
+      };
+    }
+  }, [showArrow]);
 
 
   // Get responsive content position configuration
@@ -886,7 +975,7 @@ function ScrollSyncModel({
       if (width <= 1924) return 'desktop';
       return 'large-desktop';
     })();
-    
+
     const contentPositionConfigs = {
       'mobile-small': [
         { horizontal: 'center', vertical: 'center' },  // Section 1
@@ -924,12 +1013,12 @@ function ScrollSyncModel({
         { horizontal: 'center', vertical: 'top' }      // Section 5
       ]
     };
-    
+
     return contentPositionConfigs[viewport] || contentPositionConfigs['desktop'];
   };
 
   const sections = [
-    { 
+    {
       // Option 1: Use textSets with multiple cycling sets (NEW!)
       textSets: {
         set1: [
@@ -941,7 +1030,7 @@ function ScrollSyncModel({
           'endless spectrum of realities.'
         ]
       },
-      
+
       // Timing configuration for text set cycling
       textSetTiming: {
         displayDuration: 4000,      // Show each set for 4 seconds
@@ -949,13 +1038,13 @@ function ScrollSyncModel({
         delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
         loop: true                   // Loop back to first set after last
       },
-      
+
       // Option 2: Use simple array (original behavior - no cycling)
       // textSets: [
       //   'Vast and intricate,',
       //   'products never stop evolving.'
       // ],
-      
+
       // Animation configuration for this section's text
       animationConfig: {
         type: 'fadeSlideUp',     // Options: 'fadeSlideUp', 'fadeIn', 'slideLeft', 'slideRight', 'stagger', 'typewriter'
@@ -963,17 +1052,17 @@ function ScrollSyncModel({
         duration: 0.8,            // Animation duration
         ease: 'power2.out'        // GSAP ease function
       },
-      
+
       // Text alignment configuration
       textAlign: 'center',       // Options: 'left', 'center', 'right'
-      
-      background: '#000000', 
+
+      background: '#000000',
       border: '1px solid #ffffff',
       hasHeader: showHeader,
       showNumber: false,
       showScrollHint: true
     },
-    { 
+    {
       textSets: {
         set1: [
           'The support landscape is',
@@ -993,12 +1082,12 @@ function ScrollSyncModel({
         ease: 'power3.out'
       },
       textAlign: 'left',         // Left-aligned text for section 2
-      background: '#000000', 
+      background: '#000000',
       border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: true
     },
-    { 
+    {
       textSets: [
         'Meet Kahuna AI',
       ],
@@ -1009,12 +1098,12 @@ function ScrollSyncModel({
         ease: 'power2.inOut'
       },
       textAlign: 'center',       // Center-aligned text
-      background: '#000000', 
+      background: '#000000',
       border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: true
     },
-    { 
+    {
       textSets: [
         'Discover',
         'Transform',
@@ -1027,12 +1116,12 @@ function ScrollSyncModel({
         ease: 'power1.out'
       },
       textAlign: 'right',        // Right-aligned text
-      background: '#000000', 
+      background: '#000000',
       border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: true
     },
-    { 
+    {
       textSets: [
         'Experience the',
         'full view'
@@ -1044,15 +1133,15 @@ function ScrollSyncModel({
         ease: 'power2.out'
       },
       textAlign: 'center',       // Center-aligned text
-      background: '#000000', 
+      background: '#000000',
       border: '1x solid #ffffff',
       showNumber: false,
       showScrollHint: true
     },
-    ...(showFooter ? [{ 
-      title: 'Footer', 
-      subtitle: 'Contact & Links', 
-      background: '#0A0A0A', 
+    ...(showFooter ? [{
+      title: 'Footer',
+      subtitle: 'Contact & Links',
+      background: '#0A0A0A',
       border: '1px solid #ffffff',
       isFooter: true
     }] : [])
@@ -1075,18 +1164,18 @@ function ScrollSyncModel({
           <div>PNG Sequence: {isInSection5 ? '✓' : '✗'}</div>
           <div>Frame: {currentFrame}/{totalFrames}</div>
           <div>Start Section: {(() => {
-            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
-                           window.innerWidth <= 767 ? 'mobile-large' :
-                           window.innerWidth <= 1023 ? 'tablet' :
-                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' :
+              window.innerWidth <= 767 ? 'mobile-large' :
+                window.innerWidth <= 1023 ? 'tablet' :
+                  window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
             const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0 } : { startSection: 4, startProgress: 0.2 };
             return config.startSection + 1;
           })()}</div>
           <div>Start Progress: {(() => {
-            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
-                           window.innerWidth <= 767 ? 'mobile-large' :
-                           window.innerWidth <= 1023 ? 'tablet' :
-                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' :
+              window.innerWidth <= 767 ? 'mobile-large' :
+                window.innerWidth <= 1023 ? 'tablet' :
+                  window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
             const config = viewport === 'desktop' ? { startProgress: 0.0 } : { startProgress: 0.2 };
             return (config.startProgress * 100).toFixed(0) + '%';
           })()}</div>
@@ -1129,15 +1218,15 @@ function ScrollSyncModel({
       <div className={`header ${headerVisible ? 'visible' : 'hidden'}`}>
         {/* Left Logo */}
         <div className="header-left">
-          <img 
+          <img
             src="/kahuna-logo-3.svg"
-            alt="Kahuna Logo" 
+            alt="Kahuna Logo"
             className="header-logo"
           />
         </div>
 
         {/* Right Let's Talk Button */}
-        <button 
+        <button
           onClick={() => {
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
@@ -1147,15 +1236,25 @@ function ScrollSyncModel({
           Let's Talk
         </button>
       </div>
-      
+
+      {/* Downward Arrow - Only visible in Section 1 after Enterprise text */}
+      <div className={`scroll-arrow ${showArrow ? 'visible' : 'hidden'}`}>
+        <div className="scroll-text">SCROLL</div>
+        <img
+          src="/Component 3 (1).png"
+          alt="Scroll down"
+          className="arrow-image"
+        />
+      </div>
+
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="scroll-container"
       >
         {sections.map((section, index) => {
           const contentPosition = getContentPositionConfig()[index] || { horizontal: 'center', vertical: 'center' };
-          
+
           return (
             <div
               key={index}
@@ -1170,9 +1269,9 @@ function ScrollSyncModel({
                 // Footer UI from HeroScroll
                 <div className="footer-container">
                   {/* Main Tagline Section */}
-                  <img 
-                    src="/final-logo.svg" 
-                    alt="Kahuna Labs" 
+                  <img
+                    src="/final-logo.svg"
+                    alt="Kahuna Labs"
                     className="footer-logo-bg"
                   />
                   <div className="footer-tagline">
@@ -1205,9 +1304,9 @@ function ScrollSyncModel({
 
                       <div className="footer-column">
                         <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
-                          <img 
-                            src="/LinkedIn-Icon.png" 
-                            alt="LinkedIn" 
+                          <img
+                            src="/LinkedIn-Icon.png"
+                            alt="LinkedIn"
                             className="footer-linkedin-icon"
                           />
                           <span>LinkedIn</span>
@@ -1235,16 +1334,16 @@ function ScrollSyncModel({
                 </div>
               ) : (
                 // Regular section content
-                <div 
+                <div
                   className="section-content"
-                  style={{ 
+                  style={{
                     textAlign: section.textAlign || 'center'  // Apply text alignment from config
                   }}
                 >
                   {section.showNumber !== false && (
                     <div className="section-number">SECTION {index + 1}</div>
                   )}
-                  
+
                   {/* Render textSets with animations if provided */}
                   {section.textSets ? (
                     <div className="text-sets-container">
@@ -1252,8 +1351,8 @@ function ScrollSyncModel({
                       {Array.isArray(section.textSets) ? (
                         // Simple array - original behavior
                         section.textSets.map((text, textIndex) => (
-                          <div 
-                            key={textIndex} 
+                          <div
+                            key={textIndex}
                             className="text-set-line"
                             style={{ opacity: 0 }}
                           >
@@ -1264,14 +1363,14 @@ function ScrollSyncModel({
                         // Object with multiple sets - cycling behavior
                         // Render all sets, each in its own absolutely positioned group
                         Object.entries(section.textSets).map(([setKey, textArray]) => (
-                          <div 
+                          <div
                             key={setKey}
                             className="text-set-group"
                             data-set={setKey}
                           >
                             {textArray.map((text, textIndex) => (
-                              <div 
-                                key={`${setKey}-${textIndex}`} 
+                              <div
+                                key={`${setKey}-${textIndex}`}
                                 className="text-set-line"
                                 data-set={setKey}
                                 style={{ opacity: 0 }}
@@ -1293,7 +1392,7 @@ function ScrollSyncModel({
                       )}
                     </>
                   )}
-                  
+
                   {section.showScrollHint !== false && (
                     <div className="section-scroll-hint">
                       <p className="section-scroll-text">
@@ -1310,7 +1409,7 @@ function ScrollSyncModel({
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div className="scroll-indicator">
+        <div className="scroll-indicator">
           {scrollIndicatorText}
         </div>
       )}
@@ -1318,162 +1417,162 @@ function ScrollSyncModel({
       {/* Debug Controls */}
       {showDebugControls && (
         <div className={`debug-controls ${debugControlsPosition}`}>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
-            console.log('Manual position set to right');
-          }}
-          className="debug-button primary"
-        >
-          Test Move Right
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
-            console.log('Manual position set to center');
-          }}
-          className="debug-button primary"
-        >
-          Test Move Center
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
-            console.log('Manual rotation set to 45 degrees');
-          }}
-          className="debug-button purple"
-        >
-          Test 45° Rotation
-        </button>
-        <button
-          onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
-            console.log('Manual rotation set to -30 degrees');
-          }}
-          className="debug-button purple"
-        >
-          Test -30° Rotation
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 300, height: 'auto' });
-            console.log('Video size set to small');
-          }}
-          className="debug-button purple"
-        >
-          Small Size
-        </button>
-        <button
-          onClick={() => {
-            setVideoSize({ width: 600, height: 'auto' });
-            console.log('Video size set to large');
-          }}
-          className="debug-button purple"
-        >
-          Large Size
-        </button>
-        <button
-          onClick={() => {
-            // Test immediate size change
-            const testSizes = [300, 400, 500, 600, 700];
-            let index = 0;
-            const interval = setInterval(() => {
-              setVideoSize({ width: testSizes[index], height: 'auto' });
-              console.log('Test size change to:', testSizes[index]);
-              index++;
-              if (index >= testSizes.length) {
-                clearInterval(interval);
-              }
-            }, 200);
-          }}
-          className="debug-button red"
-        >
-          Test Size Cycle
-        </button>
-        <button
-          onClick={() => {
-            setHeaderVisible(!headerVisible);
-            console.log('Header visibility toggled:', !headerVisible);
-          }}
-          className={`debug-button ${headerVisible ? 'green' : 'red'}`}
-        >
-          {headerVisible ? 'Hide Header' : 'Show Header'}
-        </button>
-        <button
-          onClick={() => {
-            console.log('Retrying initialization...');
-            setError(null);
-            setIsInitialized(false);
-            // Force re-render by updating a state
-            window.location.reload();
-          }}
-          className="debug-button red"
-        >
-          Retry Init
-        </button>
-        <button
-          onClick={() => {
-            // Find the video element and toggle play/pause
-            const videos = document.querySelectorAll('video');
-            console.log('Found videos:', videos.length);
-            videos.forEach((video, index) => {
-              console.log(`Video ${index}:`, {
-                src: video.src,
-                paused: video.paused,
-                currentTime: video.currentTime,
-                duration: video.duration,
-                readyState: video.readyState
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
+              console.log('Manual position set to right');
+            }}
+            className="debug-button primary"
+          >
+            Test Move Right
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
+              console.log('Manual position set to center');
+            }}
+            className="debug-button primary"
+          >
+            Test Move Center
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
+              console.log('Manual rotation set to 45 degrees');
+            }}
+            className="debug-button purple"
+          >
+            Test 45° Rotation
+          </button>
+          <button
+            onClick={() => {
+              setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
+              console.log('Manual rotation set to -30 degrees');
+            }}
+            className="debug-button purple"
+          >
+            Test -30° Rotation
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 300, height: 'auto' });
+              console.log('Video size set to small');
+            }}
+            className="debug-button purple"
+          >
+            Small Size
+          </button>
+          <button
+            onClick={() => {
+              setVideoSize({ width: 600, height: 'auto' });
+              console.log('Video size set to large');
+            }}
+            className="debug-button purple"
+          >
+            Large Size
+          </button>
+          <button
+            onClick={() => {
+              // Test immediate size change
+              const testSizes = [300, 400, 500, 600, 700];
+              let index = 0;
+              const interval = setInterval(() => {
+                setVideoSize({ width: testSizes[index], height: 'auto' });
+                console.log('Test size change to:', testSizes[index]);
+                index++;
+                if (index >= testSizes.length) {
+                  clearInterval(interval);
+                }
+              }, 200);
+            }}
+            className="debug-button red"
+          >
+            Test Size Cycle
+          </button>
+          <button
+            onClick={() => {
+              setHeaderVisible(!headerVisible);
+              console.log('Header visibility toggled:', !headerVisible);
+            }}
+            className={`debug-button ${headerVisible ? 'green' : 'red'}`}
+          >
+            {headerVisible ? 'Hide Header' : 'Show Header'}
+          </button>
+          <button
+            onClick={() => {
+              console.log('Retrying initialization...');
+              setError(null);
+              setIsInitialized(false);
+              // Force re-render by updating a state
+              window.location.reload();
+            }}
+            className="debug-button red"
+          >
+            Retry Init
+          </button>
+          <button
+            onClick={() => {
+              // Find the video element and toggle play/pause
+              const videos = document.querySelectorAll('video');
+              console.log('Found videos:', videos.length);
+              videos.forEach((video, index) => {
+                console.log(`Video ${index}:`, {
+                  src: video.src,
+                  paused: video.paused,
+                  currentTime: video.currentTime,
+                  duration: video.duration,
+                  readyState: video.readyState
+                });
+                if (video.paused) {
+                  video.play().catch(err => console.log('Play failed:', err));
+                } else {
+                  video.pause();
+                }
               });
-              if (video.paused) {
-                video.play().catch(err => console.log('Play failed:', err));
-              } else {
-                video.pause();
+            }}
+            className="debug-button green"
+          >
+            Toggle Video
+          </button>
+          <button
+            onClick={() => {
+              const viewport = window.innerWidth <= 480 ? 'mobile-small' :
+                window.innerWidth <= 767 ? 'mobile-large' :
+                  window.innerWidth <= 1023 ? 'tablet' :
+                    window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+              const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0, endSection: 4, endProgress: 1.0 } : { startSection: 4, startProgress: 0.2, endSection: 4, endProgress: 1.0 };
+              console.log('PNG Sequence Config:', config);
+              console.log('Current Section:', Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+              console.log('Section Progress:', scrollProgress * (showFooter ? 6 : 5) - Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+              console.log('Should Show PNG:', isInSection5);
+              console.log('Current Frame:', currentFrame);
+            }}
+            className="debug-button blue"
+          >
+            PNG Debug Info
+          </button>
+          <button
+            onClick={() => {
+              console.log('Video element:', videoRef.current);
+              console.log('Video position state:', videoPosition);
+              console.log('Scroll progress:', scrollProgress);
+              if (videoRef.current) {
+                console.log('Video properties:', {
+                  src: videoRef.current.src,
+                  paused: videoRef.current.paused,
+                  currentTime: videoRef.current.currentTime,
+                  duration: videoRef.current.duration,
+                  readyState: videoRef.current.readyState,
+                  videoWidth: videoRef.current.videoWidth,
+                  videoHeight: videoRef.current.videoHeight
+                });
               }
-            });
-          }}
-          className="debug-button green"
-        >
-          Toggle Video
-        </button>
-        <button
-          onClick={() => {
-            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
-                           window.innerWidth <= 767 ? 'mobile-large' :
-                           window.innerWidth <= 1023 ? 'tablet' :
-                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
-            const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0, endSection: 4, endProgress: 1.0 } : { startSection: 4, startProgress: 0.2, endSection: 4, endProgress: 1.0 };
-            console.log('PNG Sequence Config:', config);
-            console.log('Current Section:', Math.floor(scrollProgress * (showFooter ? 6 : 5)));
-            console.log('Section Progress:', scrollProgress * (showFooter ? 6 : 5) - Math.floor(scrollProgress * (showFooter ? 6 : 5)));
-            console.log('Should Show PNG:', isInSection5);
-            console.log('Current Frame:', currentFrame);
-          }}
-          className="debug-button blue"
-        >
-          PNG Debug Info
-        </button>
-        <button
-          onClick={() => {
-            console.log('Video element:', videoRef.current);
-            console.log('Video position state:', videoPosition);
-            console.log('Scroll progress:', scrollProgress);
-            if (videoRef.current) {
-              console.log('Video properties:', {
-                src: videoRef.current.src,
-                paused: videoRef.current.paused,
-                currentTime: videoRef.current.currentTime,
-                duration: videoRef.current.duration,
-                readyState: videoRef.current.readyState,
-                videoWidth: videoRef.current.videoWidth,
-                videoHeight: videoRef.current.videoHeight
-              });
-            }
-          }}
-          className="debug-button blue"
-        >
-          Video Debug Info
-        </button>
-      </div>
+            }}
+            className="debug-button blue"
+          >
+            Video Debug Info
+          </button>
+        </div>
       )}
     </div>
   );
