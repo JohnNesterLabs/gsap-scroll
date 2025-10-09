@@ -671,18 +671,105 @@ function ScrollSyncModel({
   }, [showFooter, showHeader]);
 
 
+  // Get responsive content position configuration
+  const getContentPositionConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return 'mobile-small';
+      if (width <= 767) return 'mobile-large';
+      if (width <= 1023) return 'tablet';
+      if (width <= 1924) return 'desktop';
+      return 'large-desktop';
+    })();
+    
+    const contentPositionConfigs = {
+      'mobile-small': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'mobile-large': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'tablet': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'desktop': [
+        { horizontal: 'center', vertical: 'top' },     // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'large-desktop': [
+        { horizontal: 'center', vertical: 'top' },     // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ]
+    };
+    
+    return contentPositionConfigs[viewport] || contentPositionConfigs['desktop'];
+  };
+
   const sections = [
     { 
-      title: 'Section 1', 
-      subtitle: 'Model at Center', 
+      title: 'Vast and intricate, products never stop evolving.', 
+      // subtitle: 'Model at Center', 
+      // description: 'Welcome to our immersive experience',
       background: '#000000', 
       border: '1px solid #ffffff',
-      hasHeader: showHeader // Use prop for header visibility
+      hasHeader: showHeader, // Use prop for header visibility
+      showNumber: true,
+      showScrollHint: true
     },
-    { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '1px solid #ffffff' },
-    { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '1px solid #ffffff' },
-    { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '1px solid #ffffff' },
-    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '1x solid #ffffff' },
+    { 
+      title: 'Section 2', 
+      subtitle: 'Model moves Right', 
+      description: 'Explore the right side',
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: true,
+      showScrollHint: true
+    },
+    { 
+      title: 'Section 3', 
+      subtitle: 'Model moves Down', 
+      description: 'Dive deeper into the content',
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: true,
+      showScrollHint: true
+    },
+    { 
+      title: 'Section 4', 
+      subtitle: 'Model moves Left', 
+      description: 'Discover the left perspective',
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: true,
+      showScrollHint: true
+    },
+    { 
+      title: 'Section 5', 
+      subtitle: 'Model moves Up', 
+      description: 'Experience the full view',
+      background: '#000000', 
+      border: '1x solid #ffffff',
+      showNumber: true,
+      showScrollHint: true
+    },
     ...(showFooter ? [{ 
       title: 'Footer', 
       subtitle: 'Contact & Links', 
@@ -787,97 +874,108 @@ function ScrollSyncModel({
         ref={scrollContainerRef}
         className="scroll-container"
       >
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            className={`section ${section.isFooter ? 'footer' : ''}`}
-            style={{
-              background: section.background,
-              border: section.border
-            }}
-          >
-            {section.isFooter ? (
-              // Footer UI from HeroScroll
-              <div className="footer-container">
-                {/* Main Tagline Section */}
-                <img 
-                  src="/final-logo.svg" 
-                  alt="Kahuna Labs" 
-                  className="footer-logo-bg"
-                />
-                <div className="footer-tagline">
-                  <div className="footer-tagline-text">
-                    <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
-                    <div className="footer-tagline-line">Enterprise Grade.</div>
+        {sections.map((section, index) => {
+          const contentPosition = getContentPositionConfig()[index] || { horizontal: 'center', vertical: 'center' };
+          
+          return (
+            <div
+              key={index}
+              className={`section ${section.isFooter ? 'footer' : ''} section-justify-${contentPosition.horizontal} section-align-${contentPosition.vertical}`}
+              style={{
+                background: section.background,
+                border: section.border
+              }}
+            >
+              {section.isFooter ? (
+                // Footer UI from HeroScroll
+                <div className="footer-container">
+                  {/* Main Tagline Section */}
+                  <img 
+                    src="/final-logo.svg" 
+                    alt="Kahuna Labs" 
+                    className="footer-logo-bg"
+                  />
+                  <div className="footer-tagline">
+                    <div className="footer-tagline-text">
+                      <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
+                      <div className="footer-tagline-line">Enterprise Grade.</div>
+                    </div>
+                  </div>
+
+                  {/* Footer Content */}
+                  <div className="footer-content">
+                    <div className="footer-links">
+                      {/* Technology Column */}
+                      <div className="footer-column">
+                        <h3 className="footer-column-title">TECHNOLOGY</h3>
+                        <ul className="footer-links-list">
+                          <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
+                          <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
+                        </ul>
+                      </div>
+
+                      {/* Company Column */}
+                      <div className="footer-column">
+                        <h3 className="footer-column-title">COMPANY</h3>
+                        <ul className="footer-links-list">
+                          <li><a href="/contact" className="footer-link">Contact us</a></li>
+                          <li><a href="/careers" className="footer-link">Careers</a></li>
+                        </ul>
+                      </div>
+
+                      <div className="footer-column">
+                        <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
+                          <img 
+                            src="/LinkedIn-Icon.png" 
+                            alt="LinkedIn" 
+                            className="footer-linkedin-icon"
+                          />
+                          <span>LinkedIn</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Kahuna Labs Logo */}
+                    <div className="footer-logo-section">
+                      <div className="footer-logo-container">
+                        <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Copyright Line */}
+                  <div className="footer-copyright">
+                    <div className="footer-copyright-text">
+                      All rights reserved to Kahuna Labs. Copyright © 2025.
+                    </div>
+                    {/* <div className="footer-copyright-text">
+                      Made by Nester Labs
+                    </div> */}
                   </div>
                 </div>
-
-                {/* Footer Content */}
-                <div className="footer-content">
-                  <div className="footer-links">
-                    {/* Technology Column */}
-                    <div className="footer-column">
-                      <h3 className="footer-column-title">TECHNOLOGY</h3>
-                      <ul className="footer-links-list">
-                        <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
-                        <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
-                      </ul>
+              ) : (
+                // Regular section content
+                <div className="section-content">
+                  {section.showNumber !== false && (
+                    <div className="section-number">SECTION {index + 1}</div>
+                  )}
+                  <h2 className="section-title">{section.title}</h2>
+                  <p className="section-subtitle">{section.subtitle}</p>
+                  {section.description && (
+                    <p className="section-description">{section.description}</p>
+                  )}
+                  {section.showScrollHint !== false && (
+                    <div className="section-scroll-hint">
+                      <p className="section-scroll-text">
+                        Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
+                      </p>
                     </div>
-
-                    {/* Company Column */}
-                    <div className="footer-column">
-                      <h3 className="footer-column-title">COMPANY</h3>
-                      <ul className="footer-links-list">
-                        <li><a href="/contact" className="footer-link">Contact us</a></li>
-                        <li><a href="/careers" className="footer-link">Careers</a></li>
-                      </ul>
-                    </div>
-
-                    <div className="footer-column">
-                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
-                        <img 
-                          src="/LinkedIn-Icon.png" 
-                          alt="LinkedIn" 
-                          className="footer-linkedin-icon"
-                        />
-                        <span>LinkedIn</span>
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Kahuna Labs Logo */}
-                  <div className="footer-logo-section">
-                    <div className="footer-logo-container">
-                      <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Bottom Copyright Line */}
-                <div className="footer-copyright">
-                  <div className="footer-copyright-text">
-                    All rights reserved to Kahuna Labs. Copyright © 2025.
-                  </div>
-                  {/* <div className="footer-copyright-text">
-                    Made by Nester Labs
-                  </div> */}
-                </div>
-              </div>
-            ) : (
-              // Regular section content
-            <div className="section-content">
-                <div className="section-number">SECTION {index + 1}</div>
-              <h2 className="section-title">{section.title}</h2>
-              <p className="section-subtitle">{section.subtitle}</p>
-              <div className="section-scroll-hint">
-                <p className="section-scroll-text">
-                  Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
-                </p>
-              </div>
+              )}
             </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Scroll Indicator */}
