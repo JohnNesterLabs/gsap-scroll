@@ -62,7 +62,7 @@ export default function Demo() {
         section3: { width: 2000, height: "auto" },
         section4: { width: 1200, height: "auto" },
         section5: { width: 1200, height: "auto" },
-        section6: { width: 1400, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       "large-desktop": {
@@ -327,9 +327,9 @@ export default function Demo() {
       "mobile-small": [
         "28px", // Section 1
         "24px", // Section 2
-        "32px", // Section 3
-        "26px", // Section 4
-        "28px", // Section 5
+        "28px", // Section 3
+        "24px", // Section 4
+        "24px", // Section 5
         "26px", // Section 6
       ],
       "mobile-large": [
@@ -351,10 +351,10 @@ export default function Demo() {
       desktop: [
         "60px", // Section 1
         "36px", // Section 2
-        "64px", // Section 3
+        "60px", // Section 3
         "36px", // Section 4
-        "52px", // Section 5
-        "48px", // Section 6
+        "36px", // Section 5
+        "36px", // Section 6
       ],
       "large-desktop": [
         "72px", // Section 1
@@ -669,18 +669,17 @@ export default function Demo() {
           fontSize={getFontSizeConfig()[4]}
           fontWeight={getFontWeightConfig()[4]}
           firstSet={[
-            "AI that automatically builds and nurtures your Troubleshooting Map",
+            "",
           ]}
         />
-        <AnimatedSection
+        {/* <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
           fontSize={getFontSizeConfig()[5]}
           fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
-          // secondSet={["Transform your vision", "Into reality"]}
-        />
+        /> */}
         {/* <ZoomInSection sectionNumber={6} text="Welcome to the Future" /> */}
         {/* Footer Section */}
         <div className="demo-section demo-footer">

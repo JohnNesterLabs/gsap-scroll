@@ -79,12 +79,7 @@ const InfiniteWordLoop = ({ sectionNumber, words }) => {
             </div>
           </div>
         </div>
-        {/* Section Number Indicator */}
-        <div className="word-section-indicator">
-          <div className="word-section-number">
-            Section {sectionNumber}
-          </div>
-        </div>
+      
       </div>
     </section>
   );

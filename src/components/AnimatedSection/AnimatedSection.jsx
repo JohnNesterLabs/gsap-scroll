@@ -16,6 +16,7 @@ const AnimatedSection = ({
 }) => {
   const [animationState, setAnimationState] = useState("idle");
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const sectionRef = useRef(null);
   const observerRef = useRef(null);
   const timersRef = useRef({ timer1: null, timer2: null });
@@ -37,6 +38,9 @@ const AnimatedSection = ({
           // Reset to first state when entering the section
           // This ensures animations always start from the beginning
           setAnimationState("first");
+          if (sectionNumber === 1) {
+            setHasScrolled(false);
+          }
         } else {
           // When leaving the section, clear all timers and reset to idle
           if (timers.timer1) {
@@ -161,6 +165,23 @@ const AnimatedSection = ({
     }
   }, [showScrollIndicator]);
 
+  // Hide scroll indicator when user starts scrolling
+  useEffect(() => {
+    if (sectionNumber === 1 && showScrollIndicator) {
+      const handleScroll = () => {
+        if (!hasScrolled) {
+          setHasScrolled(true);
+          setShowScrollIndicator(false);
+        }
+      };
+      // Add scroll listener to the main scroll container
+      const scrollContainer = document.querySelector('.demo-scroll-container') || window;
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [sectionNumber, showScrollIndicator, hasScrolled]);
 
   const gradientClass = sectionNumber === 1 ? "gradient-1" : "gradient-2";
 
@@ -216,7 +237,7 @@ const AnimatedSection = ({
         </div>
 
         {/* Scroll Indicator - Only for Section 1 */}
-        {sectionNumber === 1 && showScrollIndicator && (
+        {sectionNumber === 1 && showScrollIndicator && !hasScrolled && (
           <div className="scroll-indicator-container">
             <div ref={scrollIndicatorRef} className="scroll-text">
               SCROLL
