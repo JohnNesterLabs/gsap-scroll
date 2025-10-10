@@ -21,10 +21,11 @@
 }
 
 .section-container {
-  max-width: 1200px;
+  /* max-width: 1200px; */
   width: 100%;
   padding: 0 1.5rem;
   margin: 0 auto;
+  z-index: 6;
 }
 
 .text-container {
@@ -35,14 +36,138 @@
   justify-content: center;
 }
 
+/* Text Position Configurations */
+.text-position-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.text-position-top {
+  align-items: flex-start;
+  justify-content: center;
+  /* padding-top: 100px; */
+}
+
+.text-position-bottom {
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 100px;
+}
+
+.text-position-left {
+  align-items: center;
+  justify-content: flex-start;
+  /* padding-left: 100px; */
+}
+
+.text-position-right {
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 100px;
+}
+
+.text-position-top-left {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 100px;
+  padding-left: 100px;
+}
+
+.text-position-top-right {
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-top: 100px;
+  padding-right: 100px;
+}
+
+.text-position-bottom-left {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: 100px;
+  padding-left: 100px;
+}
+
+.text-position-bottom-right {
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 100px;
+  padding-right: 100px;
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+  .text-position-top,
+  .text-position-top-left,
+  .text-position-top-right {
+    padding-top: 50px;
+  }
+  
+  .text-position-bottom,
+  .text-position-bottom-left,
+  .text-position-bottom-right {
+    padding-bottom: 50px;
+  }
+  
+  .text-position-left,
+  .text-position-top-left,
+  .text-position-bottom-left {
+    padding-left: 20px;
+  }
+  
+  .text-position-right,
+  .text-position-top-right,
+  .text-position-bottom-right {
+    padding-right: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-position-top,
+  .text-position-top-left,
+  .text-position-top-right {
+    padding-top: 30px;
+  }
+  
+  .text-position-bottom,
+  .text-position-bottom-left,
+  .text-position-bottom-right {
+    padding-bottom: 30px;
+  }
+  
+  .text-position-left,
+  .text-position-top-left,
+  .text-position-bottom-left {
+    padding-left: 15px;
+  }
+  
+  .text-position-right,
+  .text-position-top-right,
+  .text-position-bottom-right {
+    padding-right: 15px;
+  }
+}
+
 .text-set {
-  position: absolute;
+  /* position: absolute; */
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
+}
+
+/* Dynamic Text Alignment Classes */
+.text-align-left {
+  align-items: flex-start !important;
+}
+
+.text-align-center {
+  align-items: center !important;
+}
+
+.text-align-right {
+  align-items: flex-end !important;
 }
 
 .text-line {
@@ -61,7 +186,8 @@
 
 @media (min-width: 1024px) {
   .text-line {
-    font-size: 3rem;
+    font-size: 60px;
+    margin: 0px;
   }
 }
 

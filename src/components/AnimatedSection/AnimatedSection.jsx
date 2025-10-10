@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import "./AnimatedSection.css";
 
-const AnimatedSection = ({ sectionNumber, firstSet, secondSet }) => {
+const AnimatedSection = ({ 
+  sectionNumber, 
+  firstSet, 
+  secondSet, 
+  textPosition = 'center', // New prop for text positioning
+  textAlign = 'center' // New prop for text alignment
+}) => {
   const [animationState, setAnimationState] = useState("idle");
   const sectionRef = useRef(null);
   const observerRef = useRef(null);
@@ -82,11 +88,11 @@ const AnimatedSection = ({ sectionNumber, firstSet, secondSet }) => {
       className={`animated-section ${gradientClass}`}
     >
       <div className="section-container">
-        <div className="text-container">
+        <div className={`text-container text-position-${textPosition}`}>
           {/* First Set */}
           {(animationState === "first" || animationState === "transition") && (
             <div
-              className={`text-set ${
+              className={`text-set text-align-${textAlign} ${
                 animationState === "transition" ? "animate-slide-up" : "animate-fade-in"
               }`}
             >
@@ -107,8 +113,8 @@ const AnimatedSection = ({ sectionNumber, firstSet, secondSet }) => {
 
           {/* Second Set */}
           {animationState === "second" && (
-            <div className="text-set animate-slide-in">
-              {secondSet.map((text, index) => (
+            <div className={`text-set text-align-${textAlign} animate-slide-in`}>
+              {secondSet?.map((text, index) => (
                 <p
                   key={`second-${index}`}
                   className="text-line"

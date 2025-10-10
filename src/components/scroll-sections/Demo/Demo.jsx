@@ -5,7 +5,7 @@ import './Demo.css';
 export default function Demo() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [, setScrollProgress] = useState(0);
   const [videoPosition, setVideoPosition] = useState({ x: 50, y: 50, scale: 1, rotation: 0 });
   const [videoSize, setVideoSize] = useState({ width: 400, height: 'auto' });
   const [activeSection, setActiveSection] = useState(0);
@@ -38,6 +38,118 @@ export default function Demo() {
       ]
     };
     return positionConfigs['desktop'];
+  };
+
+  // Text position configuration for each section
+  const getTextPositionConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return 'mobile-small';
+      if (width <= 767) return 'mobile-large';
+      if (width <= 1023) return 'tablet';
+      if (width <= 1924) return 'desktop';
+      return 'large-desktop';
+    })();
+
+    const textPositionConfigs = {
+      'mobile-small': [
+        'center',        // Section 1 - Text at center (mobile)
+        'center',        // Section 2 - Text at center (mobile)
+        'center',        // Section 3 - Text at center (mobile)
+        'center',        // Section 4 - Text at center (mobile)
+        'center',        // Section 5 - Text at center (mobile)
+        'center',        // Section 6 - Text at center (mobile)
+      ],
+      'mobile-large': [
+        'center',        // Section 1 - Text at center (mobile)
+        'center',        // Section 2 - Text at center (mobile)
+        'center',        // Section 3 - Text at center (mobile)
+        'center',        // Section 4 - Text at center (mobile)
+        'center',        // Section 5 - Text at center (mobile)
+        'center',        // Section 6 - Text at center (mobile)
+      ],
+      'tablet': [
+        'top',           // Section 1 - Text at top
+        'left',          // Section 2 - Text at left
+        'center',        // Section 3 - Text at center
+        'right',         // Section 4 - Text at right
+        'bottom',        // Section 5 - Text at bottom
+        'center',        // Section 6 - Text at center (footer)
+      ],
+      'desktop': [
+        'top',           // Section 1 - Text at top
+        'left',          // Section 2 - Text at left
+        'center',        // Section 3 - Text at center
+        'right',         // Section 4 - Text at right
+        'bottom',        // Section 5 - Text at bottom
+        'center',        // Section 6 - Text at center (footer)
+      ],
+      'large-desktop': [
+        'top',           // Section 1 - Text at top
+        'left',          // Section 2 - Text at left
+        'center',        // Section 3 - Text at center
+        'right',         // Section 4 - Text at right
+        'bottom',        // Section 5 - Text at bottom
+        'center',        // Section 6 - Text at center (footer)
+      ]
+    };
+    return textPositionConfigs[viewport] || textPositionConfigs['desktop'];
+  };
+
+  // Text alignment configuration for each section
+  const getTextAlignConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return 'mobile-small';
+      if (width <= 767) return 'mobile-large';
+      if (width <= 1023) return 'tablet';
+      if (width <= 1924) return 'desktop';
+      return 'large-desktop';
+    })();
+
+    const textAlignConfigs = {
+      'mobile-small': [
+        'center',        // Section 1 - Center aligned (mobile)
+        'center',        // Section 2 - Center aligned (mobile)
+        'center',        // Section 3 - Center aligned (mobile)
+        'center',        // Section 4 - Center aligned (mobile)
+        'center',        // Section 5 - Center aligned (mobile)
+        'center',        // Section 6 - Center aligned (mobile)
+      ],
+      'mobile-large': [
+        'center',        // Section 1 - Center aligned (mobile)
+        'center',        // Section 2 - Center aligned (mobile)
+        'center',        // Section 3 - Center aligned (mobile)
+        'center',        // Section 4 - Center aligned (mobile)
+        'center',        // Section 5 - Center aligned (mobile)
+        'center',        // Section 6 - Center aligned (mobile)
+      ],
+      'tablet': [
+        'center',        // Section 1 - Center aligned
+        'left',          // Section 2 - Left aligned
+        'center',        // Section 3 - Center aligned
+        'right',         // Section 4 - Right aligned
+        'center',        // Section 5 - Center aligned
+        'center',        // Section 6 - Center aligned (footer)
+      ],
+      'desktop': [
+        'center',        // Section 1 - Center aligned
+        'left',          // Section 2 - Left aligned
+        'center',        // Section 3 - Center aligned
+        'right',         // Section 4 - Right aligned
+        'center',        // Section 5 - Center aligned
+        'center',        // Section 6 - Center aligned (footer)
+      ],
+      'large-desktop': [
+        'center',        // Section 1 - Center aligned
+        'left',          // Section 2 - Left aligned
+        'center',        // Section 3 - Center aligned
+        'right',         // Section 4 - Right aligned
+        'center',        // Section 5 - Center aligned
+        'center',        // Section 6 - Center aligned (footer)
+      ]
+    };
+    return textAlignConfigs[viewport] || textAlignConfigs['desktop'];
   };
 
   // Video rotation configuration for each section
@@ -235,31 +347,58 @@ export default function Demo() {
       >
         <AnimatedSection
           sectionNumber={1}
-          firstSet={["Welcome to our site", "We build amazing experiences"]}
-          secondSet={["Let's get started", "Scroll down to explore more"]}
+          textPosition={getTextPositionConfig()[0]}
+          textAlign={getTextAlignConfig()[0]}
+          firstSet={[
+            'Vast and intricate,',
+            'products never stop evolving.'
+          ]}
+          secondSet={[
+            'Enterprise customers have an',
+            'endless spectrum of realities.'
+          ]}
         />
         <AnimatedSection
           sectionNumber={2}
-          firstSet={["Creative Design", "Smooth Interactions"]}
-          secondSet={["Modern Aesthetics", "Next-level Performance"]}
+          textPosition={getTextPositionConfig()[1]}
+          textAlign={getTextAlignConfig()[1]}
+          firstSet={[
+            'The support landscape is',
+            'boundless and shifting'
+          ]}
+          secondSet={[
+            "You're lost.",
+            "",
+            'Outdated, laborious',
+            'and fractional knowledge',
+            "cripple frontline actions."
+          ]}
         />
         <AnimatedSection
           sectionNumber={3}
-          firstSet={["Welcome to our site", "We build amazing experiences"]}
-          secondSet={["Let's get started", "Scroll down to explore more"]}
+          textPosition={getTextPositionConfig()[2]}
+          textAlign={getTextAlignConfig()[2]}
+          firstSet={[ 'Meet Kahuna AI']}
+          // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
         <AnimatedSection
           sectionNumber={4}
+          textPosition={getTextPositionConfig()[3]}
+          textAlign={getTextAlignConfig()[3]}
           firstSet={["Creative Design", "Smooth Interactions"]}
           secondSet={["Modern Aesthetics", "Next-level Performance"]}
         />
         <AnimatedSection
           sectionNumber={5}
+          textPosition={getTextPositionConfig()[4]}
+          textAlign={getTextAlignConfig()[4]}
           firstSet={["Welcome to our site", "We build amazing experiences"]}
           secondSet={["Let's get started", "Scroll down to explore more"]}
         />
         <AnimatedSection
           sectionNumber={6}
+          textPosition={getTextPositionConfig()[5]}
+          textAlign={getTextAlignConfig()[5]}
           firstSet={["Creative Design", "Smooth Interactions"]}
           secondSet={["Modern Aesthetics", "Next-level Performance"]}
         />
