@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import AnimatedSection from '../../AnimatedSection/AnimatedSection';
 import './Demo.css';
 import ZoomInSection from '../ZoomInSection/ZoomInSection';
+import InfiniteWordLoop from '../InfiniteWordLoop/InfiniteWordLoop';
 
 export default function Demo() {
   const videoRef = useRef(null);
@@ -487,6 +488,7 @@ export default function Demo() {
           firstSet={[ 'Meet Kahuna AI']}
           // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
+        <InfiniteWordLoop sectionNumber={4} words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]} />
         <AnimatedSection
           sectionNumber={4}
           textPosition={getTextPositionConfig()[3]}
