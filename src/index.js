@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { loadProdigySansFonts } from './fonts';
+import ZoomInSection from './components/scroll-sections/ZoomInSection/ZoomInSection';
 
 // Load fonts before rendering
 loadProdigySansFonts();
@@ -11,6 +12,10 @@ loadProdigySansFonts();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
+      {/* <ZoomInSection sectionNumber={1} text="Welcome to Section One" /> */}
+      {/* <ZoomInSection sectionNumber={1} text="Welcome to the Future" />
+      <ZoomInSection sectionNumber={2} text="Experience the Zoom Effect" />
+      <ZoomInSection sectionNumber={3} text="Scroll to Explore More" /> */}
     <App />
   </React.StrictMode>
 );

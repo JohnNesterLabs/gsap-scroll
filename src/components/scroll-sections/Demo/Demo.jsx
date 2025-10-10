@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import AnimatedSection from '../../AnimatedSection/AnimatedSection';
 import './Demo.css';
+import ZoomInSection from '../ZoomInSection/ZoomInSection';
 
 export default function Demo() {
   const videoRef = useRef(null);
@@ -504,7 +505,7 @@ export default function Demo() {
           firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
           // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
-        <AnimatedSection
+        {/* <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
@@ -512,7 +513,8 @@ export default function Demo() {
           fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
           // secondSet={["Transform your vision", "Into reality"]}
-        />
+        /> */}
+        <ZoomInSection sectionNumber={6} text="Welcome to the Future" />
         {/* Footer Section */}
         <div className="demo-section demo-footer">
           <div className="footer-container">
