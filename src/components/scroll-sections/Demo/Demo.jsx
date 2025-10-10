@@ -1,243 +1,248 @@
-import React, { useEffect, useRef, useState } from 'react';
-import AnimatedSection from '../../AnimatedSection/AnimatedSection';
-import './Demo.css';
-import ZoomInSection from '../ZoomInSection/ZoomInSection';
-import InfiniteWordLoop from '../InfiniteWordLoop/InfiniteWordLoop';
+import React, { useEffect, useRef, useState } from "react";
+import AnimatedSection from "../../AnimatedSection/AnimatedSection";
+import "./Demo.css";
+import ZoomInSection from "../ZoomInSection/ZoomInSection";
+import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 
 export default function Demo() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [, setScrollProgress] = useState(0);
-  const [videoPosition, setVideoPosition] = useState({ x: 50, y: 50, scale: 1, rotation: 0 });
-  const [videoSize, setVideoSize] = useState({ width: 400, height: 'auto' });
+  const [videoPosition, setVideoPosition] = useState({
+    x: 50,
+    y: 50,
+    scale: 1,
+    rotation: 0,
+  });
+  const [videoSize, setVideoSize] = useState({ width: 400, height: "auto" });
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
 
   // Video size configuration for each section
   const getVideoSizeConfig = () => {
     const configs = {
-      'desktop': {
-        section1: { width: 3000, height: 'auto' },
-        section2: { width: 1400, height: 'auto' },
-        section3: { width: 3000, height: 'auto' },
-        section4: { width: 1200, height: 'auto' },
-        section5: { width: 1200, height: 'auto' },
-        section6: { width: 1400, height: 'auto' },
-        section7: { width: 0, height: 'auto' }, // Footer
-      }
+      desktop: {
+        section1: { width: 1400, height: "auto" },
+        section2: { width: 1400, height: "auto" },
+        section3: { width: 2000, height: "auto" },
+        section4: { width: 1200, height: "auto" },
+        section5: { width: 1200, height: "auto" },
+        section6: { width: 1400, height: "auto" },
+        section7: { width: 0, height: "auto" }, // Footer
+      },
     };
-    return configs['desktop'];
+    return configs["desktop"];
   };
 
   // Video position configuration for each section
   const getPositionConfig = () => {
     const positionConfigs = {
-      'desktop': [
-        { x: 50, y: 90 },      // Section 1 - Center
-        { x: 90, y: 50 },       // Section 2 - Top Right
-        { x: 50, y: 50 },       // Section 3 - Center
-        { x: 50, y: 50 },       // Section 4 - Center
-        { x: 50, y: 50 },       // Section 5 - Center
-        { x: 50, y: 50 },       // Section 6 - Center
-        { x: 50, y: 50 },       // Section 7 - Footer
-      ]
+      desktop: [
+        { x: 50, y: 110 }, // Section 1 - Center
+        { x: 90, y: 50 }, // Section 2 - Top Right
+        { x: 40, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 6 - Center
+        { x: 50, y: 50 }, // Section 7 - Footer
+      ],
     };
-    return positionConfigs['desktop'];
+    return positionConfigs["desktop"];
   };
 
   // Text position configuration for each section
   const getTextPositionConfig = () => {
     const viewport = (() => {
       const width = window.innerWidth;
-      if (width <= 480) return 'mobile-small';
-      if (width <= 767) return 'mobile-large';
-      if (width <= 1023) return 'tablet';
-      if (width <= 1924) return 'desktop';
-      return 'large-desktop';
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
     })();
 
     const textPositionConfigs = {
-      'mobile-small': [
-        'center',        // Section 1 - Text at center (mobile)
-        'center',        // Section 2 - Text at center (mobile)
-        'center',        // Section 3 - Text at center (mobile)
-        'center',        // Section 4 - Text at center (mobile)
-        'center',        // Section 5 - Text at center (mobile)
-        'center',        // Section 6 - Text at center (mobile)
+      "mobile-small": [
+        "center", // Section 1 - Text at center (mobile)
+        "center", // Section 2 - Text at center (mobile)
+        "center", // Section 3 - Text at center (mobile)
+        "center", // Section 4 - Text at center (mobile)
+        "center", // Section 5 - Text at center (mobile)
+        "center", // Section 6 - Text at center (mobile)
       ],
-      'mobile-large': [
-        'center',        // Section 1 - Text at center (mobile)
-        'center',        // Section 2 - Text at center (mobile)
-        'center',        // Section 3 - Text at center (mobile)
-        'center',        // Section 4 - Text at center (mobile)
-        'center',        // Section 5 - Text at center (mobile)
-        'center',        // Section 6 - Text at center (mobile)
+      "mobile-large": [
+        "center", // Section 1 - Text at center (mobile)
+        "center", // Section 2 - Text at center (mobile)
+        "center", // Section 3 - Text at center (mobile)
+        "center", // Section 4 - Text at center (mobile)
+        "center", // Section 5 - Text at center (mobile)
+        "center", // Section 6 - Text at center (mobile)
       ],
-      'tablet': [
-        'top',           // Section 1 - Text at top
-        'left',          // Section 2 - Text at left
-        'center',        // Section 3 - Text at center
-        'right',         // Section 4 - Text at right
-        'bottom',        // Section 5 - Text at bottom
-        'top-left',      // Section 6 - Text at top-left
+      tablet: [
+        "top", // Section 1 - Text at top
+        "left", // Section 2 - Text at left
+        "center", // Section 3 - Text at center
+        "right", // Section 4 - Text at right
+        "bottom", // Section 5 - Text at bottom
+        "top-left", // Section 6 - Text at top-left
       ],
-      'desktop': [
-        'top',           // Section 1 - Text at top
-        'left',          // Section 2 - Text at left
-        'center',        // Section 3 - Text at center
-        'right',         // Section 4 - Text at right
-        'bottom',        // Section 5 - Text at bottom
-        'top-left',      // Section 6 - Text at top-left
+      desktop: [
+        "top", // Section 1 - Text at top
+        "left", // Section 2 - Text at left
+        "center", // Section 3 - Text at center
+        "right", // Section 4 - Text at right
+        "bottom", // Section 5 - Text at bottom
+        "top-left", // Section 6 - Text at top-left
       ],
-      'large-desktop': [
-        'top',           // Section 1 - Text at top
-        'left',          // Section 2 - Text at left
-        'center',        // Section 3 - Text at center
-        'right',         // Section 4 - Text at right
-        'bottom',        // Section 5 - Text at bottom
-        'top-left',      // Section 6 - Text at top-left
-      ]
+      "large-desktop": [
+        "top", // Section 1 - Text at top
+        "left", // Section 2 - Text at left
+        "center", // Section 3 - Text at center
+        "right", // Section 4 - Text at right
+        "bottom", // Section 5 - Text at bottom
+        "top-left", // Section 6 - Text at top-left
+      ],
     };
-    return textPositionConfigs[viewport] || textPositionConfigs['desktop'];
+    return textPositionConfigs[viewport] || textPositionConfigs["desktop"];
   };
 
   // Text alignment configuration for each section
   const getTextAlignConfig = () => {
     const viewport = (() => {
       const width = window.innerWidth;
-      if (width <= 480) return 'mobile-small';
-      if (width <= 767) return 'mobile-large';
-      if (width <= 1023) return 'tablet';
-      if (width <= 1924) return 'desktop';
-      return 'large-desktop';
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
     })();
 
     const textAlignConfigs = {
-      'mobile-small': [
-        'center',        // Section 1 - Center aligned (mobile)
-        'center',        // Section 2 - Center aligned (mobile)
-        'center',        // Section 3 - Center aligned (mobile)
-        'center',        // Section 4 - Center aligned (mobile)
-        'center',        // Section 5 - Center aligned (mobile)
-        'center',        // Section 6 - Center aligned (mobile)
+      "mobile-small": [
+        "center", // Section 1 - Center aligned (mobile)
+        "center", // Section 2 - Center aligned (mobile)
+        "center", // Section 3 - Center aligned (mobile)
+        "center", // Section 4 - Center aligned (mobile)
+        "center", // Section 5 - Center aligned (mobile)
+        "center", // Section 6 - Center aligned (mobile)
       ],
-      'mobile-large': [
-        'center',        // Section 1 - Center aligned (mobile)
-        'center',        // Section 2 - Center aligned (mobile)
-        'center',        // Section 3 - Center aligned (mobile)
-        'center',        // Section 4 - Center aligned (mobile)
-        'center',        // Section 5 - Center aligned (mobile)
-        'center',        // Section 6 - Center aligned (mobile)
+      "mobile-large": [
+        "center", // Section 1 - Center aligned (mobile)
+        "center", // Section 2 - Center aligned (mobile)
+        "center", // Section 3 - Center aligned (mobile)
+        "center", // Section 4 - Center aligned (mobile)
+        "center", // Section 5 - Center aligned (mobile)
+        "center", // Section 6 - Center aligned (mobile)
       ],
-      'tablet': [
-        'center',        // Section 1 - Center aligned
-        'left',          // Section 2 - Left aligned
-        'center',        // Section 3 - Center aligned
-        'right',         // Section 4 - Right aligned
-        'center',        // Section 5 - Center aligned
-        'left',          // Section 6 - Left aligned
+      tablet: [
+        "center", // Section 1 - Center aligned
+        "left", // Section 2 - Left aligned
+        "center", // Section 3 - Center aligned
+        "right", // Section 4 - Right aligned
+        "center", // Section 5 - Center aligned
+        "left", // Section 6 - Left aligned
       ],
-      'desktop': [
-        'center',        // Section 1 - Center aligned
-        'left',          // Section 2 - Left aligned
-        'center',        // Section 3 - Center aligned
-        'center',         // Section 4 - Center aligned
-        'center',        // Section 5 - Center aligned
-        'left',          // Section 6 - Left aligned
+      desktop: [
+        "center", // Section 1 - Center aligned
+        "left", // Section 2 - Left aligned
+        "center", // Section 3 - Center aligned
+        "center", // Section 4 - Center aligned
+        "center", // Section 5 - Center aligned
+        "left", // Section 6 - Left aligned
       ],
-      'large-desktop': [
-        'center',        // Section 1 - Center aligned
-        'left',          // Section 2 - Left aligned
-        'center',        // Section 3 - Center aligned
-        'center',         // Section 4 - Center aligned
-        'center',        // Section 5 - Center aligned
-        'left',          // Section 6 - Left aligned
-      ]
+      "large-desktop": [
+        "center", // Section 1 - Center aligned
+        "left", // Section 2 - Left aligned
+        "center", // Section 3 - Center aligned
+        "center", // Section 4 - Center aligned
+        "center", // Section 5 - Center aligned
+        "left", // Section 6 - Left aligned
+      ],
     };
-    return textAlignConfigs[viewport] || textAlignConfigs['desktop'];
+    return textAlignConfigs[viewport] || textAlignConfigs["desktop"];
   };
 
   // Video rotation configuration for each section
   const getRotationConfig = () => {
     const rotationConfigs = {
-      'desktop': [
-        0,      // Section 1 - Normal
-        0,      // Section 2 - Normal
-        0,      // Section 3 - Normal
-        0,      // Section 4 - Normal
-        0,      // Section 5 - Normal
-        0,      // Section 6 - Normal
-        0,      // Section 7 - Footer
-      ]
+      desktop: [
+        0, // Section 1 - Normal
+        0, // Section 2 - Normal
+        0, // Section 3 - Normal
+        0, // Section 4 - Normal
+        0, // Section 5 - Normal
+        0, // Section 6 - Normal
+        0, // Section 7 - Footer
+      ],
     };
-    return rotationConfigs['desktop'];
+    return rotationConfigs["desktop"];
   };
 
   // Font size configuration for each section
   const getFontSizeConfig = () => {
     const viewport = (() => {
       const width = window.innerWidth;
-      if (width <= 480) return 'mobile-small';
-      if (width <= 767) return 'mobile-large';
-      if (width <= 1023) return 'tablet';
-      if (width <= 1924) return 'desktop';
-      return 'large-desktop';
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
     })();
 
     const fontSizeConfigs = {
-      'mobile-small': [
-        '28px',    // Section 1
-        '24px',    // Section 2
-        '32px',    // Section 3
-        '26px',    // Section 4
-        '28px',    // Section 5
-        '26px',    // Section 6
+      "mobile-small": [
+        "28px", // Section 1
+        "24px", // Section 2
+        "32px", // Section 3
+        "26px", // Section 4
+        "28px", // Section 5
+        "26px", // Section 6
       ],
-      'mobile-large': [
-        '32px',    // Section 1
-        '28px',    // Section 2
-        '36px',    // Section 3
-        '30px',    // Section 4
-        '32px',    // Section 5
-        '30px',    // Section 6
+      "mobile-large": [
+        "32px", // Section 1
+        "28px", // Section 2
+        "36px", // Section 3
+        "30px", // Section 4
+        "32px", // Section 5
+        "30px", // Section 6
       ],
-      'tablet': [
-        '48px',    // Section 1
-        '32px',    // Section 2
-        '52px',    // Section 3
-        '40px',    // Section 4
-        '44px',    // Section 5
-        '40px',    // Section 6
+      tablet: [
+        "48px", // Section 1
+        "32px", // Section 2
+        "52px", // Section 3
+        "40px", // Section 4
+        "44px", // Section 5
+        "40px", // Section 6
       ],
-      'desktop': [
-        '60px',    // Section 1
-        '36px',    // Section 2
-        '64px',    // Section 3
-        '36px',    // Section 4
-        '52px',    // Section 5
-        '48px',    // Section 6
+      desktop: [
+        "60px", // Section 1
+        "36px", // Section 2
+        "64px", // Section 3
+        "36px", // Section 4
+        "52px", // Section 5
+        "48px", // Section 6
       ],
-      'large-desktop': [
-        '72px',    // Section 1
-        '42px',    // Section 2
-        '76px',    // Section 3
-        '56px',    // Section 4
-        '60px',    // Section 5
-        '56px',    // Section 6
-      ]
+      "large-desktop": [
+        "72px", // Section 1
+        "42px", // Section 2
+        "76px", // Section 3
+        "56px", // Section 4
+        "60px", // Section 5
+        "56px", // Section 6
+      ],
     };
-    return fontSizeConfigs[viewport] || fontSizeConfigs['desktop'];
+    return fontSizeConfigs[viewport] || fontSizeConfigs["desktop"];
   };
 
   // Font weight configuration for each section
   const getFontWeightConfig = () => {
     return [
-      '500',    // Section 1
-      '500',    // Section 2
-      '600',    // Section 3
-      '500',    // Section 4
-      '500',    // Section 5
-      '500',    // Section 6
+      "500", // Section 1
+      "500", // Section 2
+      "600", // Section 3
+      "500", // Section 4
+      "500", // Section 5
+      "500", // Section 6
     ];
   };
 
@@ -245,21 +250,36 @@ export default function Demo() {
   const handleScroll = () => {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || !videoRef.current) {
-      console.log('Missing scroll container or video ref');
+      console.log("Missing scroll container or video ref");
       return;
     }
 
     const scrollTop = scrollContainer.scrollTop;
-    const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+    const maxScroll =
+      scrollContainer.scrollHeight - scrollContainer.clientHeight;
 
     if (maxScroll <= 0) {
-      console.log('No scroll available - maxScroll:', maxScroll, 'scrollHeight:', scrollContainer.scrollHeight, 'clientHeight:', scrollContainer.clientHeight);
+      console.log(
+        "No scroll available - maxScroll:",
+        maxScroll,
+        "scrollHeight:",
+        scrollContainer.scrollHeight,
+        "clientHeight:",
+        scrollContainer.clientHeight
+      );
       return;
     }
 
     const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
 
-    console.log('Scroll progress:', scrollProgress, 'ScrollTop:', scrollTop, 'MaxScroll:', maxScroll);
+    console.log(
+      "Scroll progress:",
+      scrollProgress,
+      "ScrollTop:",
+      scrollTop,
+      "MaxScroll:",
+      maxScroll
+    );
 
     // Update state for UI display
     setScrollProgress(scrollProgress);
@@ -290,13 +310,22 @@ export default function Demo() {
     // Interpolate between current and next rotation
     const currentRotation = rotations[currentSection];
     const nextRotation = rotations[nextSection];
-    const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
+    const newRotation =
+      currentRotation + (nextRotation - currentRotation) * sectionProgress;
 
     // Scale effect - set section 5 to 0.8 scale, hide video in section 6 (like ScrollSyncModel)
     let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
 
     // Dynamic video sizing based on section (EXACTLY like ScrollSyncModel)
-    const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5', 'section6', 'section7'];
+    const sizeKeys = [
+      "section1",
+      "section2",
+      "section3",
+      "section4",
+      "section5",
+      "section6",
+      "section7",
+    ];
     const currentSizeKey = sizeKeys[currentSection];
     const nextSizeKey = sizeKeys[nextSection];
 
@@ -304,26 +333,28 @@ export default function Demo() {
     const nextSize = videoSizeConfig[nextSizeKey];
 
     // Interpolate between current and next size
-    const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
+    const newWidth =
+      currentSize.width +
+      (nextSize.width - currentSize.width) * sectionProgress;
 
     // Update video position and size state (EXACTLY like ScrollSyncModel)
     setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
-    setVideoSize({ width: newWidth, height: 'auto' });
+    setVideoSize({ width: newWidth, height: "auto" });
 
     // Show header only during section 1 (first 4% of scroll) - matching ScrollSyncModel
     setHeaderVisible(scrollProgress < 0.04);
 
-    console.log('Video position and size updated:', { 
-      x: newX, 
-      y: newY, 
-      scale, 
+    console.log("Video position and size updated:", {
+      x: newX,
+      y: newY,
+      scale,
       rotation: newRotation,
       width: newWidth,
       section: currentSection,
       progress: sectionProgress,
       scrollProgress: scrollProgress,
       currentSize: currentSize.width,
-      nextSize: nextSize.width
+      nextSize: nextSize.width,
     });
   };
 
@@ -333,28 +364,30 @@ export default function Demo() {
       // Wait for scroll container to be available (like ScrollSyncModel)
       let attempts = 0;
       while (!scrollContainerRef.current && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         attempts++;
       }
 
       const scrollContainer = scrollContainerRef.current;
       if (!scrollContainer) {
-        console.error('Scroll container not found after 5 seconds');
+        console.error("Scroll container not found after 5 seconds");
         return;
       }
 
       // Wait for container to have proper dimensions (like ScrollSyncModel)
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-      console.log('Setting up Demo scroll listener...');
+      console.log("Setting up Demo scroll listener...");
 
       // Use passive listener for better performance during scroll (like ScrollSyncModel)
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-      
+      scrollContainer.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
+
       // Set initial position
       handleScroll();
 
-      console.log('Demo scroll listener attached successfully');
+      console.log("Demo scroll listener attached successfully");
     };
 
     setupScrollListener();
@@ -364,7 +397,7 @@ export default function Demo() {
       // Note: scrollContainer is captured in the async function scope
       // The cleanup will be handled by the async function's scope
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initialize video
@@ -377,18 +410,18 @@ export default function Demo() {
     video.muted = true;
     video.autoplay = true;
     video.playsInline = true;
-    video.preload = 'auto';
+    video.preload = "auto";
 
     // Handle video loading
-    video.addEventListener('loadeddata', () => {
-      console.log('Demo video loaded successfully');
-      video.play().catch(err => {
-        console.warn('Autoplay failed:', err);
+    video.addEventListener("loadeddata", () => {
+      console.log("Demo video loaded successfully");
+      video.play().catch((err) => {
+        console.warn("Autoplay failed:", err);
       });
     });
 
-    video.addEventListener('error', (e) => {
-      console.error('Video loading error:', e);
+    video.addEventListener("error", (e) => {
+      console.error("Video loading error:", e);
     });
   }, []);
 
@@ -401,33 +434,33 @@ export default function Demo() {
         // src="/final-hero-video1.mp4"
         className="demo-fixed-video"
         style={{
-          position: 'fixed',
+          position: "fixed",
           zIndex: 5,
-          pointerEvents: 'none',
+          pointerEvents: "none",
           left: `${videoPosition.x}%`,
           top: `${videoPosition.y}%`,
           transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
           width: `${videoSize.width}px`,
-          height: videoSize.height
+          height: videoSize.height,
           // NO CSS transition - let JavaScript handle all animations for smoothness
         }}
       />
 
       {/* Header - Only visible on Section 1 */}
-      <div className={`demo-header ${headerVisible ? 'visible' : 'hidden'}`}>
+      <div className={`demo-header ${headerVisible ? "visible" : "hidden"}`}>
         {/* Left Logo */}
         <div className="demo-header-left">
-          <img 
+          <img
             src="/kahuna-logo-3.svg"
-            alt="Kahuna Logo" 
+            alt="Kahuna Logo"
             className="demo-header-logo"
           />
         </div>
 
         {/* Right Let's Talk Button */}
-        <button 
+        <button
           onClick={() => {
-            console.log('Let\'s Talk button clicked!');
+            console.log("Let's Talk button clicked!");
             // Add your contact/navigation logic here
           }}
           className="demo-header-button"
@@ -437,13 +470,13 @@ export default function Demo() {
       </div>
 
       {/* Scrollable Content */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="demo-scroll-container"
         style={{
-          height: '100vh',
-          overflowY: 'auto',
-          overflowX: 'hidden'
+          height: "100vh",
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
       >
         <AnimatedSection
@@ -452,13 +485,10 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[0]}
           fontSize={getFontSizeConfig()[0]}
           fontWeight={getFontWeightConfig()[0]}
-          firstSet={[
-            'Vast and intricate,',
-            'products never stop evolving.'
-          ]}
+          firstSet={["Vast and intricate,", "products never stop evolving."]}
           secondSet={[
-            'Enterprise customers have an',
-            'endless spectrum of realities.'
+            "Enterprise customers have an",
+            "endless spectrum of realities.",
           ]}
         />
         <AnimatedSection
@@ -467,16 +497,13 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[1]}
           fontSize={getFontSizeConfig()[1]}
           fontWeight={getFontWeightConfig()[1]}
-          firstSet={[
-            'The support landscape is',
-            'boundless and shifting'
-          ]}
+          firstSet={["The support landscape is", "boundless and shifting"]}
           secondSet={[
             "You're lost.",
             "",
-            'Outdated, laborious',
-            'and fractional knowledge',
-            "cripple frontline actions."
+            "Outdated, laborious",
+            "and fractional knowledge",
+            "cripple frontline actions.",
           ]}
         />
         <AnimatedSection
@@ -485,16 +512,21 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[2]}
           fontSize={getFontSizeConfig()[2]}
           fontWeight={getFontWeightConfig()[2]}
-          firstSet={[ 'Meet Kahuna AI']}
+          firstSet={["Meet Kahuna AI"]}
         />
-        <InfiniteWordLoop sectionNumber={4} words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]} />
+        <InfiniteWordLoop
+          sectionNumber={4}
+          words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]}
+        />
         <AnimatedSection
           sectionNumber={4}
           textPosition={getTextPositionConfig()[3]}
           textAlign={getTextAlignConfig()[3]}
           fontSize={getFontSizeConfig()[3]}
           fontWeight={getFontWeightConfig()[3]}
-          firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
+          firstSet={[
+            "AI that automatically builds and nurtures your Troubleshooting Map",
+          ]}
         />
         <AnimatedSection
           sectionNumber={5}
@@ -502,7 +534,9 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[4]}
           fontSize={getFontSizeConfig()[4]}
           fontWeight={getFontWeightConfig()[4]}
-          firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
+          firstSet={[
+            "AI that automatically builds and nurtures your Troubleshooting Map",
+          ]}
         />
         <AnimatedSection
           sectionNumber={6}
@@ -518,15 +552,17 @@ export default function Demo() {
         <div className="demo-section demo-footer">
           <div className="footer-container">
             {/* Main Tagline Section */}
-            <img 
-              src="/final-logo.svg" 
-              alt="Kahuna Labs" 
+            <img
+              src="/final-logo.svg"
+              alt="Kahuna Labs"
               className="footer-logo-bg"
             />
             <div className="footer-tagline">
               <div className="footer-tagline-text">
-                <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
-                <div className="footer-tagline-line">Enterprise Grade.</div>
+                <div className="footer-tagline-line">
+                  Secure. Private. Comprehensive. Enterprise Grade.
+                </div>
+                {/* <div className="footer-tagline-line">Enterprise Grade.</div> */}
               </div>
             </div>
 
@@ -537,8 +573,22 @@ export default function Demo() {
                 <div className="footer-column">
                   <h3 className="footer-column-title">TECHNOLOGY</h3>
                   <ul className="footer-links-list">
-                    <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
-                    <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
+                    <li>
+                      <a
+                        href="/technology/frontline-productivity"
+                        className="footer-link"
+                      >
+                        Frontline Productivity
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="/technology/agentic-ai-impact"
+                        className="footer-link"
+                      >
+                        How Complex is Your Support?
+                      </a>
+                    </li>
                   </ul>
                 </div>
 
@@ -546,16 +596,29 @@ export default function Demo() {
                 <div className="footer-column">
                   <h3 className="footer-column-title">COMPANY</h3>
                   <ul className="footer-links-list">
-                    <li><a href="/contact" className="footer-link">Contact us</a></li>
-                    <li><a href="/careers" className="footer-link">Careers</a></li>
+                    <li>
+                      <a href="/contact" className="footer-link">
+                        Contact us
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/careers" className="footer-link">
+                        Careers
+                      </a>
+                    </li>
                   </ul>
                 </div>
 
                 <div className="footer-column">
-                  <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
-                    <img 
-                      src="/LinkedIn-Icon.png" 
-                      alt="LinkedIn" 
+                  <a
+                    href="https://linkedin.com/company/kahuna-labs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-linkedin"
+                  >
+                    <img
+                      src="/LinkedIn-Icon.png"
+                      alt="LinkedIn"
                       className="footer-linkedin-icon"
                     />
                     <span>LinkedIn</span>
@@ -574,13 +637,20 @@ export default function Demo() {
             {/* Bottom Copyright Line */}
             <div className="footer-copyright">
               <div className="footer-copyright-text">
-                All rights reserved to Kahuna Labs. Copyright © 2025.
+                <p>
+                  Kahuna AI and its components are trademarks of Kahuna Labs.
+                </p>
+                <p>
+                  The proprietary technology of Kahuna AI is protected by
+                  multiple issued and pending U.S. and international patents
+                  owned by Kahuna Labs.
+                </p>
+                <p>All rights reserved.</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

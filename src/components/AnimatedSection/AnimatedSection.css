@@ -23,7 +23,7 @@
 .section-container {
   /* max-width: 1200px; */
   width: 100%;
-  padding: 0 1.5rem;
+  padding: 0 100px;
   margin: 0 auto;
   z-index: 6;
 }
@@ -145,6 +145,14 @@
   .text-position-bottom-right {
     padding-right: 15px;
   }
+
+  .section-container {
+    width: 100%;
+    padding: 0 20px;
+}
+.text-line {
+  font-size: 26px;
+}
 }
 
 .text-set {
@@ -171,17 +179,22 @@
 }
 
 .text-line {
+  margin: 0px;
   font-size: 2rem;
   font-weight: 300;
   color: white;
   text-align: center;
-  line-height: 1.5;
+  /* line-height: 1.5; */
 }
 
 @media (min-width: 768px) {
   .text-line {
     font-size: 2.5rem;
   }
+  .section-container {
+    width: 100%;
+    padding: 0 20px;
+}
 }
 
 @media (min-width: 1024px) {
