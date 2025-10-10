@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import "./AnimatedSection.css";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const AnimatedSection = ({ 
   sectionNumber, 
@@ -9,9 +13,12 @@ const AnimatedSection = ({
   textAlign = 'center' // New prop for text alignment
 }) => {
   const [animationState, setAnimationState] = useState("idle");
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const sectionRef = useRef(null);
   const observerRef = useRef(null);
   const timersRef = useRef({ timer1: null, timer2: null });
+  const scrollIndicatorRef = useRef(null);
+  const arrowRef = useRef(null);
 
   useEffect(() => {
     const options = {
@@ -80,6 +87,68 @@ const AnimatedSection = ({
     };
   }, [animationState]);
 
+  // Show scroll indicator when second set completes (only for section 1)
+  useEffect(() => {
+    if (sectionNumber === 1 && animationState === "second") {
+      // Wait for the second set animation to complete (stagger delay * number of lines + duration)
+      const secondSetAnimationDuration = (secondSet.length - 1) * 0.2 + 0.8; // 0.2s stagger + 0.8s duration
+      const timer = setTimeout(() => {
+        setShowScrollIndicator(true);
+      }, secondSetAnimationDuration * 1000);
+      return () => clearTimeout(timer);
+    } else if (sectionNumber === 1 && animationState !== "second") {
+      setShowScrollIndicator(false);
+    }
+  }, [animationState, sectionNumber, secondSet?.length]);
+  // GSAP animations for scroll indicator
+  useEffect(() => {
+    if (showScrollIndicator && scrollIndicatorRef.current && arrowRef.current) {
+      // Set initial state
+      gsap.set([scrollIndicatorRef.current, arrowRef.current], { opacity: 0, y: 20 });
+      // Fade in animation
+      const tl = gsap.timeline();
+      tl.to([scrollIndicatorRef.current, arrowRef.current], {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out"
+      });
+      // Floating animation for arrow
+      gsap.to(arrowRef.current, {
+        y: -10,
+        duration: 1.5,
+        ease: "power2.inOut",
+        yoyo: true,
+        repeat: -1
+      });
+      // Scroll trigger to fade out when scrolling away
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top top",
+        end: "bottom top",
+        onLeave: () => {
+          gsap.to([scrollIndicatorRef.current, arrowRef.current], {
+            opacity: 0,
+            y: -20,
+            duration: 0.5,
+            ease: "power2.in"
+          });
+        },
+        onEnterBack: () => {
+          // Don't show again once user has scrolled away
+        }
+      });
+      return () => {
+        ScrollTrigger.getAll().forEach(trigger => {
+          if (trigger.trigger === sectionRef.current) {
+            trigger.kill();
+          }
+        });
+      };
+    }
+  }, [showScrollIndicator]);
+
+
   const gradientClass = sectionNumber === 1 ? "gradient-1" : "gradient-2";
 
   return (
@@ -133,6 +202,22 @@ const AnimatedSection = ({
         <div className="section-indicator">
           Section {sectionNumber}
         </div>
+
+        {/* Scroll Indicator - Only for Section 1 */}
+        {sectionNumber === 1 && showScrollIndicator && (
+          <div className="scroll-indicator-container">
+            <div ref={scrollIndicatorRef} className="scroll-text">
+              SCROLL
+            </div>
+            <img
+              ref={arrowRef}
+              src="/Component 3 (1).png"
+              alt="Scroll Arrow"
+              className="scroll-arrow"
+            />
+          </div>
+        )}
+
       </div>
     </section>
   );

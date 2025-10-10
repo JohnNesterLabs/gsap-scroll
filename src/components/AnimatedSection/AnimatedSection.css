@@ -248,3 +248,38 @@
   animation: slideIn 1s ease forwards;
 }
 
+.scroll-indicator-container {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 10;
+}
+.scroll-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+.scroll-arrow {
+  width: 24px;
+  height: 24px;
+  opacity: 0.8;
+  filter: brightness(0) invert(1);
+  /* Make arrow white */
+}
+@media (min-width: 768px) {
+  .scroll-text {
+    font-size: 1rem;
+  }
+  .scroll-arrow {
+    width: 28px;
+    height: 28px;
+  }
+}
