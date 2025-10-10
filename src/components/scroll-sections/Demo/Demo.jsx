@@ -9,6 +9,7 @@ export default function Demo() {
   const [videoPosition, setVideoPosition] = useState({ x: 50, y: 50, scale: 1, rotation: 0 });
   const [videoSize, setVideoSize] = useState({ width: 400, height: 'auto' });
   const [activeSection, setActiveSection] = useState(0);
+  const [headerVisible, setHeaderVisible] = useState(true);
 
   // Video size configuration for each section
   const getVideoSizeConfig = () => {
@@ -19,7 +20,8 @@ export default function Demo() {
         section3: { width: 2000, height: 'auto' },
         section4: { width: 1200, height: 'auto' },
         section5: { width: 1200, height: 'auto' },
-        section6: { width: 1750, height: 'auto' }, // Hide in footer
+        section6: { width: 1400, height: 'auto' },
+        section7: { width: 0, height: 'auto' }, // Footer
       }
     };
     return configs['desktop'];
@@ -30,11 +32,12 @@ export default function Demo() {
     const positionConfigs = {
       'desktop': [
         { x: 50, y: 110 },      // Section 1 - Center
-        { x: 90, y: 50 },      // Section 2 - Top Right
-        { x: 50, y: 50 },      // Section 3 - Bottom Left
-        { x: 50, y: 50 },      // Section 4 - Bottom Right
-        { x: 50, y: 50 },      // Section 5 - Top Left
-        { x: 50, y: 50 },      // Section 6 - Center (footer)
+        { x: 90, y: 50 },       // Section 2 - Top Right
+        { x: 50, y: 50 },       // Section 3 - Center
+        { x: 50, y: 50 },       // Section 4 - Center
+        { x: 50, y: 50 },       // Section 5 - Center
+        { x: 50, y: 50 },       // Section 6 - Center
+        { x: 50, y: 50 },       // Section 7 - Footer
       ]
     };
     return positionConfigs['desktop'];
@@ -74,7 +77,7 @@ export default function Demo() {
         'center',        // Section 3 - Text at center
         'right',         // Section 4 - Text at right
         'bottom',        // Section 5 - Text at bottom
-        'center',        // Section 6 - Text at center (footer)
+        'top-left',      // Section 6 - Text at top-left
       ],
       'desktop': [
         'top',           // Section 1 - Text at top
@@ -82,7 +85,7 @@ export default function Demo() {
         'center',        // Section 3 - Text at center
         'right',         // Section 4 - Text at right
         'bottom',        // Section 5 - Text at bottom
-        'center',        // Section 6 - Text at center (footer)
+        'top-left',      // Section 6 - Text at top-left
       ],
       'large-desktop': [
         'top',           // Section 1 - Text at top
@@ -90,7 +93,7 @@ export default function Demo() {
         'center',        // Section 3 - Text at center
         'right',         // Section 4 - Text at right
         'bottom',        // Section 5 - Text at bottom
-        'center',        // Section 6 - Text at center (footer)
+        'top-left',      // Section 6 - Text at top-left
       ]
     };
     return textPositionConfigs[viewport] || textPositionConfigs['desktop'];
@@ -130,7 +133,7 @@ export default function Demo() {
         'center',        // Section 3 - Center aligned
         'right',         // Section 4 - Right aligned
         'center',        // Section 5 - Center aligned
-        'center',        // Section 6 - Center aligned (footer)
+        'left',          // Section 6 - Left aligned
       ],
       'desktop': [
         'center',        // Section 1 - Center aligned
@@ -138,7 +141,7 @@ export default function Demo() {
         'center',        // Section 3 - Center aligned
         'right',         // Section 4 - Right aligned
         'center',        // Section 5 - Center aligned
-        'center',        // Section 6 - Center aligned (footer)
+        'left',          // Section 6 - Left aligned
       ],
       'large-desktop': [
         'center',        // Section 1 - Center aligned
@@ -146,7 +149,7 @@ export default function Demo() {
         'center',        // Section 3 - Center aligned
         'right',         // Section 4 - Right aligned
         'center',        // Section 5 - Center aligned
-        'center',        // Section 6 - Center aligned (footer)
+        'left',          // Section 6 - Left aligned
       ]
     };
     return textAlignConfigs[viewport] || textAlignConfigs['desktop'];
@@ -157,11 +160,12 @@ export default function Demo() {
     const rotationConfigs = {
       'desktop': [
         0,      // Section 1 - Normal
-        0,     // Section 2 - 15 degrees
-        0,    // Section 3 - -10 degrees
-        0,     // Section 4 - 25 degrees
-        0,    // Section 5 - -20 degrees
-        0,      // Section 6 - Normal (footer)
+        0,      // Section 2 - Normal
+        0,      // Section 3 - Normal
+        0,      // Section 4 - Normal
+        0,      // Section 5 - Normal
+        0,      // Section 6 - Normal
+        0,      // Section 7 - Footer
       ]
     };
     return rotationConfigs['desktop'];
@@ -195,7 +199,7 @@ export default function Demo() {
     const videoSizeConfig = getVideoSizeConfig();
 
     // Calculate which section we're in and interpolate (EXACTLY like ScrollSyncModel)
-    const totalSections = 6; // Dynamic sections
+    const totalSections = 7; // 6 AnimatedSections + 1 Footer
     const sectionIndex = scrollProgress * (totalSections - 1); // 0 to totalSections-1
     const currentSection = Math.floor(sectionIndex);
     const nextSection = Math.min(currentSection + 1, totalSections - 1);
@@ -222,7 +226,7 @@ export default function Demo() {
     let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
 
     // Dynamic video sizing based on section (EXACTLY like ScrollSyncModel)
-    const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'];
+    const sizeKeys = ['section1', 'section2', 'section3', 'section4', 'section5', 'section6', 'section7'];
     const currentSizeKey = sizeKeys[currentSection];
     const nextSizeKey = sizeKeys[nextSection];
 
@@ -235,6 +239,9 @@ export default function Demo() {
     // Update video position and size state (EXACTLY like ScrollSyncModel)
     setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
     setVideoSize({ width: newWidth, height: 'auto' });
+
+    // Show header only during section 1 (first 4% of scroll) - matching ScrollSyncModel
+    setHeaderVisible(scrollProgress < 0.04);
 
     console.log('Video position and size updated:', { 
       x: newX, 
@@ -335,6 +342,29 @@ export default function Demo() {
         }}
       />
 
+      {/* Header - Only visible on Section 1 */}
+      <div className={`demo-header ${headerVisible ? 'visible' : 'hidden'}`}>
+        {/* Left Logo */}
+        <div className="demo-header-left">
+          <img 
+            src="/kahuna-logo-3.svg"
+            alt="Kahuna Logo" 
+            className="demo-header-logo"
+          />
+        </div>
+
+        {/* Right Let's Talk Button */}
+        <button 
+          onClick={() => {
+            console.log('Let\'s Talk button clicked!');
+            // Add your contact/navigation logic here
+          }}
+          className="demo-header-button"
+        >
+          Let's Talk
+        </button>
+      </div>
+
       {/* Scrollable Content */}
       <div 
         ref={scrollContainerRef}
@@ -399,9 +429,74 @@ export default function Demo() {
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
-          firstSet={["Creative Design", "Smooth Interactions"]}
-          secondSet={["Modern Aesthetics", "Next-level Performance"]}
+          firstSet={["Experience the future", "Innovation meets excellence"]}
+          secondSet={["Transform your vision", "Into reality"]}
         />
+        {/* Footer Section */}
+        <div className="demo-section demo-footer">
+          <div className="footer-container">
+            {/* Main Tagline Section */}
+            <img 
+              src="/final-logo.svg" 
+              alt="Kahuna Labs" 
+              className="footer-logo-bg"
+            />
+            <div className="footer-tagline">
+              <div className="footer-tagline-text">
+                <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
+                <div className="footer-tagline-line">Enterprise Grade.</div>
+              </div>
+            </div>
+
+            {/* Footer Content */}
+            <div className="footer-content">
+              <div className="footer-links">
+                {/* Technology Column */}
+                <div className="footer-column">
+                  <h3 className="footer-column-title">TECHNOLOGY</h3>
+                  <ul className="footer-links-list">
+                    <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
+                    <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
+                  </ul>
+                </div>
+
+                {/* Company Column */}
+                <div className="footer-column">
+                  <h3 className="footer-column-title">COMPANY</h3>
+                  <ul className="footer-links-list">
+                    <li><a href="/contact" className="footer-link">Contact us</a></li>
+                    <li><a href="/careers" className="footer-link">Careers</a></li>
+                  </ul>
+                </div>
+
+                <div className="footer-column">
+                  <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
+                    <img 
+                      src="/LinkedIn-Icon.png" 
+                      alt="LinkedIn" 
+                      className="footer-linkedin-icon"
+                    />
+                    <span>LinkedIn</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Kahuna Labs Logo */}
+              <div className="footer-logo-section">
+                <div className="footer-logo-container">
+                  <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Copyright Line */}
+            <div className="footer-copyright">
+              <div className="footer-copyright-text">
+                All rights reserved to Kahuna Labs. Copyright © 2025.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Debug Info */}
