@@ -14,12 +14,12 @@ export default function Demo() {
   const getVideoSizeConfig = () => {
     const configs = {
       'desktop': {
-        section1: { width: 600, height: 'auto' },
-        section2: { width: 500, height: 'auto' },
-        section3: { width: 700, height: 'auto' },
-        section4: { width: 400, height: 'auto' },
-        section5: { width: 800, height: 'auto' },
-        section6: { width: 0, height: 'auto' }, // Hide in footer
+        section1: { width: 1400, height: 'auto' },
+        section2: { width: 1400, height: 'auto' },
+        section3: { width: 2000, height: 'auto' },
+        section4: { width: 1200, height: 'auto' },
+        section5: { width: 1200, height: 'auto' },
+        section6: { width: 1750, height: 'auto' }, // Hide in footer
       }
     };
     return configs['desktop'];
@@ -29,11 +29,11 @@ export default function Demo() {
   const getPositionConfig = () => {
     const positionConfigs = {
       'desktop': [
-        { x: 50, y: 50 },      // Section 1 - Center
-        { x: 80, y: 30 },      // Section 2 - Top Right
-        { x: 20, y: 70 },      // Section 3 - Bottom Left
-        { x: 70, y: 60 },      // Section 4 - Bottom Right
-        { x: 30, y: 40 },      // Section 5 - Top Left
+        { x: 50, y: 110 },      // Section 1 - Center
+        { x: 90, y: 50 },      // Section 2 - Top Right
+        { x: 50, y: 50 },      // Section 3 - Bottom Left
+        { x: 50, y: 50 },      // Section 4 - Bottom Right
+        { x: 50, y: 50 },      // Section 5 - Top Left
         { x: 50, y: 50 },      // Section 6 - Center (footer)
       ]
     };
@@ -45,10 +45,10 @@ export default function Demo() {
     const rotationConfigs = {
       'desktop': [
         0,      // Section 1 - Normal
-        15,     // Section 2 - 15 degrees
-        -10,    // Section 3 - -10 degrees
-        25,     // Section 4 - 25 degrees
-        -20,    // Section 5 - -20 degrees
+        0,     // Section 2 - 15 degrees
+        0,    // Section 3 - -10 degrees
+        0,     // Section 4 - 25 degrees
+        0,    // Section 5 - -20 degrees
         0,      // Section 6 - Normal (footer)
       ]
     };

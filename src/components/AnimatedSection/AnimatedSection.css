@@ -6,14 +6,18 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  border: 1px solid white;
 }
 
 .animated-section.gradient-1 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border: 1px solid white;
+  background-color: black;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); */
 }
 
 .animated-section.gradient-2 {
-  background: linear-gradient(135deg, #f093fb 0%, #764ba2 50%, #667eea 100%);
+  background-color: black;
+  /* background: linear-gradient(135deg, #f093fb 0%, #764ba2 50%, #667eea 100%); */
 }
 
 .section-container {
