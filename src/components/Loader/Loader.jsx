@@ -23,16 +23,14 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
     useEffect(() => {
         if (progress < 5) {
             setLoadingText('Initializing Kahuna AI...');
-        } else if (progress < 25) {
-            setLoadingText('Loading main video...');
-        } else if (progress < 45) {
-            setLoadingText('Loading logo assets...');
-        } else if (progress < 80) {
-            setLoadingText(`Loading PNG sequence (${loadedCount}/${totalAssets})...`);
+        } else if (progress < 30) {
+            setLoadingText('Loading demo video...');
+        } else if (progress < 70) {
+            setLoadingText('Loading assets...');
         } else if (progress < 95) {
-            setLoadingText('Optimizing performance...');
-        } else if (progress < 100) {
             setLoadingText('Almost ready...');
+        } else if (progress < 100) {
+            setLoadingText('Finalizing...');
         } else {
             setLoadingText('Welcome to Kahuna AI');
         }
@@ -65,9 +63,9 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
                 </div>
 
                 {/* Loading text */}
-                {/* <div className="loading-text">
+                <div className="loading-text">
                     {loadingText}
-                </div> */}
+                </div>
 
                 {/* Animated dots */}
                 {/* <div className="loading-dots">

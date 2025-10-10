@@ -41,8 +41,7 @@ function App() {
   }, [error]);
   return (
     <div className="App">
-       <Demo/>
-       {/* {showLoader && (
+      {showLoader && (
         <Loader
           progress={progress}
           onComplete={handleLoaderComplete}
@@ -54,8 +53,8 @@ function App() {
       )}
 
       {!showLoader && (
-      <ScrollSyncModel/>
-      )} */}
+        <Demo/>
+      )}
     </div>
   );
 }

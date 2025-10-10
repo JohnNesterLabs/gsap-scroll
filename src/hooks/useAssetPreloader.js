@@ -2,11 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 
 // Define all assets that need to be preloaded
 const ASSETS_TO_PRELOAD = [
-    // Main video
-    '/map-alive-test.mp4',
-
-    // PNG sequence frames (all 153 frames for Section 5)
-    ...Array.from({ length: 328 }, (_, i) => `/frames-journey/frame_${String(i + 1).padStart(4, '0')}.png`),
+    // Main demo video
+    '/demo1.mp4',
 
     // Logo assets
     '/Logo-color.svg',
@@ -85,54 +82,22 @@ export const useAssetPreloader = () => {
         let loadedCount = 0;
 
         try {
-            // Prioritize critical assets first
-            const criticalAssets = ASSETS_TO_PRELOAD.filter(asset => 
-                asset.includes('.mp4') || asset.includes('.svg') || asset.includes('.png')
-            ).filter(asset => !asset.includes('/frames/frame_'));
-
-            const pngFrames = ASSETS_TO_PRELOAD.filter(asset => asset.includes('/frames/frame_'));
-
-            // Load critical assets first (batch size 2 for better reliability)
-            console.log('🎬 Loading critical assets first...');
-            for (let i = 0; i < criticalAssets.length; i += 2) {
-                const batch = criticalAssets.slice(i, i + 2);
-                await Promise.allSettled(batch.map(async (asset) => {
-                    try {
-                        await preloadAsset(asset);
-                        loadedCount++;
-                        setLoadedAssets(prev => new Set([...prev, asset]));
-                        setProgress(Math.round((loadedCount / totalAssets) * 100));
-                        return asset;
-                    } catch (error) {
-                        console.warn(`Failed to preload critical asset ${asset}:`, error);
-                        loadedCount++;
-                        setProgress(Math.round((loadedCount / totalAssets) * 100));
-                        return null;
-                    }
-                }));
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-
-            // Then load PNG frames in smaller batches (batch size 5 for performance)
-            console.log('🖼️ Loading PNG sequence frames...');
-            for (let i = 0; i < pngFrames.length; i += 5) {
-                const batch = pngFrames.slice(i, i + 5);
-                await Promise.allSettled(batch.map(async (asset) => {
-                    try {
-                        await preloadAsset(asset);
-                        loadedCount++;
-                        setLoadedAssets(prev => new Set([...prev, asset]));
-                        setProgress(Math.round((loadedCount / totalAssets) * 100));
-                        return asset;
-                    } catch (error) {
-                        console.warn(`Failed to preload PNG frame ${asset}:`, error);
-                        loadedCount++;
-                        setProgress(Math.round((loadedCount / totalAssets) * 100));
-                        return null;
-                    }
-                }));
-                // Smaller delay for PNG frames to speed up loading
-                await new Promise(resolve => setTimeout(resolve, 20));
+            console.log('🎬 Loading Demo assets...');
+            
+            // Load all assets sequentially for Demo
+            for (const asset of ASSETS_TO_PRELOAD) {
+                try {
+                    await preloadAsset(asset);
+                    loadedCount++;
+                    setLoadedAssets(prev => new Set([...prev, asset]));
+                    setProgress(Math.round((loadedCount / totalAssets) * 100));
+                } catch (error) {
+                    console.warn(`Failed to preload asset ${asset}:`, error);
+                    loadedCount++;
+                    setProgress(Math.round((loadedCount / totalAssets) * 100));
+                }
+                // Small delay between assets
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
             // Ensure progress reaches 100%

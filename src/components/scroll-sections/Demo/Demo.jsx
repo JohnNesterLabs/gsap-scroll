@@ -327,7 +327,8 @@ export default function Demo() {
       {/* Fixed Video */}
       <video
         ref={videoRef}
-        src="/final-hero-video1.mp4"
+        src="/demo1.mp4"
+        // src="/final-hero-video1.mp4"
         className="demo-fixed-video"
         style={{
           position: 'fixed',
