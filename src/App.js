@@ -1,6 +1,7 @@
 import './App.css';
 import AnimatedSection from './components/AnimatedSection/AnimatedSection';
 import Loader from './components/Loader/Loader';
+import Demo from './components/scroll-sections/Demo/Demo';
 import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { useState, useEffect } from 'react';
@@ -40,16 +41,7 @@ function App() {
   }, [error]);
   return (
     <div className="App">
-       <AnimatedSection
-        sectionNumber={1}
-        firstSet={["Welcome to our site", "We build amazing experiences"]}
-        secondSet={["Let's get started", "Scroll down to explore more"]}
-      />
-      <AnimatedSection
-        sectionNumber={2}
-        firstSet={["Creative Design", "Smooth Interactions"]}
-        secondSet={["Modern Aesthetics", "Next-level Performance"]}
-      />
+       <Demo/>
        {/* {showLoader && (
         <Loader
           progress={progress}

@@ -24,11 +24,11 @@ function ScrollSyncModel({
   const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
   const [isInSection5, setIsInSection5] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState(0);
-  const [activeTextSetIndex, setActiveTextSetIndex] = React.useState({}); // Track which text set is active per section
+  const [sectionAnimationStates, setSectionAnimationStates] = React.useState({ 0: "first" }); // Track animation state per section: "idle", "first", "transition", "second" - Initialize section 0 to "first"
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
   const sectionRefs = useRef([]);
-  const textSetTimersRef = useRef({}); // Store timers for text set cycling
+  const textSetTimersRef = useRef({}); // Store timers for text set cycling (per section)
 
   // Preload frame images
   const preloadFrame = (frameNumber) => {
@@ -130,7 +130,64 @@ function ScrollSyncModel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInSection5, currentFrame]);
 
-  // Text animation effect - triggers when active section or text set index changes
+  // State machine for text set cycling (matching AnimatedSection logic)
+  // This automatically transitions: "first" (3s) → "transition" (0.8s) → "second"
+  useEffect(() => {
+    const currentState = sectionAnimationStates[activeSection];
+    if (!currentState || currentState === "idle") return;
+
+    const section = sections[activeSection];
+    if (!section || section.isFooter || !section.textSets) return;
+
+    // Check if this section has multiple text sets
+    const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
+    if (!isMultipleSets) return; // Only apply state machine to multi-set sections
+
+    // Get timing config with defaults matching AnimatedSection behavior
+    const timingConfig = section.textSetTiming || {
+      displayDuration: 3000,      // Show each set for 3 seconds
+      fadeOutDuration: 800,       // Transition duration in milliseconds
+      loop: false
+    };
+
+    // Capture timers ref for cleanup
+    const timers = textSetTimersRef.current;
+
+    // Clear any existing timers for this section
+    if (timers[activeSection]) {
+      clearTimeout(timers[activeSection]);
+    }
+
+    // Set up state transitions based on current state
+    if (currentState === "first") {
+      // After displayDuration, transition to "transition" state
+      timers[activeSection] = setTimeout(() => {
+        setSectionAnimationStates(prev => ({
+          ...prev,
+          [activeSection]: "transition"
+        }));
+      }, timingConfig.displayDuration);
+    } else if (currentState === "transition") {
+      // After fadeOutDuration, transition to "second" state
+      timers[activeSection] = setTimeout(() => {
+        setSectionAnimationStates(prev => ({
+          ...prev,
+          [activeSection]: "second"
+        }));
+      }, timingConfig.fadeOutDuration);
+    }
+    // If state is "second", stay there (no further transitions unless loop is enabled)
+
+    // Cleanup function
+    return () => {
+      if (timers[activeSection]) {
+        clearTimeout(timers[activeSection]);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionAnimationStates, activeSection]);
+
+  // Text animation effect - triggers when active section or animation state changes
   useEffect(() => {
     const section = sections[activeSection];
     if (!section || section.isFooter || !section.textSets) return;
@@ -138,8 +195,16 @@ function ScrollSyncModel({
     const sectionElement = sectionRefs.current[activeSection];
     if (!sectionElement) return;
     
-    // Capture current timer reference for cleanup
-    const currentSectionTimers = textSetTimersRef.current;
+    const currentState = sectionAnimationStates[activeSection] || "idle";
+    
+    // Debug logging
+    // console.log(`Section ${activeSection}: state = ${currentState}`);
+    
+    if (currentState === "idle") return; // Don't animate if not visible
+
+    // Small delay to ensure DOM elements are ready
+    const timeoutId = setTimeout(() => {
+      // console.log(`Delayed animation for section ${activeSection}, state: ${currentState}`);
 
     // Get animation config with defaults
     const config = section.animationConfig || {
@@ -313,73 +378,88 @@ function ScrollSyncModel({
     const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
     
     if (isMultipleSets) {
-      // Handle multiple text sets with cycling
+      // Handle multiple text sets with state-based cycling (matching AnimatedSection logic)
+      // State machine: "first" → "transition" → "second"
       const textSetKeys = Object.keys(section.textSets);
-      const currentIndex = activeTextSetIndex[activeSection] || 0;
-      const currentKey = textSetKeys[currentIndex];
       
-      // Get timing config with defaults
+      // Get timing config
       const timingConfig = section.textSetTiming || {
-        displayDuration: 4000,      // How long to show each set (ms)
-        fadeOutDuration: 0.5,       // Fade out duration (seconds)
-        delayBetweenSets: 0.3,      // Delay between fade out and fade in (seconds)
-        loop: true                   // Whether to loop back to first set
+        displayDuration: 3000,
+        fadeOutDuration: 800,
+        loop: false
       };
 
-      // Animate in current text set
-      const currentTextElements = sectionElement.querySelectorAll(`.text-set-line[data-set="${currentKey}"]`);
-      animateTextElements(currentTextElements, true);
+      // Get elements for each set
+      const set1Elements = sectionElement.querySelectorAll(`.text-set-line[data-set="${textSetKeys[0]}"]`);
+      const set2Elements = sectionElement.querySelectorAll(`.text-set-line[data-set="${textSetKeys[1]}"]`);
 
-      // Clear any existing timer for this section
-      if (textSetTimersRef.current[activeSection]) {
-        clearTimeout(textSetTimersRef.current[activeSection]);
-      }
+      // Debug logging
+      console.log(`Section ${activeSection}: Found ${set1Elements.length} set1 elements, ${set2Elements.length} set2 elements`);
+      console.log(`Looking for: data-set="${textSetKeys[0]}" and data-set="${textSetKeys[1]}"`);
 
-      // Check if we're on the last set
-      const isLastSet = currentIndex === textSetKeys.length - 1;
-      
-      // Only set up cycling timer if:
-      // - loop is enabled, OR
-      // - we're not on the last set yet
-      if (timingConfig.loop || !isLastSet) {
-        // Set up timer to cycle to next text set
-        textSetTimersRef.current[activeSection] = setTimeout(() => {
-          // Fade out current text set
-          gsap.to(currentTextElements, {
-            opacity: 0,
-            duration: timingConfig.fadeOutDuration,
-            ease: 'power2.in',
-            onComplete: () => {
-              // Move to next text set after delay
-              setTimeout(() => {
-                const nextIndex = (currentIndex + 1) % textSetKeys.length;
-                
-                setActiveTextSetIndex(prev => ({
-                  ...prev,
-                  [activeSection]: nextIndex
-                }));
-              }, timingConfig.delayBetweenSets * 1000);
-            }
+      // Handle animations based on current state
+      if (currentState === "first") {
+        // FIRST STATE: Show set1 with slide-in animation from bottom
+        gsap.set(set2Elements, { opacity: 0, y: 30 }); // Hide set2
+        
+        // Ensure elements are ready before animating
+        if (set1Elements.length > 0) {
+          console.log(`Animating ${set1Elements.length} set1 elements for section ${activeSection}`);
+          // Simple visibility test first
+          gsap.set(set1Elements, { opacity: 1, y: 0 }); // Just make visible for now
+          console.log(`Set set1 elements to visible`);
+        } else {
+          console.warn(`No set1 elements found for section ${activeSection}`);
+          // Try to find any text elements as fallback
+          const allTextElements = sectionElement.querySelectorAll('.text-set-line');
+          console.log(`Found ${allTextElements.length} total text elements in section ${activeSection}`);
+          if (allTextElements.length > 0) {
+            // Make all text elements visible as fallback
+            gsap.set(allTextElements, { opacity: 1, y: 0 });
+            console.log(`Made all text elements visible as fallback`);
+          }
+        }
+        
+      } else if (currentState === "transition") {
+        // TRANSITION STATE: Slide set1 UP and fade out
+        gsap.to(set1Elements, {
+          opacity: 0,
+          y: -30,  // Slide UP
+          duration: timingConfig.fadeOutDuration / 1000,  // Convert ms to seconds
+          ease: 'power2.in'
+        });
+        
+      } else if (currentState === "second") {
+        // SECOND STATE: Hide set1, show set2 with slide-in animation from bottom
+        gsap.set(set1Elements, { opacity: 0, y: -30 }); // Keep set1 hidden
+        
+        gsap.set(set2Elements, { opacity: 0, y: 30 }); // Reset set2
+        const set2Array = Array.from(set2Elements);
+        set2Array.forEach((element, index) => {
+          gsap.to(element, {
+            opacity: 1,
+            y: 0,
+            duration: config.duration || 1,
+            ease: config.ease || 'power2.out',
+            delay: index * (config.staggerDelay || 0.2)
           });
-        }, timingConfig.displayDuration);
+        });
       }
-      // If loop is false and we're on the last set, keep it visible permanently
 
     } else {
       // Handle simple array of text (original behavior)
       const textElements = sectionElement.querySelectorAll('.text-set-line');
       animateTextElements(textElements, true);
     }
+    }, 100); // 100ms delay to ensure DOM is ready
 
     // Cleanup function
     return () => {
-      if (currentSectionTimers && currentSectionTimers[activeSection]) {
-        clearTimeout(currentSectionTimers[activeSection]);
-      }
+      clearTimeout(timeoutId);
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection, activeTextSetIndex]);
+  }, [activeSection, sectionAnimationStates]);
 
   useEffect(() => {
     // Get viewport dimensions for responsive video sizing
@@ -780,13 +860,22 @@ function ScrollSyncModel({
 
       // Track active section for animations
       if (currentSection !== activeSection) {
-        setActiveSection(currentSection);
-        // Reset text set index to 0 when entering a new section
-        // This ensures that when returning to a section, it starts from set1
-        setActiveTextSetIndex(prev => ({
+        // LEAVING old section: Clear timers and set to "idle" (matching AnimatedSection lines 25-35)
+        const previousSection = activeSection;
+        if (textSetTimersRef.current[previousSection]) {
+          clearTimeout(textSetTimersRef.current[previousSection]);
+          textSetTimersRef.current[previousSection] = null;
+        }
+        
+        // console.log(`Switching from section ${previousSection} to section ${currentSection}`);
+        
+        setSectionAnimationStates(prev => ({
           ...prev,
-          [currentSection]: 0
+          [previousSection]: "idle",    // Set old section to idle
+          [currentSection]: "first"     // Set new section to first
         }));
+        
+        setActiveSection(currentSection);
       }
 
       // Interpolate between current and next position
@@ -1004,12 +1093,12 @@ function ScrollSyncModel({
         ]
       },
       
-      // Timing configuration for text set cycling
+      // Timing configuration for text set cycling (matching AnimatedSection)
       textSetTiming: {
-        displayDuration: 4000,      // Show each set for 4 seconds
-        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
-        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
-        loop: false                   // Loop back to first set after last
+        displayDuration: 3000,      // Show each set for 3 seconds (matching AnimatedSection)
+        fadeOutDuration: 800,       // Slide up/fade out in 800ms = 0.8 seconds (matching AnimatedSection)
+        delayBetweenSets: 0,        // No delay - immediate transition (matching AnimatedSection)
+        loop: false                 // Don't loop - stay on last set
       },
       
       // Option 2: Use simple array (original behavior - no cycling)
@@ -1050,17 +1139,17 @@ function ScrollSyncModel({
         ]
       },
       textSetTiming: {
-        displayDuration: 4000,      // Show each set for 4 seconds
-        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
-        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
-        loop: false                   // Loop back to first set after last
+        displayDuration: 3000,      // Show each set for 3 seconds (matching AnimatedSection)
+        fadeOutDuration: 800,       // Slide up/fade out in 800ms = 0.8 seconds (matching AnimatedSection)
+        delayBetweenSets: 0,        // No delay - immediate transition (matching AnimatedSection)
+        loop: false                 // Don't loop - stay on last set
       },
       animationConfig: {
         type: 'fadeIn',
         staggerDelay: 0.2,
-        duration: 0.6,
+        duration: 0.8,              // Match AnimatedSection duration
         ease: 'power2.out',
-        emptyLineDelay: 4         // Delay in seconds before showing lines after empty string
+        emptyLineDelay: 4           // Delay in seconds before showing lines after empty string
       },
       textAlign: 'left',         // Left-aligned text for section 2
       background: '#000000', 
