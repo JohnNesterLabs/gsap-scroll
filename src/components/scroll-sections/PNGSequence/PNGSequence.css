@@ -1,0 +1,107 @@
+.png-sequence-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10; /* Higher than video but lower than UI elements */
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.png-sequence-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Maintain aspect ratio while fitting container */
+  object-position: center;
+  opacity: 1;
+  transition: opacity 0.1s ease-out; /* Smooth frame transitions */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .png-sequence-container {
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  .png-sequence-frame {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 480px) {
+  .png-sequence-container {
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  .png-sequence-frame {
+    object-fit: contain;
+  }
+}
+
+/* Debug info styling */
+.png-sequence-debug {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 12px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.png-sequence-debug div {
+  margin: 2px 0;
+}
+
+/* Loading state */
+.png-sequence-frame.loading {
+  opacity: 0.7;
+}
+
+/* Error state */
+.png-sequence-frame.error {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+/* Smooth entrance animation */
+.png-sequence-container.entering {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Smooth exit animation */
+.png-sequence-container.exiting {
+  animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

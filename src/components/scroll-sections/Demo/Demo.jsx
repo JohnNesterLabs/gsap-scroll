@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
+import PNGSequence from "../PNGSequence/PNGSequence";
 
 export default function Demo() {
   const videoRef = useRef(null);
@@ -16,6 +17,22 @@ export default function Demo() {
   const [videoSize, setVideoSize] = useState({ width: 400, height: "auto" });
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [sectionProgress, setSectionProgress] = useState(0);
+  
+  // PNG Sequence Configuration
+  // CONFIGURATION: Change startSection to control when PNG sequence starts
+  // - startSection: 4 = PNG sequence starts from section 4 (after L657 section)
+  // - startSection: 5 = PNG sequence starts from section 5 (after section 4)
+  // 
+  // TO CHANGE START SECTION: Simply modify the startSection value below
+  // Example: Change startSection: 4 to startSection: 5 to start from section 5
+  const PNG_SEQUENCE_CONFIG = {
+    startSection: 4, // Change this to 4 or 5 to control when PNG sequence starts
+    totalFrames: 328,
+    framePrefix: 'frame_',
+    frameSuffix: '.png',
+    folderPath: '/frames-journey/'
+  };
 
   // Video size configuration for each section
   const getVideoSizeConfig = () => {
@@ -59,10 +76,10 @@ export default function Demo() {
       desktop: {
         section1: { width: 1400, height: "auto" },
         section2: { width: 1400, height: "auto" },
-        section3: { width: 2000, height: "auto" },
+        section3: { width: 2000, height: "auto" },  
         section4: { width: 1000, height: "auto" },
-        section5: { width: 1000, height: "auto" },
-        section6: { width: 0, height: "auto" },
+        section5: { width: 2000, height: "auto" },
+        section6: { width: 2000, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       "large-desktop": {
@@ -429,10 +446,11 @@ export default function Demo() {
     const nextSection = Math.min(currentSection + 1, totalSections - 1);
     const sectionProgress = sectionIndex - currentSection;
 
-    // Track active section
+    // Track active section and section progress
     if (currentSection !== activeSection) {
       setActiveSection(currentSection);
     }
+    setSectionProgress(sectionProgress);
 
     // Interpolate between current and next position (EXACTLY like ScrollSyncModel)
     const currentPos = positions[currentSection];
@@ -663,6 +681,17 @@ export default function Demo() {
           firstSet={[
             "AI that automatically builds and nurtures your Troubleshooting Map",
           ]}
+        />
+        
+        {/* PNG Sequence Animation - Starts after L657 section */}
+        <PNGSequence
+          startSection={PNG_SEQUENCE_CONFIG.startSection}
+          totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
+          framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
+          frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
+          folderPath={PNG_SEQUENCE_CONFIG.folderPath}
+          activeSection={activeSection}
+          sectionProgress={sectionProgress}
         />
         <AnimatedSection
           sectionNumber={5}
