@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
-import ZoomInSection from "../ZoomInSection/ZoomInSection";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 
 export default function Demo() {
@@ -20,7 +19,43 @@ export default function Demo() {
 
   // Video size configuration for each section
   const getVideoSizeConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
+    })();
+
     const configs = {
+      "mobile-small": {
+        section1: { width: 320, height: "auto" },
+        section2: { width: 320, height: "auto" },
+        section3: { width: 400, height: "auto" },
+        section4: { width: 300, height: "auto" },
+        section5: { width: 300, height: "auto" },
+        section6: { width: 320, height: "auto" },
+        section7: { width: 0, height: "auto" }, // Footer
+      },
+      "mobile-large": {
+        section1: { width: 400, height: "auto" },
+        section2: { width: 400, height: "auto" },
+        section3: { width: 500, height: "auto" },
+        section4: { width: 380, height: "auto" },
+        section5: { width: 380, height: "auto" },
+        section6: { width: 400, height: "auto" },
+        section7: { width: 0, height: "auto" }, // Footer
+      },
+      tablet: {
+        section1: { width: 800, height: "auto" },
+        section2: { width: 800, height: "auto" },
+        section3: { width: 1000, height: "auto" },
+        section4: { width: 700, height: "auto" },
+        section5: { width: 700, height: "auto" },
+        section6: { width: 800, height: "auto" },
+        section7: { width: 0, height: "auto" }, // Footer
+      },
       desktop: {
         section1: { width: 1400, height: "auto" },
         section2: { width: 1400, height: "auto" },
@@ -30,13 +65,58 @@ export default function Demo() {
         section6: { width: 1400, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
+      "large-desktop": {
+        section1: { width: 1600, height: "auto" },
+        section2: { width: 1600, height: "auto" },
+        section3: { width: 2200, height: "auto" },
+        section4: { width: 1400, height: "auto" },
+        section5: { width: 1400, height: "auto" },
+        section6: { width: 1600, height: "auto" },
+        section7: { width: 0, height: "auto" }, // Footer
+      },
     };
-    return configs["desktop"];
+    return configs[viewport] || configs["desktop"];
   };
 
   // Video position configuration for each section
   const getPositionConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
+    })();
+
     const positionConfigs = {
+      "mobile-small": [
+        { x: 50, y: 50 }, // Section 1 - Center
+        { x: 50, y: 50 }, // Section 2 - Center
+        { x: 50, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 6 - Center
+        { x: 50, y: 50 }, // Section 7 - Footer
+      ],
+      "mobile-large": [
+        { x: 50, y: 50 }, // Section 1 - Center
+        { x: 50, y: 50 }, // Section 2 - Center
+        { x: 50, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 6 - Center
+        { x: 50, y: 50 }, // Section 7 - Footer
+      ],
+      tablet: [
+        { x: 50, y: 60 }, // Section 1 - Center
+        { x: 70, y: 50 }, // Section 2 - Right
+        { x: 50, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 6 - Center
+        { x: 50, y: 50 }, // Section 7 - Footer
+      ],
       desktop: [
         { x: 50, y: 110 }, // Section 1 - Center
         { x: 90, y: 50 }, // Section 2 - Top Right
@@ -46,8 +126,17 @@ export default function Demo() {
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
+      "large-desktop": [
+        { x: 50, y: 120 }, // Section 1 - Center
+        { x: 90, y: 50 }, // Section 2 - Top Right
+        { x: 40, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 6 - Center
+        { x: 50, y: 50 }, // Section 7 - Footer
+      ],
     };
-    return positionConfigs["desktop"];
+    return positionConfigs[viewport] || positionConfigs["desktop"];
   };
 
   // Text position configuration for each section
@@ -164,7 +253,43 @@ export default function Demo() {
 
   // Video rotation configuration for each section
   const getRotationConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
+    })();
+
     const rotationConfigs = {
+      "mobile-small": [
+        0, // Section 1 - Normal
+        0, // Section 2 - Normal
+        0, // Section 3 - Normal
+        0, // Section 4 - Normal
+        0, // Section 5 - Normal
+        0, // Section 6 - Normal
+        0, // Section 7 - Footer
+      ],
+      "mobile-large": [
+        0, // Section 1 - Normal
+        0, // Section 2 - Normal
+        0, // Section 3 - Normal
+        0, // Section 4 - Normal
+        0, // Section 5 - Normal
+        0, // Section 6 - Normal
+        0, // Section 7 - Footer
+      ],
+      tablet: [
+        0, // Section 1 - Normal
+        0, // Section 2 - Normal
+        0, // Section 3 - Normal
+        0, // Section 4 - Normal
+        0, // Section 5 - Normal
+        0, // Section 6 - Normal
+        0, // Section 7 - Footer
+      ],
       desktop: [
         0, // Section 1 - Normal
         0, // Section 2 - Normal
@@ -174,8 +299,17 @@ export default function Demo() {
         0, // Section 6 - Normal
         0, // Section 7 - Footer
       ],
+      "large-desktop": [
+        0, // Section 1 - Normal
+        0, // Section 2 - Normal
+        0, // Section 3 - Normal
+        0, // Section 4 - Normal
+        0, // Section 5 - Normal
+        0, // Section 6 - Normal
+        0, // Section 7 - Footer
+      ],
     };
-    return rotationConfigs["desktop"];
+    return rotationConfigs[viewport] || rotationConfigs["desktop"];
   };
 
   // Font size configuration for each section
