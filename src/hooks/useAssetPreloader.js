@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 // Define all assets that need to be preloaded
 const ASSETS_TO_PRELOAD = [
     // Main demo video
-    '/demo1.mp4',
+    '/hero4.mp4',
 
     // Logo assets
     '/Logo-color.svg',

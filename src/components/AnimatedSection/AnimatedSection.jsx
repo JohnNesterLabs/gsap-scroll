@@ -132,7 +132,7 @@ const AnimatedSection = ({
       });
       // Floating animation for arrow
       gsap.to(arrowRef.current, {
-        y: -10,
+        y: -4,
         duration: 1.5,
         ease: "power2.inOut",
         yoyo: true,
@@ -238,6 +238,7 @@ const AnimatedSection = ({
 
         {/* Scroll Indicator - Only for Section 1 */}
         {sectionNumber === 1 && showScrollIndicator && !hasScrolled && (
+          <div className="scroll-indicator-wrapper">
           <div className="scroll-indicator-container">
             <div ref={scrollIndicatorRef} className="scroll-text">
               SCROLL
@@ -248,6 +249,7 @@ const AnimatedSection = ({
               alt="Scroll Arrow"
               className="scroll-arrow"
             />
+          </div>
           </div>
         )}
 

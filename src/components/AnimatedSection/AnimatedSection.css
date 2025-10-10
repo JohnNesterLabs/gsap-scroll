@@ -6,12 +6,13 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border: 1px solid white;
+  /* border: 1px solid white; */
 }
 
 .animated-section.gradient-1 {
-  border: 1px solid white;
+  /* border: 1px solid white; */
   background-color: black;
+  background: linear-gradient(192.04deg, #0B0F11 0%, #000000 100%);
   /* background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); */
 }
 
@@ -260,6 +261,17 @@
 
 .animate-slide-in {
   animation: slideIn 1s ease forwards;
+}
+
+.scroll-indicator-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000000 100%);
+  z-index: 5;
+  pointer-events: none;
 }
 
 .scroll-indicator-container {
