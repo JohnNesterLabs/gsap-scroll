@@ -58,9 +58,16 @@
   border: none;
   outline: none;
 }
+.demo-header-button a{
+  text-decoration: none;
+  color: white;
+}
 
 .demo-header-button:hover {
   background-color: white;
+  color: black;
+}
+.demo-header-button:hover a{
   color: black;
 }
 

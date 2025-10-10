@@ -60,8 +60,8 @@ export default function Demo() {
         section1: { width: 1400, height: "auto" },
         section2: { width: 1400, height: "auto" },
         section3: { width: 2000, height: "auto" },
-        section4: { width: 1200, height: "auto" },
-        section5: { width: 1200, height: "auto" },
+        section4: { width: 1000, height: "auto" },
+        section5: { width: 1000, height: "auto" },
         section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
@@ -121,8 +121,8 @@ export default function Demo() {
         { x: 50, y: 110 }, // Section 1 - Center
         { x: 90, y: 50 }, // Section 2 - Top Right
         { x: 40, y: 50 }, // Section 3 - Center
-        { x: 50, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 45, y: 50 }, // Section 4 - Center
+        { x: 45, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
@@ -599,7 +599,9 @@ export default function Demo() {
           }}
           className="demo-header-button"
         >
-          Let's Talk
+          <a href="mailto:info@kahunalabs.ai">
+            Let's Talk
+          </a>
         </button>
       </div>
 
@@ -716,7 +718,9 @@ export default function Demo() {
                     </li>
                     <li>
                       <a
-                        href="/technology/agentic-ai-impact"
+                        href="https://form.jotform.com/251278392049160"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="footer-link"
                       >
                         How Complex is Your Support?
@@ -730,12 +734,12 @@ export default function Demo() {
                   <h3 className="footer-column-title">COMPANY</h3>
                   <ul className="footer-links-list">
                     <li>
-                      <a href="/contact" className="footer-link">
+                      <a href="mailto:info@kahunalabs.ai" className="footer-link">
                         Contact us
                       </a>
                     </li>
                     <li>
-                      <a href="/careers" className="footer-link">
+                      <a href="mailto:careers@kahunalabs.ai" className="footer-link">
                         Careers
                       </a>
                     </li>
