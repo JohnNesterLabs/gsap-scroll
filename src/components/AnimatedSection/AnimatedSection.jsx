@@ -7,10 +7,12 @@ gsap.registerPlugin(ScrollTrigger);
 
 const AnimatedSection = ({ 
   sectionNumber, 
-  firstSet, 
-  secondSet, 
+  firstSet = [], // Default to empty array
+  secondSet = [], // Default to empty array
   textPosition = 'center', // New prop for text positioning
-  textAlign = 'center' // New prop for text alignment
+  textAlign = 'center', // New prop for text alignment
+  fontSize = '60px', // New prop for font size
+  fontWeight = '500' // New prop for font weight
 }) => {
   const [animationState, setAnimationState] = useState("idle");
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
@@ -71,38 +73,49 @@ const AnimatedSection = ({
     if (timers.timer1) clearTimeout(timers.timer1);
     if (timers.timer2) clearTimeout(timers.timer2);
 
-    if (animationState === "first") {
+    // Only proceed with animation if we have both firstSet and secondSet
+    if (animationState === "first" && secondSet && secondSet.length > 0) {
       timers.timer1 = setTimeout(() => {
         setAnimationState("transition");
       }, 3000);
-    } else if (animationState === "transition") {
+    } else if (animationState === "transition" && secondSet && secondSet.length > 0) {
       timers.timer2 = setTimeout(() => {
         setAnimationState("second");
       }, 800);
     }
+    // If no secondSet, stay in "first" state
 
     return () => {
       if (timers.timer1) clearTimeout(timers.timer1);
       if (timers.timer2) clearTimeout(timers.timer2);
     };
-  }, [animationState]);
+  }, [animationState, secondSet]);
 
   // Show scroll indicator when second set completes (only for section 1)
   useEffect(() => {
-    if (sectionNumber === 1 && animationState === "second") {
+    if (sectionNumber === 1 && animationState === "second" && secondSet && secondSet.length > 0) {
       // Wait for the second set animation to complete (stagger delay * number of lines + duration)
       const secondSetAnimationDuration = (secondSet.length - 1) * 0.2 + 0.8; // 0.2s stagger + 0.8s duration
       const timer = setTimeout(() => {
         setShowScrollIndicator(true);
       }, secondSetAnimationDuration * 1000);
       return () => clearTimeout(timer);
-    } else if (sectionNumber === 1 && animationState !== "second") {
+    } else if (sectionNumber === 1 && animationState === "first" && (!secondSet || secondSet.length === 0)) {
+      // If no secondSet, show scroll indicator after firstSet completes
+      const firstSetAnimationDuration = (firstSet.length - 1) * 0.2 + 0.8; // 0.2s stagger + 0.8s duration
+      const timer = setTimeout(() => {
+        setShowScrollIndicator(true);
+      }, (firstSetAnimationDuration + 2) * 1000); // Add 2s delay after firstSet
+      return () => clearTimeout(timer);
+    } else if (sectionNumber === 1 && animationState !== "second" && animationState !== "first") {
       setShowScrollIndicator(false);
     }
-  }, [animationState, sectionNumber, secondSet?.length]);
+  }, [animationState, sectionNumber, secondSet, firstSet]);
   // GSAP animations for scroll indicator
   useEffect(() => {
     if (showScrollIndicator && scrollIndicatorRef.current && arrowRef.current) {
+      const section = sectionRef.current; // Capture ref for cleanup
+      
       // Set initial state
       gsap.set([scrollIndicatorRef.current, arrowRef.current], { opacity: 0, y: 20 });
       // Fade in animation
@@ -123,7 +136,7 @@ const AnimatedSection = ({
       });
       // Scroll trigger to fade out when scrolling away
       ScrollTrigger.create({
-        trigger: sectionRef.current,
+        trigger: section,
         start: "top top",
         end: "bottom top",
         onLeave: () => {
@@ -140,7 +153,7 @@ const AnimatedSection = ({
       });
       return () => {
         ScrollTrigger.getAll().forEach(trigger => {
-          if (trigger.trigger === sectionRef.current) {
+          if (trigger.trigger === section) {
             trigger.kill();
           }
         });
@@ -159,7 +172,7 @@ const AnimatedSection = ({
       <div className="section-container">
         <div className={`text-container text-position-${textPosition}`}>
           {/* First Set */}
-          {(animationState === "first" || animationState === "transition") && (
+          {(animationState === "first" || animationState === "transition") && firstSet && firstSet.length > 0 && (
             <div
               className={`text-set text-align-${textAlign} ${
                 animationState === "transition" ? "animate-slide-up" : "animate-fade-in"
@@ -172,6 +185,8 @@ const AnimatedSection = ({
                   style={{
                     animationDelay:
                       animationState === "first" ? `${index * 0.2}s` : "0s",
+                    fontSize: fontSize,
+                    fontWeight: fontWeight,
                   }}
                 >
                   {text}
@@ -181,14 +196,16 @@ const AnimatedSection = ({
           )}
 
           {/* Second Set */}
-          {animationState === "second" && (
+          {animationState === "second" && secondSet && secondSet.length > 0 && (
             <div className={`text-set text-align-${textAlign} animate-slide-in`}>
-              {secondSet?.map((text, index) => (
+              {secondSet.map((text, index) => (
                 <p
                   key={`second-${index}`}
                   className="text-line"
                   style={{
                     animationDelay: `${index * 0.2}s`,
+                    fontSize: fontSize,
+                    fontWeight: fontWeight,
                   }}
                 >
                   {text}
@@ -196,11 +213,6 @@ const AnimatedSection = ({
               ))}
             </div>
           )}
-        </div>
-
-        {/* Section Number Indicator */}
-        <div className="section-indicator">
-          Section {sectionNumber}
         </div>
 
         {/* Scroll Indicator - Only for Section 1 */}

@@ -171,6 +171,74 @@ export default function Demo() {
     return rotationConfigs['desktop'];
   };
 
+  // Font size configuration for each section
+  const getFontSizeConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return 'mobile-small';
+      if (width <= 767) return 'mobile-large';
+      if (width <= 1023) return 'tablet';
+      if (width <= 1924) return 'desktop';
+      return 'large-desktop';
+    })();
+
+    const fontSizeConfigs = {
+      'mobile-small': [
+        '28px',    // Section 1
+        '24px',    // Section 2
+        '32px',    // Section 3
+        '26px',    // Section 4
+        '28px',    // Section 5
+        '26px',    // Section 6
+      ],
+      'mobile-large': [
+        '32px',    // Section 1
+        '28px',    // Section 2
+        '36px',    // Section 3
+        '30px',    // Section 4
+        '32px',    // Section 5
+        '30px',    // Section 6
+      ],
+      'tablet': [
+        '48px',    // Section 1
+        '32px',    // Section 2
+        '52px',    // Section 3
+        '40px',    // Section 4
+        '44px',    // Section 5
+        '40px',    // Section 6
+      ],
+      'desktop': [
+        '60px',    // Section 1
+        '36px',    // Section 2
+        '64px',    // Section 3
+        '48px',    // Section 4
+        '52px',    // Section 5
+        '48px',    // Section 6
+      ],
+      'large-desktop': [
+        '72px',    // Section 1
+        '42px',    // Section 2
+        '76px',    // Section 3
+        '56px',    // Section 4
+        '60px',    // Section 5
+        '56px',    // Section 6
+      ]
+    };
+    return fontSizeConfigs[viewport] || fontSizeConfigs['desktop'];
+  };
+
+  // Font weight configuration for each section
+  const getFontWeightConfig = () => {
+    return [
+      '500',    // Section 1
+      '500',    // Section 2
+      '600',    // Section 3
+      '500',    // Section 4
+      '500',    // Section 5
+      '500',    // Section 6
+    ];
+  };
+
   // Scroll handler function (matching ScrollSyncModel exactly)
   const handleScroll = () => {
     const scrollContainer = scrollContainerRef.current;
@@ -380,6 +448,8 @@ export default function Demo() {
           sectionNumber={1}
           textPosition={getTextPositionConfig()[0]}
           textAlign={getTextAlignConfig()[0]}
+          fontSize={getFontSizeConfig()[0]}
+          fontWeight={getFontWeightConfig()[0]}
           firstSet={[
             'Vast and intricate,',
             'products never stop evolving.'
@@ -393,6 +463,8 @@ export default function Demo() {
           sectionNumber={2}
           textPosition={getTextPositionConfig()[1]}
           textAlign={getTextAlignConfig()[1]}
+          fontSize={getFontSizeConfig()[1]}
+          fontWeight={getFontWeightConfig()[1]}
           firstSet={[
             'The support landscape is',
             'boundless and shifting'
@@ -409,6 +481,8 @@ export default function Demo() {
           sectionNumber={3}
           textPosition={getTextPositionConfig()[2]}
           textAlign={getTextAlignConfig()[2]}
+          fontSize={getFontSizeConfig()[2]}
+          fontWeight={getFontWeightConfig()[2]}
           firstSet={[ 'Meet Kahuna AI']}
           // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
@@ -416,6 +490,8 @@ export default function Demo() {
           sectionNumber={4}
           textPosition={getTextPositionConfig()[3]}
           textAlign={getTextAlignConfig()[3]}
+          fontSize={getFontSizeConfig()[3]}
+          fontWeight={getFontWeightConfig()[3]}
           firstSet={["Creative Design", "Smooth Interactions"]}
           secondSet={["Modern Aesthetics", "Next-level Performance"]}
         />
@@ -423,15 +499,19 @@ export default function Demo() {
           sectionNumber={5}
           textPosition={getTextPositionConfig()[4]}
           textAlign={getTextAlignConfig()[4]}
-          firstSet={["Welcome to our site", "We build amazing experiences"]}
-          secondSet={["Let's get started", "Scroll down to explore more"]}
+          fontSize={getFontSizeConfig()[4]}
+          fontWeight={getFontWeightConfig()[4]}
+          firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
+          // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
         <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
+          fontSize={getFontSizeConfig()[5]}
+          fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
-          secondSet={["Transform your vision", "Into reality"]}
+          // secondSet={["Transform your vision", "Into reality"]}
         />
         {/* Footer Section */}
         <div className="demo-section demo-footer">
@@ -499,27 +579,7 @@ export default function Demo() {
           </div>
         </div>
       </div>
-
-      {/* Debug Info */}
-      {/* <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '5px',
-        fontSize: '12px',
-        zIndex: 10,
-        fontFamily: 'monospace'
-      }}>
-        <div>Section: {activeSection + 1}/6</div>
-        <div>Progress: {(scrollProgress * 100).toFixed(1)}%</div>
-        <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
-        <div>Rotation: {videoPosition.rotation.toFixed(1)}°</div>
-        <div>Size: {videoSize.width}px</div>
-        <div>Scale: {videoPosition.scale.toFixed(2)}</div>
-      </div> */}
+      
     </div>
   );
 }
