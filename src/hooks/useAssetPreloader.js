@@ -6,7 +6,7 @@ const ASSETS_TO_PRELOAD = [
     '/map-alive-test.mp4',
 
     // PNG sequence frames (all 153 frames for Section 5)
-    ...Array.from({ length: 153 }, (_, i) => `/frames/frame_${String(i + 1).padStart(4, '0')}.png`),
+    ...Array.from({ length: 328 }, (_, i) => `/frames-journey/frame_${String(i + 1).padStart(4, '0')}.png`),
 
     // Logo assets
     '/Logo-color.svg',

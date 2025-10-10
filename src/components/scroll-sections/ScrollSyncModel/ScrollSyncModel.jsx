@@ -34,7 +34,7 @@ function ScrollSyncModel({
   const preloadFrame = (frameNumber) => {
     if (!frameImagesRef.current[frameNumber]) {
       const img = new Image();
-      img.src = `/frames/frame_${String(frameNumber).padStart(4, '0')}.png`;
+      img.src = `/frames-journey/frame_${String(frameNumber).padStart(4, '0')}.png`;
       frameImagesRef.current[frameNumber] = img;
     }
     return frameImagesRef.current[frameNumber];
@@ -359,7 +359,7 @@ function ScrollSyncModel({
           section2: { width: 900, height: 'auto' },
           section3: { width: 920, height: 'auto' },
           section4: { width: 350, height: 'auto' },
-          section5: { width: 0, height: 'auto' },
+          section5: { width: 400, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'mobile-large': {
@@ -375,7 +375,7 @@ function ScrollSyncModel({
           section2: { width: 950, height: 'auto' },
           section3: { width: 1150, height: 'auto' },
           section4: { width: 500, height: 'auto' },
-          section5: { width: 0, height: 'auto' },
+          section5: { width: 600, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
@@ -383,7 +383,7 @@ function ScrollSyncModel({
           section2: { width: 1600, height: 'auto' },
           section3: { width: 2500, height: 'auto' },
           section4: { width: 1280, height: 'auto' },
-          section5: { width: 0, height: 'auto' },
+          section5: { width: 1300, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
@@ -391,7 +391,7 @@ function ScrollSyncModel({
           section2: { width: 2800, height: 'auto' },
           section3: { width: 3400, height: 'auto' },
           section4: { width: 1300, height: 'auto' },
-          section5: { width: 1300, height: 'auto' },
+          section5: { width: 3800, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         }
       };
@@ -533,7 +533,7 @@ function ScrollSyncModel({
         },
         'large-desktop': {
           startSection: 4,
-          startProgress: 0.0,
+          startProgress: 0.3,
           endSection: 4,
           endProgress: 1.0
         }
@@ -755,7 +755,7 @@ function ScrollSyncModel({
 
       // Hide video in footer section (section 6)
       if (currentSection === 5) {
-        scale = 0;
+        scale = 1;
       }
 
       // Dynamic video sizing based on section
