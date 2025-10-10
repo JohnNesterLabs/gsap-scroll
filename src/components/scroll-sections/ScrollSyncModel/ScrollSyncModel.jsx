@@ -10,7 +10,7 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/map-alive-test.mp4"
+  videoSrc = "/final-hero-video1.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -532,18 +532,18 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ],
         'desktop': [
-          -75,      // Section 1 - Normal position
-          -165,     // Section 2 - 45 degree rotation
-          -190,      // Section 3 - Normal position
-          -190,    // Section 4 - -30 degree rotation
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ],
         'large-desktop': [
-          -75,      // Section 1 - Normal position
-          -165,     // Section 2 - 45 degree rotation
-          -190,      // Section 3 - Normal position
-          -190,    // Section 4 - -30 degree rotation
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ]
@@ -1050,10 +1050,10 @@ function ScrollSyncModel({
         loop: false                   // Loop back to first set after last
       },
       animationConfig: {
-        type: 'stagger',
+        type: 'fadeIn',
         staggerDelay: 0.2,
         duration: 0.6,
-        ease: 'power3.out',
+        ease: 'power2.out',
         emptyLineDelay: 4         // Delay in seconds before showing lines after empty string
       },
       textAlign: 'left',         // Left-aligned text for section 2
@@ -1066,12 +1066,12 @@ function ScrollSyncModel({
       textSets: [
         'Meet Kahuna AI',
       ],
-      textSetTiming: {
-        displayDuration: 4000,      // Show each set for 4 seconds
-        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
-        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
-        loop: false                   // Loop back to first set after last
-      },
+      // textSetTiming: {
+      //   displayDuration: 4000,      // Show each set for 4 seconds
+      //   fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+      //   delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+      //   loop: false                   // Loop back to first set after last
+      // },
       animationConfig: {
         type: 'slideLeft',
         staggerDelay: 0.4,
