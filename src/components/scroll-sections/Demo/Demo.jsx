@@ -30,16 +30,16 @@ export default function Demo() {
 
     const configs = {
       "mobile-small": {
-        section1: { width: 320, height: "auto" },
-        section2: { width: 320, height: "auto" },
-        section3: { width: 400, height: "auto" },
-        section4: { width: 300, height: "auto" },
-        section5: { width: 300, height: "auto" },
-        section6: { width: 320, height: "auto" },
+        section1: { width: 1520, height: "auto" },
+        section2: { width: 1820, height: "auto" },
+        section3: { width: 2020, height: "auto" },
+        section4: { width: 70, height: "auto" },
+        section5: { width: 100, height: "auto" },
+        section6: { width: 100, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       "mobile-large": {
-        section1: { width: 400, height: "auto" },
+        section1: { width: 700, height: "auto" },
         section2: { width: 400, height: "auto" },
         section3: { width: 500, height: "auto" },
         section4: { width: 380, height: "auto" },
@@ -91,9 +91,9 @@ export default function Demo() {
 
     const positionConfigs = {
       "mobile-small": [
-        { x: 50, y: 50 }, // Section 1 - Center
-        { x: 50, y: 50 }, // Section 2 - Center
-        { x: 50, y: 50 }, // Section 3 - Center
+        { x: 20, y: 90 }, // Section 1 - Center
+        { x: 110, y: 50 }, // Section 2 - Center
+        { x: 40, y: 50 }, // Section 3 - Center
         { x: 50, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center

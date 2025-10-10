@@ -102,7 +102,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .demo-fixed-video {
     max-width: 80vw;
     max-height: 40vh;
@@ -114,7 +114,7 @@
     max-width: 90vw;
     max-height: 30vh;
   }
-}
+} */
 
 /* Header Responsive Media Queries - Matching ScrollSyncModel */
 /* Large Desktop (1925px and up) */
