@@ -1,4 +1,5 @@
 import './App.css';
+import AnimatedSection from './components/AnimatedSection/AnimatedSection';
 import Loader from './components/Loader/Loader';
 import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
@@ -39,7 +40,17 @@ function App() {
   }, [error]);
   return (
     <div className="App">
-       {showLoader && (
+       <AnimatedSection
+        sectionNumber={1}
+        firstSet={["Welcome to our site", "We build amazing experiences"]}
+        secondSet={["Let's get started", "Scroll down to explore more"]}
+      />
+      <AnimatedSection
+        sectionNumber={2}
+        firstSet={["Creative Design", "Smooth Interactions"]}
+        secondSet={["Modern Aesthetics", "Next-level Performance"]}
+      />
+       {/* {showLoader && (
         <Loader
           progress={progress}
           onComplete={handleLoaderComplete}
@@ -52,7 +63,7 @@ function App() {
 
       {!showLoader && (
       <ScrollSyncModel/>
-      )}
+      )} */}
     </div>
   );
 }

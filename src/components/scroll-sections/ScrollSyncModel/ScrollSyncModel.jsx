@@ -781,6 +781,12 @@ function ScrollSyncModel({
       // Track active section for animations
       if (currentSection !== activeSection) {
         setActiveSection(currentSection);
+        // Reset text set index to 0 when entering a new section
+        // This ensures that when returning to a section, it starts from set1
+        setActiveTextSetIndex(prev => ({
+          ...prev,
+          [currentSection]: 0
+        }));
       }
 
       // Interpolate between current and next position
