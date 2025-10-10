@@ -10,7 +10,7 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/final-hero-video1.mp4"
+  videoSrc = "/map-alive-test.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -34,7 +34,7 @@ function ScrollSyncModel({
   const preloadFrame = (frameNumber) => {
     if (!frameImagesRef.current[frameNumber]) {
       const img = new Image();
-      img.src = `/frames-journey/frame_${String(frameNumber).padStart(4, '0')}.png`;
+      img.src = `/frames/frame_${String(frameNumber).padStart(4, '0')}.png`;
       frameImagesRef.current[frameNumber] = img;
     }
     return frameImagesRef.current[frameNumber];
@@ -163,99 +163,149 @@ function ScrollSyncModel({
 
       if (!animateIn) return; // If animating out, just keep them hidden
 
-      // Apply animation based on type
-      switch (config.type) {
-        case 'fadeSlideUp':
-          gsap.fromTo(textElements, 
-            { opacity: 0, y: 50 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
-          break;
+      // Convert NodeList to array for easier manipulation
+      const elementsArray = Array.from(textElements);
+      
+      // Check for empty strings and split elements into groups
+      let emptyStringIndex = -1;
+      elementsArray.forEach((element, index) => {
+        const text = element.textContent.trim();
+        if (text === '' && emptyStringIndex === -1) {
+          emptyStringIndex = index;
+        }
+      });
 
-        case 'fadeIn':
-          gsap.fromTo(textElements,
-            { opacity: 0 },
-            {
-              opacity: 1,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
-          break;
+      // If there's an empty string, split animation into two groups
+      if (emptyStringIndex !== -1) {
+        // Group 1: Elements before and including the empty string
+        const beforeEmpty = elementsArray.slice(0, emptyStringIndex + 1);
+        // Group 2: Elements after the empty string
+        const afterEmpty = elementsArray.slice(emptyStringIndex + 1);
 
-        case 'slideLeft':
-          gsap.fromTo(textElements,
-            { opacity: 0, x: 100 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
-          break;
+        // Get delay for lines after empty string (default 4 seconds)
+        const emptyLineDelay = config.emptyLineDelay || 4;
 
-        case 'slideRight':
-          gsap.fromTo(textElements,
-            { opacity: 0, x: -100 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
-          break;
+        // Animate first group immediately
+        if (beforeEmpty.length > 0) {
+          animateGroup(beforeEmpty, 0);
+        }
 
-        case 'stagger':
-          gsap.fromTo(textElements,
-            { opacity: 0, y: 30, scale: 0.95 },
-            {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
-          break;
+        // Animate second group after delay
+        if (afterEmpty.length > 0) {
+          animateGroup(afterEmpty, emptyLineDelay);
+        }
+      } else {
+        // No empty strings, animate all elements normally
+        animateGroup(elementsArray, 0);
+      }
 
-        case 'typewriter':
-          textElements.forEach((element, index) => {
-            gsap.fromTo(element,
-              { opacity: 0, x: -20 },
-              {
-                opacity: 1,
-                x: 0,
-                duration: config.duration,
-                ease: config.ease,
-                delay: index * config.staggerDelay
-              }
-            );
-          });
-          break;
+      // Helper function to animate a group of elements with a delay
+      function animateGroup(elements, delayOffset) {
+        switch (config.type) {
+          case 'fadeSlideUp':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element, 
+                { opacity: 0, y: 50 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
 
-        default:
-          gsap.fromTo(textElements,
-            { opacity: 0, y: 50 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: config.duration,
-              ease: config.ease,
-              stagger: config.staggerDelay
-            }
-          );
+          case 'fadeIn':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0 },
+                {
+                  opacity: 1,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'slideLeft':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: 100 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'slideRight':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: -100 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'stagger':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, y: 30, scale: 0.95 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'typewriter':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: -20 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          default:
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, y: 50 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+        }
       }
     };
 
@@ -359,7 +409,7 @@ function ScrollSyncModel({
           section2: { width: 900, height: 'auto' },
           section3: { width: 920, height: 'auto' },
           section4: { width: 350, height: 'auto' },
-          section5: { width: 400, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'mobile-large': {
@@ -375,23 +425,23 @@ function ScrollSyncModel({
           section2: { width: 950, height: 'auto' },
           section3: { width: 1150, height: 'auto' },
           section4: { width: 500, height: 'auto' },
-          section5: { width: 600, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'desktop': {
-          section1: { width: 1600, height: 'auto' },
-          section2: { width: 1600, height: 'auto' },
+          section1: { width: 1500, height: 'auto' },
+          section2: { width: 1500, height: 'auto' },
           section3: { width: 2500, height: 'auto' },
-          section4: { width: 1280, height: 'auto' },
-          section5: { width: 1300, height: 'auto' },
+          section4: { width: 1080, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         },
         'large-desktop': {
           section1: { width: 3300, height: 'auto' },
           section2: { width: 2800, height: 'auto' },
-          section3: { width: 3400, height: 'auto' },
+          section3: { width: 3100, height: 'auto' },
           section4: { width: 1300, height: 'auto' },
-          section5: { width: 3800, height: 'auto' },
+          section5: { width: 1300, height: 'auto' },
           ...(showFooter && { section6: { width: 0, height: 'auto' } })
         }
       };
@@ -482,18 +532,18 @@ function ScrollSyncModel({
           0       // Section 6 - Footer
         ],
         'desktop': [
-          0,      // Section 1 - Normal position
-          0,     // Section 2 - 45 degree rotation
-          0,      // Section 3 - Normal position
-          0,    // Section 4 - -30 degree rotation
+          -75,      // Section 1 - Normal position
+          -165,     // Section 2 - 45 degree rotation
+          -190,      // Section 3 - Normal position
+          -190,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ],
         'large-desktop': [
-          0,      // Section 1 - Normal position
-          0,     // Section 2 - 45 degree rotation
-          0,      // Section 3 - Normal position
-          0,    // Section 4 - -30 degree rotation
+          -75,      // Section 1 - Normal position
+          -165,     // Section 2 - 45 degree rotation
+          -190,      // Section 3 - Normal position
+          -190,    // Section 4 - -30 degree rotation
           0,      // Section 5 - Normal position
           0       // Section 6 - Footer
         ]
@@ -533,7 +583,7 @@ function ScrollSyncModel({
         },
         'large-desktop': {
           startSection: 4,
-          startProgress: 0.3,
+          startProgress: 0.0,
           endSection: 4,
           endProgress: 1.0
         }
@@ -755,7 +805,7 @@ function ScrollSyncModel({
 
       // Hide video in footer section (section 6)
       if (currentSection === 5) {
-        scale = 1;
+        scale = 0;
       }
 
       // Dynamic video sizing based on section
@@ -988,6 +1038,7 @@ function ScrollSyncModel({
         set2: [
           "You're lost.",
           "",
+          'Outdated, laborious',
           'and fractional knowledge',
           "cripple frontline actions."
         ]
@@ -1002,7 +1053,8 @@ function ScrollSyncModel({
         type: 'stagger',
         staggerDelay: 0.2,
         duration: 0.6,
-        ease: 'power3.out'
+        ease: 'power3.out',
+        emptyLineDelay: 4         // Delay in seconds before showing lines after empty string
       },
       textAlign: 'left',         // Left-aligned text for section 2
       background: '#000000', 
