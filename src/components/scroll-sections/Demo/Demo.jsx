@@ -33,7 +33,7 @@ export default function Demo() {
         section1: { width: 1520, height: "auto" },
         section2: { width: 1820, height: "auto" },
         section3: { width: 2020, height: "auto" },
-        section4: { width: 70, height: "auto" },
+        section4: { width: 800, height: "auto" },
         section5: { width: 100, height: "auto" },
         section6: { width: 100, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer

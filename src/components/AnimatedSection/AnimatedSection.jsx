@@ -81,11 +81,11 @@ const AnimatedSection = ({
     if (animationState === "first" && secondSet && secondSet.length > 0) {
       timers.timer1 = setTimeout(() => {
         setAnimationState("transition");
-      }, 3000);
+      }, 1500);
     } else if (animationState === "transition" && secondSet && secondSet.length > 0) {
       timers.timer2 = setTimeout(() => {
         setAnimationState("second");
-      }, 800);
+      }, 400);
     }
     // If no secondSet, stay in "first" state
 
