@@ -17,9 +17,9 @@ export default function Demo() {
   const getVideoSizeConfig = () => {
     const configs = {
       'desktop': {
-        section1: { width: 1400, height: 'auto' },
+        section1: { width: 3000, height: 'auto' },
         section2: { width: 1400, height: 'auto' },
-        section3: { width: 2000, height: 'auto' },
+        section3: { width: 3000, height: 'auto' },
         section4: { width: 1200, height: 'auto' },
         section5: { width: 1200, height: 'auto' },
         section6: { width: 1400, height: 'auto' },
@@ -33,7 +33,7 @@ export default function Demo() {
   const getPositionConfig = () => {
     const positionConfigs = {
       'desktop': [
-        { x: 50, y: 110 },      // Section 1 - Center
+        { x: 50, y: 90 },      // Section 1 - Center
         { x: 90, y: 50 },       // Section 2 - Top Right
         { x: 50, y: 50 },       // Section 3 - Center
         { x: 50, y: 50 },       // Section 4 - Center
@@ -141,7 +141,7 @@ export default function Demo() {
         'center',        // Section 1 - Center aligned
         'left',          // Section 2 - Left aligned
         'center',        // Section 3 - Center aligned
-        'right',         // Section 4 - Right aligned
+        'center',         // Section 4 - Center aligned
         'center',        // Section 5 - Center aligned
         'left',          // Section 6 - Left aligned
       ],
@@ -149,7 +149,7 @@ export default function Demo() {
         'center',        // Section 1 - Center aligned
         'left',          // Section 2 - Left aligned
         'center',        // Section 3 - Center aligned
-        'right',         // Section 4 - Right aligned
+        'center',         // Section 4 - Center aligned
         'center',        // Section 5 - Center aligned
         'left',          // Section 6 - Left aligned
       ]
@@ -213,7 +213,7 @@ export default function Demo() {
         '60px',    // Section 1
         '36px',    // Section 2
         '64px',    // Section 3
-        '48px',    // Section 4
+        '36px',    // Section 4
         '52px',    // Section 5
         '48px',    // Section 6
       ],
@@ -397,7 +397,7 @@ export default function Demo() {
       {/* Fixed Video */}
       <video
         ref={videoRef}
-        src="/demo1.mp4"
+        src="/hero4.mp4"
         // src="/final-hero-video1.mp4"
         className="demo-fixed-video"
         style={{
@@ -486,7 +486,6 @@ export default function Demo() {
           fontSize={getFontSizeConfig()[2]}
           fontWeight={getFontWeightConfig()[2]}
           firstSet={[ 'Meet Kahuna AI']}
-          // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
         <InfiniteWordLoop sectionNumber={4} words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]} />
         <AnimatedSection
@@ -495,8 +494,7 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[3]}
           fontSize={getFontSizeConfig()[3]}
           fontWeight={getFontWeightConfig()[3]}
-          firstSet={["Creative Design", "Smooth Interactions"]}
-          secondSet={["Modern Aesthetics", "Next-level Performance"]}
+          firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
         />
         <AnimatedSection
           sectionNumber={5}
@@ -505,9 +503,8 @@ export default function Demo() {
           fontSize={getFontSizeConfig()[4]}
           fontWeight={getFontWeightConfig()[4]}
           firstSet={["AI that automatically builds and nurtures your Troubleshooting Map"]}
-          // secondSet={["Let's get started", "Scroll down to explore more"]}
         />
-        {/* <AnimatedSection
+        <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
@@ -515,8 +512,8 @@ export default function Demo() {
           fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
           // secondSet={["Transform your vision", "Into reality"]}
-        /> */}
-        <ZoomInSection sectionNumber={6} text="Welcome to the Future" />
+        />
+        {/* <ZoomInSection sectionNumber={6} text="Welcome to the Future" /> */}
         {/* Footer Section */}
         <div className="demo-section demo-footer">
           <div className="footer-container">
