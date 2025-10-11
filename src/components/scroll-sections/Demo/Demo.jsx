@@ -673,7 +673,7 @@ export default function Demo() {
           words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]}
         />
         <AnimatedSection
-          sectionNumber={4}
+          sectionNumber={5}
           textPosition={getTextPositionConfig()[3]}
           textAlign={getTextAlignConfig()[3]}
           fontSize={getFontSizeConfig()[3]}
@@ -694,7 +694,7 @@ export default function Demo() {
           sectionProgress={sectionProgress}
         />
         <AnimatedSection
-          sectionNumber={5}
+          sectionNumber={6}
           textPosition={getTextPositionConfig()[4]}
           textAlign={getTextAlignConfig()[4]}
           fontSize={getFontSizeConfig()[4]}
@@ -703,14 +703,14 @@ export default function Demo() {
             "",
           ]}
         />
-        <AnimatedSection
-          sectionNumber={6}
+        {/* <AnimatedSection
+          sectionNumber={7}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
           fontSize={getFontSizeConfig()[5]}
           fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
-        />
+        /> */}
         {/* <ZoomInSection sectionNumber={6} text="Welcome to the Future" /> */}
         {/* Footer Section */}
         <div className="demo-section demo-footer">
