@@ -15,7 +15,10 @@ const PNGSequence = ({
   timelinePosition = { top: '50%', left: '50%' }, // Customizable timeline position
   playButtonPosition = { top: '60%', left: '50%' }, // Customizable play button position
   onTimelineComplete, // Callback when timeline completes
-  onPlayButtonClick // Callback when play button is clicked
+  onPlayButtonClick, // Callback when play button is clicked
+  // Video popup props
+  videoSrc = '/demo1.mp4', // Default video source for popup
+  showVideoPopup = true // Whether to show video popup on continue
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -23,8 +26,8 @@ const PNGSequence = ({
   const [showTimeline, setShowTimeline] = useState(false);
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [timelineProgress, setTimelineProgress] = useState(0);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const imgRef = useRef(null);
-  const timelineRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
 
@@ -160,10 +163,31 @@ const PNGSequence = ({
   // Handle play button click
   const handlePlayButtonClick = () => {
     setShowPlayButton(false);
-    resumeScroll();
+    
+    if (showVideoPopup && videoSrc) {
+      // Show video popup instead of immediately resuming scroll
+      setShowVideoModal(true);
+    } else {
+      // Resume scroll immediately if no video popup
+      resumeScroll();
+    }
+    
     if (onPlayButtonClick) {
       onPlayButtonClick();
     }
+  };
+
+  // Handle video popup close
+  const handleVideoModalClose = () => {
+    console.log('Video modal close button clicked - closing video popup');
+    setShowVideoModal(false);
+    // Ensure the play button is shown again after closing the video
+    setShowPlayButton(true);
+    // Small delay to ensure state update before resuming scroll
+    setTimeout(() => {
+      resumeScroll(); // Resume scroll after closing video
+      console.log('Scroll resumed after video close');
+    }, 100);
   };
 
 
@@ -245,6 +269,46 @@ const PNGSequence = ({
             </svg>
             <span className="play-text">Continue</span>
           </button>
+        </div>
+      )}
+
+      {/* Video Modal Popup */}
+      {showVideoModal && (
+        <div className="video-modal-overlay" onClick={handleVideoModalClose}>
+          <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="video-modal-close" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Close button clicked - calling handleVideoModalClose');
+                handleVideoModalClose();
+              }}
+              aria-label="Close video"
+              type="button"
+              style={{ 
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                zIndex: 1002,
+                pointerEvents: 'auto'
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+            <video 
+              className="video-modal-video"
+              src={videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       )}
 

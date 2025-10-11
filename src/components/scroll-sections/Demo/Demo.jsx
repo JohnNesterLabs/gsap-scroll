@@ -760,6 +760,9 @@ export default function Demo() {
           timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
           timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
           playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+          // Video popup functionality
+          videoSrc="/demo1.mp4"
+          showVideoPopup={true}
           onTimelineComplete={() => {
             console.log('Timeline completed - showing play button');
           }}
