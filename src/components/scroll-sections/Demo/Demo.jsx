@@ -109,7 +109,7 @@ export default function Demo() {
     const positionConfigs = {
       "mobile-small": [
         { x: 20, y: 90 }, // Section 1 - Center
-        { x: 110, y: 50 }, // Section 2 - Center
+        { x: 110, y: 70 }, // Section 2 - Center
         { x: 40, y: 50 }, // Section 3 - Center
         { x: 50, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
@@ -169,8 +169,8 @@ export default function Demo() {
 
     const textPositionConfigs = {
       "mobile-small": [
-        "center", // Section 1 - Text at center (mobile)
-        "center", // Section 2 - Text at center (mobile)
+        "top", // Section 1 - Text at center (mobile)
+        "top", // Section 2 - Text at center (mobile)
         "center", // Section 3 - Text at center (mobile)
         "center", // Section 4 - Text at center (mobile)
         "center", // Section 5 - Text at center (mobile)
@@ -226,7 +226,7 @@ export default function Demo() {
     const textAlignConfigs = {
       "mobile-small": [
         "center", // Section 1 - Center aligned (mobile)
-        "center", // Section 2 - Center aligned (mobile)
+        "left", // Section 2 - Center aligned (mobile)
         "center", // Section 3 - Center aligned (mobile)
         "center", // Section 4 - Center aligned (mobile)
         "center", // Section 5 - Center aligned (mobile)
@@ -342,9 +342,9 @@ export default function Demo() {
 
     const fontSizeConfigs = {
       "mobile-small": [
-        "28px", // Section 1
-        "24px", // Section 2
-        "28px", // Section 3
+        "26px", // Section 1
+        "26px", // Section 2
+        "36px", // Section 3
         "24px", // Section 4
         "24px", // Section 5
         "26px", // Section 6
@@ -387,14 +387,58 @@ export default function Demo() {
 
   // Font weight configuration for each section
   const getFontWeightConfig = () => {
-    return [
-      "500", // Section 1
-      "500", // Section 2
-      "600", // Section 3
-      "500", // Section 4
-      "500", // Section 5
-      "500", // Section 6
-    ];
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
+    })();
+
+    const fontWeightConfigs = {
+      "mobile-small": [
+        "500", // Section 1
+        "500", // Section 2
+        "500", // Section 3
+        "500", // Section 4
+        "500", // Section 5
+        "500", // Section 6
+      ],
+      "mobile-large": [
+        "500", // Section 1
+        "500", // Section 2
+        "600", // Section 3
+        "500", // Section 4
+        "500", // Section 5
+        "500", // Section 6
+      ],
+      tablet: [
+        "500", // Section 1
+        "500", // Section 2
+        "600", // Section 3
+        "500", // Section 4
+        "500", // Section 5
+        "500", // Section 6
+      ],
+      desktop: [
+        "500", // Section 1
+        "500", // Section 2
+        "600", // Section 3
+        "500", // Section 4
+        "500", // Section 5
+        "500", // Section 6
+      ],
+      "large-desktop": [
+        "500", // Section 1
+        "500", // Section 2
+        "600", // Section 3
+        "500", // Section 4
+        "500", // Section 5
+        "500", // Section 6
+      ],
+    };
+    return fontWeightConfigs[viewport] || fontWeightConfigs["desktop"];
   };
 
   // Scroll handler function (matching ScrollSyncModel exactly)

@@ -9,6 +9,38 @@
   border: 1px solid white;
 }
 
+/* Dynamic alignment based on textPosition prop */
+.animated-section.text-position-top {
+  align-items: flex-start;
+  padding-top: 10vh;
+}
+
+.animated-section.text-position-bottom {
+  align-items: flex-end;
+  padding-bottom: 10vh;
+}
+
+.animated-section.text-position-center {
+  align-items: center;
+}
+
+.animated-section.text-position-left {
+  justify-content: flex-start;
+  padding-left: 5vw;
+}
+
+.animated-section.text-position-right {
+  justify-content: flex-end;
+  padding-right: 5vw;
+}
+
+.animated-section.text-position-top-left {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 10vh;
+  padding-left: 5vw;
+}
+
 .animated-section.gradient-1 {
   border: 1px solid white;
   background-color: black;
@@ -184,7 +216,7 @@
   font-size: 2rem;
   font-weight: 300;
   color: white;
-  text-align: center;
+  /* text-align: center; */
   /* line-height: 1.5; */
 }
 

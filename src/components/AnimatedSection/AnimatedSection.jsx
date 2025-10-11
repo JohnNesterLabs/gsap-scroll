@@ -230,7 +230,7 @@ const AnimatedSection = ({
   return (
     <section
       ref={sectionRef}
-      className={`animated-section section-${sectionNumber} ${gradientClass}`}
+      className={`animated-section section-${sectionNumber} ${gradientClass} text-position-${textPosition}`}
       // className={`animated-section ${gradientClass}`}
     >
       <div className="section-container">

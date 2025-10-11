@@ -157,6 +157,9 @@
     .word-display-container {
         min-height: 300px;
     }
+    .word-loop-container {
+        padding: 0 20px;
+    }
 }
 @media (min-width: 1024px) {
     .word-text {
