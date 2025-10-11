@@ -6,7 +6,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border: 1px solid white;
+  /* border: 1px solid white; */
 }
 
 /* Dynamic alignment based on textPosition prop */
@@ -42,7 +42,7 @@
 }
 
 .animated-section.gradient-1 {
-  border: 1px solid white;
+  /* border: 1px solid white; */
   background-color: black;
   background: linear-gradient(192.04deg, #0B0F11 0%, #000000 100%);
   /* background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); */
@@ -158,7 +158,8 @@
   .text-position-top,
   .text-position-top-left,
   .text-position-top-right {
-    padding-top: 30px;
+    padding-top: 60px;
+    align-items: flex-start;
   }
   
   .text-position-bottom,
@@ -181,6 +182,7 @@
 
   .section-container {
     width: 100%;
+    /* padding-top: 60px; */
     padding: 0 20px;
 }
 .text-line {
