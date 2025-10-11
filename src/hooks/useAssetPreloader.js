@@ -17,6 +17,7 @@ const generatePNGFramePaths = (totalFrames = 328, folderPath = '/frames-journey/
 const ASSETS_TO_PRELOAD = [
     // Main demo video
     '/hero4.mp4',
+    '/demo1.mp4',
 
     // Logo assets
     '/Logo-color.svg',
@@ -104,8 +105,8 @@ export const useAssetPreloader = () => {
             console.log('🎬 Loading Demo assets...');
             
             // Separate critical assets from PNG frames
-            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 5); // First 5 are critical
-            const pngFrames = ASSETS_TO_PRELOAD.slice(5); // Rest are PNG frames
+            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 6); // First 13 are critical (videos + logos)
+            const pngFrames = ASSETS_TO_PRELOAD.slice(6); // Rest are PNG frames
             
             // Load critical assets first
             console.log('📦 Loading critical assets...');
