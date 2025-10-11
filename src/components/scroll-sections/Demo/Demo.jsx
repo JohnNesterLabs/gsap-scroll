@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
-import PNGSequenceCanvas from "../PNGSequenceCanvas/PNGSequenceCanvas";
+import PNGSequence from "../PNGSequence/PNGSequence";
 
 export default function Demo() {
   const videoRef = useRef(null);
@@ -32,6 +32,25 @@ export default function Demo() {
     framePrefix: 'frame_',
     frameSuffix: '.png',
     folderPath: '/frames-journey/'
+  };
+
+
+    // Scroll Stop Configuration
+  // CUSTOMIZE: Timeline and Play Button positions
+  // You can change these values to position the timeline and play button anywhere on screen
+  const SCROLL_STOP_CONFIG = {
+    stopFrame: 234, // Frame to stop at (frame_0234.png)
+    timelineDuration: 5000, // 5 seconds in milliseconds
+    // Timeline position - customize these values
+    timelinePosition: {
+      top: '50%', // '50%' = center, '30%' = upper, '70%' = lower
+      left: '50%' // '50%' = center, '20%' = left, '80%' = right
+    },
+    // Play button position - customize these values
+    playButtonPosition: {
+      top: '60%', // '60%' = below timeline, '40%' = above timeline
+      left: '50%' // '50%' = center, '20%' = left, '80%' = right
+    }
   };
 
   // Video size configuration for each section
@@ -728,7 +747,7 @@ export default function Demo() {
         />
         
         {/* PNG Sequence Animation - Canvas-based for smooth performance */}
-        <PNGSequenceCanvas
+        <PNGSequence
           startSection={PNG_SEQUENCE_CONFIG.startSection}
           totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
           framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
@@ -736,6 +755,17 @@ export default function Demo() {
           folderPath={PNG_SEQUENCE_CONFIG.folderPath}
           activeSection={activeSection}
           sectionProgress={sectionProgress}
+          // Scroll stop functionality - using configuration
+          stopFrame={SCROLL_STOP_CONFIG.stopFrame}
+          timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
+          timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
+          playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+          onTimelineComplete={() => {
+            console.log('Timeline completed - showing play button');
+          }}
+          onPlayButtonClick={() => {
+            console.log('Play button clicked - resuming scroll');
+          }}
         />
         <AnimatedSection
           sectionNumber={6}

@@ -113,3 +113,160 @@
     opacity: 0;
   }
 }
+
+.timeline-overlay {
+  pointer-events: none;
+  user-select: none;
+}
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 20px 30px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.timeline-track {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.timeline-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #00D4FF 0%, #0099CC 100%);
+  border-radius: 2px;
+  transition: width 0.1s ease-out;
+  position: relative;
+}
+.timeline-progress::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: #00D4FF;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+.timeline-text {
+  color: white;
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 30px;
+}
+/* Play Button Styles */
+.play-button-overlay {
+  pointer-events: auto;
+  user-select: none;
+}
+.play-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%);
+  border: none;
+  border-radius: 50px;
+  padding: 16px 32px;
+  color: white;
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.play-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 212, 255, 0.4);
+  background: linear-gradient(135deg, #00E5FF 0%, #00AACC 100%);
+}
+.play-button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+}
+.play-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+.play-button:hover .play-icon {
+  transform: scale(1.1);
+}
+.play-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+/* Responsive Timeline Styles */
+@media (max-width: 768px) {
+  .timeline-container {
+    padding: 16px 24px;
+    gap: 10px;
+  }
+  .timeline-track {
+    width: 160px;
+    height: 3px;
+  }
+  .timeline-text {
+    font-size: 12px;
+  }
+  .play-button {
+    padding: 12px 24px;
+    font-size: 14px;
+    gap: 8px;
+  }
+  .play-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .timeline-container {
+    padding: 12px 20px;
+    gap: 8px;
+  }
+  .timeline-track {
+    width: 120px;
+    height: 3px;
+  }
+  .timeline-text {
+    font-size: 11px;
+  }
+  .play-button {
+    padding: 10px 20px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .play-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+/* Animation for timeline and play button appearance */
+.timeline-overlay {
+  animation: slideInUp 0.5s ease-out;
+}
+.play-button-overlay {
+  animation: slideInUp 0.5s ease-out 0.2s both;
+}
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+}
