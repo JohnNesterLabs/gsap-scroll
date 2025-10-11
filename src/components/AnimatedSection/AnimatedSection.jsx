@@ -95,6 +95,48 @@ const AnimatedSection = ({
     };
   }, [animationState, secondSet]);
 
+  // GSAP animation for second set with proper delays
+  useEffect(() => {
+    if (animationState === "second" && secondSet && secondSet.length > 0) {
+      // Use a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const secondSetContainer = document.querySelector(`.section-${sectionNumber} .second-set`);
+        if (secondSetContainer) {
+          const secondSetLines = secondSetContainer.querySelectorAll('.text-line');
+          if (secondSetLines.length > 0) {
+            // Check if lines are already animated (have opacity > 0)
+            const alreadyAnimated = Array.from(secondSetLines).some(line =>
+              parseFloat(getComputedStyle(line).opacity) > 0
+            );
+            if (!alreadyAnimated) {
+              // Set initial state - all lines hidden
+              gsap.set(secondSetLines, { opacity: 0, y: 30 });
+              // Animate each line with proper delays
+              secondSetLines.forEach((line, index) => {
+                let delay = index * 0.2;
+                // Special handling for section 2 - add 2 second delay after empty line
+                if (sectionNumber === 2 && index > 1) {
+                  delay = (index - 1) * 0.2 + 2.0;
+                }
+                gsap.to(line, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.8,
+                  ease: "power2.out",
+                  delay: delay
+                });
+              });
+            } else {
+              // Lines are already animated, just make sure they're visible
+              gsap.set(secondSetLines, { opacity: 1, y: 0 });
+            }
+          }
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [animationState, sectionNumber, secondSet]);
+
   // Show scroll indicator when second set completes (only for section 1)
   useEffect(() => {
     if (sectionNumber === 1 && animationState === "second" && secondSet && secondSet.length > 0) {
@@ -188,7 +230,8 @@ const AnimatedSection = ({
   return (
     <section
       ref={sectionRef}
-      className={`animated-section ${gradientClass}`}
+      className={`animated-section section-${sectionNumber} ${gradientClass}`}
+      // className={`animated-section ${gradientClass}`}
     >
       <div className="section-container">
         <div className={`text-container text-position-${textPosition}`}>
@@ -218,20 +261,25 @@ const AnimatedSection = ({
 
           {/* Second Set */}
           {animationState === "second" && secondSet && secondSet.length > 0 && (
-            <div className={`text-set text-align-${textAlign} animate-slide-in`}>
-              {secondSet.map((text, index) => (
-                <p
-                  key={`second-${index}`}
-                  className="text-line"
-                  style={{
-                    animationDelay: `${index * 0.2}s`,
-                    fontSize: fontSize,
-                    fontWeight: fontWeight,
-                  }}
-                >
-                  {text}
-                </p>
-              ))}
+            <div className={`text-set text-align-${textAlign} second-set`}>
+              {secondSet.map((text, index) => {
+                // Add extra margin for line 1 (empty line) to create gap after "You're lost."
+                const extraMargin = sectionNumber === 2 && index === 1 ? "1.5em" : "0";
+                return (
+                  <p
+                    key={`second-${index}`}
+                    className="text-line"
+                    style={{
+                      opacity: 0, // Start hidden, GSAP will animate
+                      fontSize: fontSize,
+                      fontWeight: fontWeight,
+                      marginBottom: extraMargin
+                    }}
+                  >
+                    {text}
+                  </p>
+                );
+              })}
             </div>
           )}
         </div>
