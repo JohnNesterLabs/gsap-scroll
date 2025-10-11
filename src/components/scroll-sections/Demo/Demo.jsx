@@ -74,10 +74,10 @@ export default function Demo() {
         section7: { width: 0, height: "auto" }, // Footer
       },
       desktop: {
-        section1: { width: 1400, height: "auto" },
-        section2: { width: 1400, height: "auto" },
-        section3: { width: 2000, height: "auto" },  
-        section4: { width: 1000, height: "auto" },
+        section1: { width: 1500, height: "auto" },
+        section2: { width: 1500, height: "auto" },
+        section3: { width: 2500, height: "auto" },  
+        section4: { width: 1080, height: "auto" },
         section5: { width: 2000, height: "auto" },
         section6: { width: 2000, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
@@ -127,26 +127,26 @@ export default function Demo() {
       ],
       tablet: [
         { x: 50, y: 60 }, // Section 1 - Center
-        { x: 70, y: 50 }, // Section 2 - Right
-        { x: 50, y: 50 }, // Section 3 - Center
+        { x: 50, y: 50 }, // Section 2 - Center (aligned with text)
+        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
         { x: 50, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
       desktop: [
-        { x: 50, y: 110 }, // Section 1 - Center
-        { x: 90, y: 50 }, // Section 2 - Top Right
-        { x: 40, y: 50 }, // Section 3 - Center
+        { x: 45, y: 105 }, // Section 1 - Center
+        { x: 45, y: 55 }, // Section 2 - Center (aligned with text)
+        { x: 45, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
         { x: 45, y: 50 }, // Section 4 - Center
         { x: 45, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
       "large-desktop": [
-        { x: 50, y: 120 }, // Section 1 - Center
-        { x: 90, y: 50 }, // Section 2 - Top Right
-        { x: 40, y: 50 }, // Section 3 - Center
+        { x: 50, y: 115 }, // Section 1 - Center
+        { x: 50, y: 55 }, // Section 2 - Center (aligned with text)
+        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
         { x: 50, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
@@ -703,14 +703,14 @@ export default function Demo() {
             "",
           ]}
         />
-        {/* <AnimatedSection
+        <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[5]}
           textAlign={getTextAlignConfig()[5]}
           fontSize={getFontSizeConfig()[5]}
           fontWeight={getFontWeightConfig()[5]}
           firstSet={["Experience the future", "Innovation meets excellence"]}
-        /> */}
+        />
         {/* <ZoomInSection sectionNumber={6} text="Welcome to the Future" /> */}
         {/* Footer Section */}
         <div className="demo-section demo-footer">

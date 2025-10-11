@@ -6,11 +6,11 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  /* border: 1px solid white; */
+  border: 1px solid white;
 }
 
 .animated-section.gradient-1 {
-  /* border: 1px solid white; */
+  border: 1px solid white;
   background-color: black;
   background: linear-gradient(192.04deg, #0B0F11 0%, #000000 100%);
   /* background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); */
