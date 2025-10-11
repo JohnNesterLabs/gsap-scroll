@@ -74,11 +74,11 @@ export default function Demo() {
         section7: { width: 0, height: "auto" }, // Footer
       },
       desktop: {
-        section1: { width: 1500, height: "auto" },
-        section2: { width: 1500, height: "auto" },
+        section1: { width: 1700, height: "auto" },
+        section2: { width: 1800, height: "auto" },
         section3: { width: 2500, height: "auto" },  
         section4: { width: 1080, height: "auto" },
-        section5: { width: 2000, height: "auto" },
+        section5: { width: 2150, height: "auto" },
         section6: { width: 2000, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
@@ -135,11 +135,11 @@ export default function Demo() {
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
       desktop: [
-        { x: 45, y: 105 }, // Section 1 - Center
-        { x: 45, y: 55 }, // Section 2 - Center (aligned with text)
-        { x: 45, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
+        { x: 45, y: 110 }, // Section 1 - Center
+        { x: 90, y: 65 }, // Section 2 - Center (aligned with text)
+        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
         { x: 45, y: 50 }, // Section 4 - Center
-        { x: 45, y: 50 }, // Section 5 - Center
+        { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
