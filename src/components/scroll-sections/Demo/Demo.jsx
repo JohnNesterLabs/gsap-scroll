@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
-import PNGSequence from "../PNGSequence/PNGSequence";
+import PNGSequenceCanvas from "../PNGSequenceCanvas/PNGSequenceCanvas";
 
 export default function Demo() {
   const videoRef = useRef(null);
@@ -727,8 +727,8 @@ export default function Demo() {
           ]}
         />
         
-        {/* PNG Sequence Animation - Starts after L657 section */}
-        <PNGSequence
+        {/* PNG Sequence Animation - Canvas-based for smooth performance */}
+        <PNGSequenceCanvas
           startSection={PNG_SEQUENCE_CONFIG.startSection}
           totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
           framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
