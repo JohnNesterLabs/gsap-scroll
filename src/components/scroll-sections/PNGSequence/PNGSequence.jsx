@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './PNGSequence.css';
 
 const PNGSequence = ({ 
@@ -30,6 +30,94 @@ const PNGSequence = ({
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
+  
+  // Image preloading and request management
+  const preloadedImagesRef = useRef(new Map());
+  const pendingRequestsRef = useRef(new Map());
+  const frameLoadTimeoutRef = useRef(null);
+
+  // Format frame number with leading zeros
+  const formatFrameNumber = (frameNum) => {
+    return frameNum.toString().padStart(4, '0');
+  };
+
+  // Preload image with proper request management
+  const preloadImage = useCallback((frameNumber) => {
+    const frameKey = frameNumber;
+    
+    // Return cached image if already loaded
+    if (preloadedImagesRef.current.has(frameKey)) {
+      return preloadedImagesRef.current.get(frameKey);
+    }
+
+    // Cancel any pending request for this frame
+    if (pendingRequestsRef.current.has(frameKey)) {
+      const pendingRequest = pendingRequestsRef.current.get(frameKey);
+      if (pendingRequest.abort) {
+        pendingRequest.abort();
+      }
+      pendingRequestsRef.current.delete(frameKey);
+    }
+
+    // Create new image element
+    const img = new Image();
+    const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(frameNumber)}${frameSuffix}`;
+    
+    // Create abort controller for this request
+    const controller = new AbortController();
+    pendingRequestsRef.current.set(frameKey, controller);
+
+    // Set up image loading
+    const loadPromise = new Promise((resolve, reject) => {
+      img.onload = () => {
+        preloadedImagesRef.current.set(frameKey, img);
+        pendingRequestsRef.current.delete(frameKey);
+        resolve(img);
+      };
+      
+      img.onerror = () => {
+        pendingRequestsRef.current.delete(frameKey);
+        console.warn(`Failed to load frame ${frameNumber}`);
+        reject(new Error(`Failed to load frame ${frameNumber}`));
+      };
+    });
+
+    // Handle abort signal
+    controller.signal.addEventListener('abort', () => {
+      img.src = '';
+      pendingRequestsRef.current.delete(frameKey);
+    });
+
+    // Start loading
+    img.src = imageSrc;
+    
+    return loadPromise;
+  }, [folderPath, framePrefix, frameSuffix]);
+
+  // Batch preload nearby frames for smoother scrolling
+  const preloadNearbyFrames = useCallback((centerFrame) => {
+    const preloadRange = 5; // Preload 5 frames before and after
+    const startFrame = Math.max(1, centerFrame - preloadRange);
+    const endFrame = Math.min(totalFrames, centerFrame + preloadRange);
+    
+    for (let frame = startFrame; frame <= endFrame; frame++) {
+      if (!preloadedImagesRef.current.has(frame)) {
+        preloadImage(frame).catch(() => {
+          // Silently handle preload failures
+        });
+      }
+    }
+  }, [totalFrames, preloadImage]);
+
+  // Cleanup function for pending requests
+  const cleanupPendingRequests = () => {
+    pendingRequestsRef.current.forEach((controller) => {
+      if (controller.abort) {
+        controller.abort();
+      }
+    });
+    pendingRequestsRef.current.clear();
+  };
 
   // Calculate frame index based on section progress
   useEffect(() => {
@@ -83,6 +171,9 @@ const PNGSequence = ({
       }
       
       setCurrentFrame(clampedFrame);
+      
+      // Preload nearby frames for smoother scrolling
+      preloadNearbyFrames(clampedFrame);
     } else {
       setIsVisible(false);
       setCurrentFrame(1);
@@ -92,19 +183,18 @@ const PNGSequence = ({
       setTimelineProgress(0);
       // Clean up scroll prevention when component is not visible
       resumeScroll();
+      // Clean up pending requests when not visible
+      cleanupPendingRequests();
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped]);
-  // Cleanup scroll prevention on unmount
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, preloadNearbyFrames]);
+  // Cleanup scroll prevention and pending requests on unmount
   useEffect(() => {
     return () => {
       resumeScroll();
+      cleanupPendingRequests();
     };
   }, []);
 
-  // Format frame number with leading zeros
-  const formatFrameNumber = (frameNum) => {
-    return frameNum.toString().padStart(4, '0');
-  };
 
   // Stop forward scroll functionality (but allow backward scrolling)
   const stopForwardScroll = () => {
@@ -200,6 +290,35 @@ const PNGSequence = ({
   const handleImageLoad = () => {
     // Image loaded successfully
   };
+
+  // Update image source with preloading
+  useEffect(() => {
+    if (!isVisible || !imgRef.current) return;
+
+    // Clear any existing timeout
+    if (frameLoadTimeoutRef.current) {
+      clearTimeout(frameLoadTimeoutRef.current);
+    }
+
+    // Try to get preloaded image first
+    const preloadedImg = preloadedImagesRef.current.get(currentFrame);
+    if (preloadedImg && preloadedImg.complete) {
+      // Use preloaded image
+      imgRef.current.src = preloadedImg.src;
+    } else {
+      // Fallback to direct loading with timeout
+      const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
+      imgRef.current.src = imageSrc;
+      
+      // Set a timeout to cancel the request if it takes too long
+      frameLoadTimeoutRef.current = setTimeout(() => {
+        if (imgRef.current && imgRef.current.src === imageSrc) {
+          // Request is taking too long, try to cancel it
+          imgRef.current.src = '';
+        }
+      }, 3000); // 3 second timeout
+    }
+  }, [currentFrame, isVisible, folderPath, framePrefix, frameSuffix]);
 
   if (!isVisible) {
     return null;

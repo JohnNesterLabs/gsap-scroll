@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import './PNGSequenceCanvas.css';
 
 const PNGSequenceCanvas = ({ 
@@ -12,19 +12,67 @@ const PNGSequenceCanvas = ({
 }) => {
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
+  const pendingRequestsRef = useRef(new Map());
 
-  // Preload frame images
-  const preloadFrame = (frameNumber) => {
-    if (!frameImagesRef.current[frameNumber]) {
-      const img = new Image();
-      img.src = `${folderPath}${framePrefix}${String(frameNumber).padStart(4, '0')}${frameSuffix}`;
-      frameImagesRef.current[frameNumber] = img;
+  // Preload frame images with request management
+  const preloadFrame = useCallback((frameNumber) => {
+    // Return cached image if already loaded
+    if (frameImagesRef.current[frameNumber] && frameImagesRef.current[frameNumber].complete) {
+      return frameImagesRef.current[frameNumber];
     }
-    return frameImagesRef.current[frameNumber];
+
+    // Cancel any pending request for this frame
+    if (pendingRequestsRef.current.has(frameNumber)) {
+      const pendingRequest = pendingRequestsRef.current.get(frameNumber);
+      if (pendingRequest.abort) {
+        pendingRequest.abort();
+      }
+      pendingRequestsRef.current.delete(frameNumber);
+    }
+
+    // Create new image element
+    const img = new Image();
+    const imageSrc = `${folderPath}${framePrefix}${String(frameNumber).padStart(4, '0')}${frameSuffix}`;
+    
+    // Create abort controller for this request
+    const controller = new AbortController();
+    pendingRequestsRef.current.set(frameNumber, controller);
+
+    // Set up image loading
+    img.onload = () => {
+      pendingRequestsRef.current.delete(frameNumber);
+    };
+    
+    img.onerror = () => {
+      pendingRequestsRef.current.delete(frameNumber);
+      console.warn(`Failed to load frame ${frameNumber}`);
+    };
+
+    // Handle abort signal
+    controller.signal.addEventListener('abort', () => {
+      img.src = '';
+      pendingRequestsRef.current.delete(frameNumber);
+    });
+
+    // Start loading
+    img.src = imageSrc;
+    frameImagesRef.current[frameNumber] = img;
+    
+    return img;
+  }, [folderPath, framePrefix, frameSuffix]);
+
+  // Cleanup function for pending requests
+  const cleanupPendingRequests = () => {
+    pendingRequestsRef.current.forEach((controller) => {
+      if (controller.abort) {
+        controller.abort();
+      }
+    });
+    pendingRequestsRef.current.clear();
   };
 
   // Render frame on canvas
-  const renderFrame = (frameNumber) => {
+  const renderFrame = useCallback((frameNumber) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -83,7 +131,7 @@ const PNGSequenceCanvas = ({
     if (img.complete) {
       drawImageToFullScreen();
     }
-  };
+  }, [preloadFrame]);
 
   // Calculate frame based on section progress
   useEffect(() => {
@@ -101,14 +149,21 @@ const PNGSequenceCanvas = ({
       
       renderFrame(clampedFrame);
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, renderFrame]);
 
   // Preload key frames for better performance
   useEffect(() => {
     preloadFrame(1);
     preloadFrame(Math.floor(totalFrames / 2));
     preloadFrame(totalFrames);
-  }, [totalFrames]);
+  }, [totalFrames, preloadFrame]);
+
+  // Cleanup pending requests on unmount
+  useEffect(() => {
+    return () => {
+      cleanupPendingRequests();
+    };
+  }, []);
 
   // Handle window resize
   useEffect(() => {
@@ -126,7 +181,7 @@ const PNGSequenceCanvas = ({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [activeSection, sectionProgress, startSection, totalFrames]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, renderFrame]);
 
   // Don't render if not in the active section range
   if (activeSection < startSection) {
