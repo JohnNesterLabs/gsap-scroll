@@ -111,7 +111,7 @@ export default function Demo() {
         { x: 20, y: 90 }, // Section 1 - Center
         { x: 110, y: 70 }, // Section 2 - Center
         { x: 40, y: 50 }, // Section 3 - Center
-        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 38, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
