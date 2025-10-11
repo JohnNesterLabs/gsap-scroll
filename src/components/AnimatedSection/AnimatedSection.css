@@ -30,8 +30,8 @@
 }
 
 .animated-section.text-position-right {
-  justify-content: flex-end;
-  padding-right: 5vw;
+  justify-content: center;
+  /* padding-right: 5vw; */
 }
 
 .animated-section.text-position-top-left {
@@ -95,8 +95,8 @@
 
 .text-position-right {
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 100px;
+  justify-content: center;
+  /* padding-right: 100px; */
 }
 
 .text-position-top-left {
