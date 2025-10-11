@@ -12,7 +12,7 @@
 /* Dynamic alignment based on textPosition prop */
 .animated-section.text-position-top {
   align-items: flex-start;
-  padding-top: 10vh;
+  /* padding-top: 10vh; */
 }
 
 .animated-section.text-position-bottom {
@@ -78,7 +78,7 @@
 .text-position-top {
   /* align-items: flex-start; */
   justify-content: center;
-  /* padding-top: 100px; */
+  padding-top: 30px;
 }
 
 .text-position-bottom {
@@ -310,7 +310,7 @@
 
 .scroll-indicator-container {
   position: absolute;
-  bottom: 2rem;
+  bottom: 4rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
