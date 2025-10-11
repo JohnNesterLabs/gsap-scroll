@@ -41,7 +41,7 @@
   top: 15%;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Arial', sans-serif;
+  font-family: 'Prodigy Sans', sans-serif;
   font-size: 32px;
   font-weight: bold;
   margin: 0;
@@ -57,7 +57,7 @@
   top: 22%;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Arial', sans-serif;
+  font-family: 'Prodigy Sans', sans-serif;
   font-size: 16px;
   margin: 0;
   color: currentColor;
@@ -110,7 +110,7 @@
 }
 
 .direction-text {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Prodigy Sans', sans-serif;
   font-size: 18px;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.9);
@@ -131,7 +131,7 @@
 }
 
 .section-info span {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Prodigy Sans', sans-serif;
   font-size: 40px;
   height: 40px;
   position: relative;

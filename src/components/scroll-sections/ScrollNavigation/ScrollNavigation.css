@@ -36,7 +36,7 @@
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Prodigy Sans', sans-serif;
   backdrop-filter: blur(10px);
   min-width: 120px;
 }

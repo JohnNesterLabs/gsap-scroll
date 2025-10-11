@@ -1,0 +1,200 @@
+.infinite-word-loop-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background-color: black;
+    /* border: 1px solid white; */
+}
+.word-loop-container {
+    width: 100%;
+    padding: 0 100px;
+    margin: 0 auto;
+    z-index: 6;
+}
+/* Three Column Layout */
+.three-column-layout {
+    /* display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+    min-height: 400px;
+    align-items: center;
+    width: 100%; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.left-column {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 2rem;
+}
+.center-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* This space is reserved for the video model */
+}
+.right-column {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 300px;
+}
+.word-display-container {
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Prevent text from clipping */
+    width: 100%;
+}
+/* Kahuna AI Text on Left */
+.kahuna-ai-text {
+    font-size: 36px;
+    font-weight: 500;
+    color: white;
+    text-align: left;
+    margin: 0;
+    font-family: 'ProdigySans-Bold', sans-serif;
+    line-height: 1.2;
+}
+.word-text {
+    font-size: 36px;
+    font-weight: 500;
+    color: white;
+    text-align: center;
+    margin: 0;
+    font-family: 'ProdigySans-Bold', sans-serif;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+/* Slide Up Animation - Current word slides up and fades out */
+@keyframes slide-up {
+    0% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -150%);
+        opacity: 0;
+    }
+}
+.word-text.slide-up {
+    animation: slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+/* Slide In Animation - Next word slides in from below */
+@keyframes slide-in {
+    0% {
+        transform: translate(-50%, 50%);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+}
+.word-text.slide-in {
+    animation: slide-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.word-section-indicator {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.word-section-number {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.125rem;
+    font-weight: 300;
+    font-family: 'ProdigySans-Regular', sans-serif;
+}
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .three-column-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: center;
+    }
+    .left-column,
+    .right-column {
+        justify-content: center;
+        padding: 0;
+        height: 150px;
+    }
+    .kahuna-ai-text {
+        text-align: center;
+        font-size: 2.5rem;
+    }
+    .word-text {
+        font-size: 2.5rem;
+    }
+}
+@media (max-width: 768px) {
+    .kahuna-ai-text {
+        font-size: 2rem;
+    }
+    .word-text {
+        font-size: 2rem;
+    }
+    .word-section-indicator {
+        bottom: 2rem;
+    }
+    .word-section-number {
+        font-size: 1rem;
+    }
+}
+@media (max-width: 480px) {
+    .word-text {
+        font-size: 2rem;
+    }
+    .word-display-container {
+        min-height: 150px;
+    }
+    .word-loop-container {
+        padding: 0 20px;
+    }
+    .three-column-layout{
+        flex-direction: column;
+        height: 100%;
+        height: 90vh;
+    }
+}
+@media (min-width: 1024px) {
+    .word-text {
+        font-size: 36px;
+    }
+}
+@media (min-width: 1440px) {
+    .word-text {
+        font-size: 36px;
+    }
+}
+/* Ensure text stays centered and visible on all screen sizes */
+@media (max-width: 320px) {
+    .word-text {
+        font-size: 1.5rem;
+    }
+}
+/* Handle very long text like "Enterprise Grade" */
+.word-text {
+    max-width: 90vw;
+    word-wrap: break-word;
+    hyphens: auto;
+}
+@media (max-width: 768px) {
+    .word-text {
+        max-width: 95vw;
+    }
+}

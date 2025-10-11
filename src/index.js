@@ -3,15 +3,20 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
-import ScrollSyncModelGsap from './components/scroll-sections/ScrollSyncModelGsap/ScrollSyncModelGsap';
+import { loadProdigySansFonts } from './fonts';
+import ZoomInSection from './components/scroll-sections/ZoomInSection/ZoomInSection';
+
+// Load fonts before rendering
+loadProdigySansFonts();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ScrollSyncModel/>
-    {/* <ScrollSyncModelGsap/> */}
-    {/* <App /> */}
+      {/* <ZoomInSection sectionNumber={1} text="Welcome to Section One" /> */}
+      {/* <ZoomInSection sectionNumber={1} text="Welcome to the Future" />
+      <ZoomInSection sectionNumber={2} text="Experience the Zoom Effect" />
+      <ZoomInSection sectionNumber={3} text="Scroll to Explore More" /> */}
+    <App />
   </React.StrictMode>
 );
 

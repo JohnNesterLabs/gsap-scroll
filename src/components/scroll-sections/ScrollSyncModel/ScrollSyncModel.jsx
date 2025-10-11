@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import './ScrollSyncModel.css';
 
 function ScrollSyncModel({ 
   showScrollIndicator = false, 
@@ -8,34 +10,725 @@ function ScrollSyncModel({
   showFooter = true,
   scrollIndicatorText = "Scroll to see the model move through sections",
   debugControlsPosition = "top-right",
-  videoSrc = "/hero1.mp4"
+  videoSrc = "/final-hero-video1.mp4"
 }) {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = React.useState(0);
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1 });
+  const [videoPosition, setVideoPosition] = React.useState({ x: 0, y: 0, scale: 1, rotation: 0 });
   const [videoSize, setVideoSize] = React.useState({ width: 400, height: 'auto' });
   const [headerVisible, setHeaderVisible] = React.useState(true);
+  const [currentFrame, setCurrentFrame] = React.useState(1);
+  const [totalFrames] = React.useState(153); // Total frames from hero44.mp4 conversion
+  const [isInSection5, setIsInSection5] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState(0);
+  const [sectionAnimationStates, setSectionAnimationStates] = React.useState({ 0: "first" }); // Track animation state per section: "idle", "first", "transition", "second" - Initialize section 0 to "first"
+  const canvasRef = useRef(null);
+  const frameImagesRef = useRef({});
+  const sectionRefs = useRef([]);
+  const textSetTimersRef = useRef({}); // Store timers for text set cycling (per section)
+
+  // Preload frame images
+  const preloadFrame = (frameNumber) => {
+    if (!frameImagesRef.current[frameNumber]) {
+      const img = new Image();
+      img.src = `/frames/frame_${String(frameNumber).padStart(4, '0')}.png`;
+      frameImagesRef.current[frameNumber] = img;
+    }
+    return frameImagesRef.current[frameNumber];
+  };
+
+  // Render frame on canvas
+  const renderFrame = (frameNumber) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const img = preloadFrame(frameNumber);
+
+    const drawImageToFullScreen = () => {
+      // Set canvas size to full viewport
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Calculate scaling to completely fill screen (crop if necessary)
+      const imgAspect = img.width / img.height;
+      const canvasAspect = canvas.width / canvas.height;
+      
+      let drawWidth, drawHeight, sourceX, sourceY, sourceWidth, sourceHeight;
+      
+      if (imgAspect > canvasAspect) {
+        // Image is wider - crop sides to fill height
+        drawHeight = canvas.height;
+        drawWidth = canvas.width;
+        
+        // Calculate source crop area to maintain aspect ratio
+        sourceHeight = img.height;
+        sourceWidth = img.height * canvasAspect;
+        sourceX = (img.width - sourceWidth) / 2;
+        sourceY = 0;
+      } else {
+        // Image is taller - crop top/bottom to fill width
+        drawWidth = canvas.width;
+        drawHeight = canvas.height;
+        
+        // Calculate source crop area to maintain aspect ratio
+        sourceWidth = img.width;
+        sourceHeight = img.width / canvasAspect;
+        sourceX = 0;
+        sourceY = (img.height - sourceHeight) / 2;
+      }
+      
+      // Draw image scaled and cropped to fill entire screen
+      ctx.drawImage(
+        img,
+        sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle (crop area)
+        0, 0, drawWidth, drawHeight                   // Destination rectangle (full screen)
+      );
+    };
+
+    img.onload = () => {
+      drawImageToFullScreen();
+    };
+
+    // If image is already loaded, draw it immediately
+    if (img.complete) {
+      drawImageToFullScreen();
+    }
+  };
+
+  // Preload frames on mount
+  useEffect(() => {
+    // Preload first, middle, and last frames for better performance
+    preloadFrame(1);
+    preloadFrame(Math.floor(totalFrames / 2));
+    preloadFrame(totalFrames);
+  }, [totalFrames]);
+
+  // Render frame when currentFrame changes
+  useEffect(() => {
+    renderFrame(currentFrame);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFrame]);
+
+  // Handle window resize for full-screen canvas
+  useEffect(() => {
+    const handleResize = () => {
+      if (isInSection5 && currentFrame > 0) {
+        // Redraw the current frame when window resizes
+        renderFrame(currentFrame);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInSection5, currentFrame]);
+
+  // State machine for text set cycling (matching AnimatedSection logic)
+  // This automatically transitions: "first" (3s) → "transition" (0.8s) → "second"
+  useEffect(() => {
+    const currentState = sectionAnimationStates[activeSection];
+    if (!currentState || currentState === "idle") return;
+
+    const section = sections[activeSection];
+    if (!section || section.isFooter || !section.textSets) return;
+
+    // Check if this section has multiple text sets
+    const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
+    if (!isMultipleSets) return; // Only apply state machine to multi-set sections
+
+    // Get timing config with defaults matching AnimatedSection behavior
+    const timingConfig = section.textSetTiming || {
+      displayDuration: 3000,      // Show each set for 3 seconds
+      fadeOutDuration: 800,       // Transition duration in milliseconds
+      loop: false
+    };
+
+    // Capture timers ref for cleanup
+    const timers = textSetTimersRef.current;
+
+    // Clear any existing timers for this section
+    if (timers[activeSection]) {
+      clearTimeout(timers[activeSection]);
+    }
+
+    // Set up state transitions based on current state
+    if (currentState === "first") {
+      // After displayDuration, transition to "transition" state
+      timers[activeSection] = setTimeout(() => {
+        setSectionAnimationStates(prev => ({
+          ...prev,
+          [activeSection]: "transition"
+        }));
+      }, timingConfig.displayDuration);
+    } else if (currentState === "transition") {
+      // After fadeOutDuration, transition to "second" state
+      timers[activeSection] = setTimeout(() => {
+        setSectionAnimationStates(prev => ({
+          ...prev,
+          [activeSection]: "second"
+        }));
+      }, timingConfig.fadeOutDuration);
+    }
+    // If state is "second", stay there (no further transitions unless loop is enabled)
+
+    // Cleanup function
+    return () => {
+      if (timers[activeSection]) {
+        clearTimeout(timers[activeSection]);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionAnimationStates, activeSection]);
+
+  // Text animation effect - triggers when active section or animation state changes
+  useEffect(() => {
+    const section = sections[activeSection];
+    if (!section || section.isFooter || !section.textSets) return;
+
+    const sectionElement = sectionRefs.current[activeSection];
+    if (!sectionElement) return;
+    
+    const currentState = sectionAnimationStates[activeSection] || "idle";
+    
+    // Debug logging
+    // console.log(`Section ${activeSection}: state = ${currentState}`);
+    
+    if (currentState === "idle") return; // Don't animate if not visible
+
+    // Small delay to ensure DOM elements are ready
+    const timeoutId = setTimeout(() => {
+      // console.log(`Delayed animation for section ${activeSection}, state: ${currentState}`);
+
+    // Get animation config with defaults
+    const config = section.animationConfig || {
+      type: 'fadeSlideUp',
+      staggerDelay: 0.2,
+      duration: 0.8,
+      ease: 'power2.out'
+    };
+
+    // Helper function to animate text elements
+    const animateTextElements = (textElements, animateIn = true) => {
+      if (!textElements || !textElements.length) return;
+
+      // Reset first
+      gsap.set(textElements, { 
+        opacity: 0,
+        y: 0,
+        x: 0,
+        scale: 1
+      });
+
+      if (!animateIn) return; // If animating out, just keep them hidden
+
+      // Convert NodeList to array for easier manipulation
+      const elementsArray = Array.from(textElements);
+      
+      // Check for empty strings and split elements into groups
+      let emptyStringIndex = -1;
+      elementsArray.forEach((element, index) => {
+        const text = element.textContent.trim();
+        if (text === '' && emptyStringIndex === -1) {
+          emptyStringIndex = index;
+        }
+      });
+
+      // If there's an empty string, split animation into two groups
+      if (emptyStringIndex !== -1) {
+        // Group 1: Elements before and including the empty string
+        const beforeEmpty = elementsArray.slice(0, emptyStringIndex + 1);
+        // Group 2: Elements after the empty string
+        const afterEmpty = elementsArray.slice(emptyStringIndex + 1);
+
+        // Get delay for lines after empty string (default 4 seconds)
+        const emptyLineDelay = config.emptyLineDelay || 4;
+
+        // Animate first group immediately
+        if (beforeEmpty.length > 0) {
+          animateGroup(beforeEmpty, 0);
+        }
+
+        // Animate second group after delay
+        if (afterEmpty.length > 0) {
+          animateGroup(afterEmpty, emptyLineDelay);
+        }
+      } else {
+        // No empty strings, animate all elements normally
+        animateGroup(elementsArray, 0);
+      }
+
+      // Helper function to animate a group of elements with a delay
+      function animateGroup(elements, delayOffset) {
+        switch (config.type) {
+          case 'fadeSlideUp':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element, 
+                { opacity: 0, y: 50 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'fadeIn':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0 },
+                {
+                  opacity: 1,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'slideLeft':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: 100 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'slideRight':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: -100 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'stagger':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, y: 30, scale: 0.95 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          case 'typewriter':
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, x: -20 },
+                {
+                  opacity: 1,
+                  x: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+            break;
+
+          default:
+            elements.forEach((element, index) => {
+              gsap.fromTo(element,
+                { opacity: 0, y: 50 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: config.duration,
+                  ease: config.ease,
+                  delay: delayOffset + (index * config.staggerDelay)
+                }
+              );
+            });
+        }
+      }
+    };
+
+    // Check if textSets is an object with multiple sets or a simple array
+    const isMultipleSets = section.textSets && typeof section.textSets === 'object' && !Array.isArray(section.textSets);
+    
+    if (isMultipleSets) {
+      // Handle multiple text sets with state-based cycling (matching AnimatedSection logic)
+      // State machine: "first" → "transition" → "second"
+      const textSetKeys = Object.keys(section.textSets);
+      
+      // Get timing config
+      const timingConfig = section.textSetTiming || {
+        displayDuration: 3000,
+        fadeOutDuration: 800,
+        loop: false
+      };
+
+      // Get elements for each set
+      const set1Elements = sectionElement.querySelectorAll(`.text-set-line[data-set="${textSetKeys[0]}"]`);
+      const set2Elements = sectionElement.querySelectorAll(`.text-set-line[data-set="${textSetKeys[1]}"]`);
+
+      // Debug logging
+      console.log(`Section ${activeSection}: Found ${set1Elements.length} set1 elements, ${set2Elements.length} set2 elements`);
+      console.log(`Looking for: data-set="${textSetKeys[0]}" and data-set="${textSetKeys[1]}"`);
+
+      // Handle animations based on current state
+      if (currentState === "first") {
+        // FIRST STATE: Show set1 with slide-in animation from bottom
+        gsap.set(set2Elements, { opacity: 0, y: 30 }); // Hide set2
+        
+        // Ensure elements are ready before animating
+        if (set1Elements.length > 0) {
+          console.log(`Animating ${set1Elements.length} set1 elements for section ${activeSection}`);
+          // Simple visibility test first
+          gsap.set(set1Elements, { opacity: 1, y: 0 }); // Just make visible for now
+          console.log(`Set set1 elements to visible`);
+        } else {
+          console.warn(`No set1 elements found for section ${activeSection}`);
+          // Try to find any text elements as fallback
+          const allTextElements = sectionElement.querySelectorAll('.text-set-line');
+          console.log(`Found ${allTextElements.length} total text elements in section ${activeSection}`);
+          if (allTextElements.length > 0) {
+            // Make all text elements visible as fallback
+            gsap.set(allTextElements, { opacity: 1, y: 0 });
+            console.log(`Made all text elements visible as fallback`);
+          }
+        }
+        
+      } else if (currentState === "transition") {
+        // TRANSITION STATE: Slide set1 UP and fade out
+        gsap.to(set1Elements, {
+          opacity: 0,
+          y: -30,  // Slide UP
+          duration: timingConfig.fadeOutDuration / 1000,  // Convert ms to seconds
+          ease: 'power2.in'
+        });
+        
+      } else if (currentState === "second") {
+        // SECOND STATE: Hide set1, show set2 with slide-in animation from bottom
+        gsap.set(set1Elements, { opacity: 0, y: -30 }); // Keep set1 hidden
+        
+        gsap.set(set2Elements, { opacity: 0, y: 30 }); // Reset set2
+        const set2Array = Array.from(set2Elements);
+        set2Array.forEach((element, index) => {
+          gsap.to(element, {
+            opacity: 1,
+            y: 0,
+            duration: config.duration || 1,
+            ease: config.ease || 'power2.out',
+            delay: index * (config.staggerDelay || 0.2)
+          });
+        });
+      }
+
+    } else {
+      // Handle simple array of text (original behavior)
+      const textElements = sectionElement.querySelectorAll('.text-set-line');
+      animateTextElements(textElements, true);
+    }
+    }, 100); // 100ms delay to ensure DOM is ready
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+    };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection, sectionAnimationStates]);
 
   useEffect(() => {
-    // Video size configuration for different sections
-    const videoSizeConfig = {
-      // Section 1: Small and centered
-      section1: { width: 1100, height: 'auto' },
-      // Section 2: Medium size when moving right
-      section2: { width: 1100, height: 'auto' },
-      // Section 3: Large when at bottom
-      section3: { width: 1300, height: 'auto' },
-      // Section 4: Medium when moving left
-      section4: { width: 600, height: 'auto' },
-      // Section 5: Extra large when at top
-      section5: { width: 600, height: 'auto' },
-      // Section 6: Footer section - hide video (only if footer is enabled)
-      ...(showFooter && { section6: { width: 0, height: 'auto' } })
+    // Get viewport dimensions for responsive video sizing
+    const getViewportSize = () => {
+      const width = window.innerWidth;
+      
+      if (width <= 480) {
+        return 'mobile-small';
+      } else if (width <= 767) {
+        return 'mobile-large';
+      } else if (width <= 1023) {
+        return 'tablet';
+      } else if (width <= 1924) {
+        return 'desktop';
+      } else {
+        return 'large-desktop';
+      }
     };
+
+    // Responsive video size configuration based on viewport
+    const getVideoSizeConfig = () => {
+      const viewport = getViewportSize();
+      
+      const configs = {
+        'mobile-small': {
+          section1: { width: 950, height: 'auto' },
+          section2: { width: 900, height: 'auto' },
+          section3: { width: 920, height: 'auto' },
+          section4: { width: 350, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'mobile-large': {
+          section1: { width: 400, height: 'auto' },
+          section2: { width: 450, height: 'auto' },
+          section3: { width: 500, height: 'auto' },
+          section4: { width: 350, height: 'auto' },
+          section5: { width: 300, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'tablet': {
+          section1: { width: 900, height: 'auto' },
+          section2: { width: 950, height: 'auto' },
+          section3: { width: 1150, height: 'auto' },
+          section4: { width: 500, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'desktop': {
+          section1: { width: 1500, height: 'auto' },
+          section2: { width: 1500, height: 'auto' },
+          section3: { width: 2500, height: 'auto' },
+          section4: { width: 1080, height: 'auto' },
+          section5: { width: 0, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        },
+        'large-desktop': {
+          section1: { width: 3300, height: 'auto' },
+          section2: { width: 2800, height: 'auto' },
+          section3: { width: 3100, height: 'auto' },
+          section4: { width: 1300, height: 'auto' },
+          section5: { width: 1300, height: 'auto' },
+          ...(showFooter && { section6: { width: 0, height: 'auto' } })
+        }
+      };
+      
+      return configs[viewport] || configs['desktop'];
+    };
+
+    const videoSizeConfig = getVideoSizeConfig();
     let isMounted = true;
+
+    // Get responsive position configuration based on viewport
+    const getPositionConfig = () => {
+      const viewport = getViewportSize();
+      
+      const positionConfigs = {
+        'mobile-small': [
+          { x: 50, y: 125 },      // Section 1 - Center (mobile optimized)
+          { x: 115, y: 70 },      // Section 2 - Right (closer to center on mobile)
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 50, y: 50 },      // Section 4 - Left (closer to center on mobile)
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'mobile-large': [
+          { x: 50, y: 50 },      // Section 1 - Center
+          { x: 90, y: 50 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 10, y: 50 },      // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'tablet': [
+          { x: 50, y: 100 },      // Section 1 - Center
+          { x: 92, y: 75 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 50, y: 50 },       // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'desktop': [
+          { x: 50, y: 105 },     // Section 1 - Bottom (your laptop config)
+          { x: 95, y: 55 },      // Section 2 - Right
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 50, y: 50 },      // Section 4 - Left
+          { x: 50, y: 50 },      // Section 5 - Top
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ],
+        'large-desktop': [
+          { x: 50, y: 115 },     // Section 1 - Slightly higher for large screens
+          { x: 96, y: 55 },      // Section 2 - Right (more extreme)
+          { x: 50, y: 50 },      // Section 3 - Center
+          { x: 50, y: 50 },       // Section 4 - Left (more extreme)
+          { x: 50, y: 50 },      // Section 5 - Center
+          { x: 50, y: 50 }       // Section 6 - Footer (center)
+        ]
+      };
+      
+      return positionConfigs[viewport] || positionConfigs['desktop'];
+    };
+
+    // Get responsive rotation configuration based on viewport
+    const getRotationConfig = () => {
+      const viewport = getViewportSize();
+      
+      const rotationConfigs = {
+        'mobile-small': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'mobile-large': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'tablet': [
+          0,      // Section 1 - Normal position
+          0,      // Section 2 - Normal position
+          0,      // Section 3 - Normal position
+          0,      // Section 4 - Normal position
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'desktop': [
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ],
+        'large-desktop': [
+          0,      // Section 1 - Normal position
+          0,     // Section 2 - 45 degree rotation
+          0,      // Section 3 - Normal position
+          0,    // Section 4 - -30 degree rotation
+          0,      // Section 5 - Normal position
+          0       // Section 6 - Footer
+        ]
+      };
+      
+      return rotationConfigs[viewport] || rotationConfigs['desktop'];
+    };
+
+    // Get PNG sequence configuration based on viewport
+    const getPNGSequenceConfig = () => {
+      const viewport = getViewportSize();
+      
+      const pngSequenceConfigs = {
+        'mobile-small': {
+          startSection: 4,        // Start in Section 5 (index 4)
+          startProgress: 0.2,     // Start when 20% into Section 5
+          endSection: 4,          // End in Section 5 (index 4)
+          endProgress: 1.0        // End at 100% of Section 5
+        },
+        'mobile-large': {
+          startSection: 4,
+          startProgress: 0.2,
+          endSection: 4,
+          endProgress: 1.0
+        },
+        'tablet': {
+          startSection: 4,
+          startProgress: 0.2,
+          endSection: 4,
+          endProgress: 1.0
+        },
+        'desktop': {
+          startSection: 4,        // Start in Section 5 (index 4)
+          startProgress: 0.0,     // Start immediately when entering Section 5
+          endSection: 4,          // End in Section 5 (index 4)
+          endProgress: 1.0        // End at 100% of Section 5
+        },
+        'large-desktop': {
+          startSection: 4,
+          startProgress: 0.0,
+          endSection: 4,
+          endProgress: 1.0
+        }
+      };
+      
+      return pngSequenceConfigs[viewport] || pngSequenceConfigs['desktop'];
+    };
+
+    // Add window resize listener to recalculate video sizes and positions on viewport change
+    const handleResize = () => {
+      console.log('Viewport resized, recalculating video sizes and positions...');
+      const newConfig = getVideoSizeConfig();
+      const newPositions = getPositionConfig();
+      const newRotations = getRotationConfig();
+      
+      // Update video size and position if we're currently in a section
+      if (videoRef.current && scrollContainerRef.current) {
+        const scrollContainer = scrollContainerRef.current;
+        const scrollTop = scrollContainer.scrollTop;
+        const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+        
+        const totalSections = showFooter ? 6 : 5;
+        const sectionIndex = scrollProgress * (totalSections - 1);
+        const currentSection = Math.floor(sectionIndex);
+        const nextSection = Math.min(currentSection + 1, totalSections - 1);
+        const sectionProgress = sectionIndex - currentSection;
+        
+        // Update video size
+        const sizeKeys = showFooter ? 
+          ['section1', 'section2', 'section3', 'section4', 'section5', 'section6'] :
+          ['section1', 'section2', 'section3', 'section4', 'section5'];
+        const currentSizeKey = sizeKeys[currentSection];
+        const nextSizeKey = sizeKeys[nextSection];
+        
+        if (newConfig[currentSizeKey] && newConfig[nextSizeKey]) {
+          const currentSize = newConfig[currentSizeKey];
+          const nextSize = newConfig[nextSizeKey];
+          const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
+          setVideoSize({ width: newWidth, height: 'auto' });
+        }
+        
+        // Update video position
+        const currentPos = newPositions[currentSection];
+        const nextPos = newPositions[nextSection];
+        const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
+        const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+        
+        // Update video rotation
+        const currentRotation = newRotations[currentSection];
+        const nextRotation = newRotations[nextSection];
+        const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
+        
+        // Scale effect - set section 5 to 0.8 scale, hide video in section 6
+        let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
+        if (currentSection === 4 || (currentSection === 3 && nextSection === 4)) {
+          scale = 0.8;
+        }
+        if (currentSection === 5) {
+          scale = 0;
+        }
+        
+        setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
+      }
+    };
 
     // Simple video initialization
     const initializeVideo = async () => {
@@ -117,6 +810,10 @@ function ScrollSyncModel({
 
         // Use passive listener for better performance during scroll
         scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Add window resize listener for responsive video sizing
+        window.addEventListener('resize', handleResize, { passive: true });
+        
         handleScroll(); // Set initial position
 
         console.log('Scroll listener attached successfully');
@@ -151,15 +848,8 @@ function ScrollSyncModel({
       // Update state for UI display
       setScrollProgress(scrollProgress);
 
-      // Define positions for each section (convert to CSS percentages)
-      const positions = [
-        { x: 50, y: 135 },      // Section 1 - Bottom
-        { x: 95, y: 60 },      // Section 2 - Right
-        { x: 50, y: 50 },      // Section 3 - center
-        { x: 50, y: 50 },      // Section 4 - Left
-        { x: 50, y: 50 },      // Section 5 - Top
-        { x: 50, y: 50 }       // Section 6 - Footer (center)
-      ];
+      const positions = getPositionConfig();
+      const rotations = getRotationConfig();
 
       // Calculate which section we're in and interpolate
       const totalSections = showFooter ? 6 : 5; // Dynamic sections based on footer
@@ -168,12 +858,37 @@ function ScrollSyncModel({
       const nextSection = Math.min(currentSection + 1, totalSections - 1);
       const sectionProgress = sectionIndex - currentSection;
 
+      // Track active section for animations
+      if (currentSection !== activeSection) {
+        // LEAVING old section: Clear timers and set to "idle" (matching AnimatedSection lines 25-35)
+        const previousSection = activeSection;
+        if (textSetTimersRef.current[previousSection]) {
+          clearTimeout(textSetTimersRef.current[previousSection]);
+          textSetTimersRef.current[previousSection] = null;
+        }
+        
+        // console.log(`Switching from section ${previousSection} to section ${currentSection}`);
+        
+        setSectionAnimationStates(prev => ({
+          ...prev,
+          [previousSection]: "idle",    // Set old section to idle
+          [currentSection]: "first"     // Set new section to first
+        }));
+        
+        setActiveSection(currentSection);
+      }
+
       // Interpolate between current and next position
       const currentPos = positions[currentSection];
       const nextPos = positions[nextSection];
 
       const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
       const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+
+      // Interpolate between current and next rotation
+      const currentRotation = rotations[currentSection];
+      const nextRotation = rotations[nextSection];
+      const newRotation = currentRotation + (nextRotation - currentRotation) * sectionProgress;
 
       // Scale effect - set section 5 to 0.8 scale, hide video in section 6
       let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
@@ -202,22 +917,72 @@ function ScrollSyncModel({
       const newWidth = currentSize.width + (nextSize.width - currentSize.width) * sectionProgress;
 
       // Update video position and size state
-      setVideoPosition({ x: newX, y: newY, scale });
+      setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       setVideoSize({ width: newWidth, height: 'auto' });
 
       // Show header only during section 1 (first 20% of scroll) and if showHeader prop is true
-      setHeaderVisible(showHeader && scrollProgress < 0.2);
+      setHeaderVisible(showHeader && scrollProgress < 0.04);
+
+      // Calculate PNG sequence visibility and frame based on configuration
+      const pngConfig = getPNGSequenceConfig();
+      const shouldShowPNG = (() => {
+        // Check if we're in the start section and past the start progress
+        if (currentSection === pngConfig.startSection && sectionProgress >= pngConfig.startProgress) {
+          return true;
+        }
+        // Check if we're transitioning to the start section and should start
+        if (currentSection === pngConfig.startSection - 1 && nextSection === pngConfig.startSection && sectionProgress >= 0.8) {
+          return true;
+        }
+        // Check if we're past the end section or past the end progress
+        if (currentSection > pngConfig.endSection || 
+            (currentSection === pngConfig.endSection && sectionProgress > pngConfig.endProgress)) {
+          return false;
+        }
+        return false;
+      })();
+
+      if (shouldShowPNG) {
+        setIsInSection5(true);
+        
+        // Calculate frame number based on progress within the PNG sequence range
+        let sequenceProgress = 0;
+        
+        if (currentSection === pngConfig.startSection) {
+          // We're in the start section
+          sequenceProgress = (sectionProgress - pngConfig.startProgress) / (pngConfig.endProgress - pngConfig.startProgress);
+        } else if (currentSection === pngConfig.startSection - 1 && nextSection === pngConfig.startSection) {
+          // We're transitioning to the start section
+          sequenceProgress = 0; // Start with first frame
+        }
+        
+        // Clamp sequence progress between 0 and 1
+        sequenceProgress = Math.max(0, Math.min(1, sequenceProgress));
+        
+        const frameNumber = Math.min(
+          Math.max(1, Math.floor(sequenceProgress * totalFrames) + 1),
+          totalFrames
+        );
+        
+        setCurrentFrame(frameNumber);
+        renderFrame(frameNumber);
+        console.log('PNG Sequence - Frame:', frameNumber, 'Sequence Progress:', sequenceProgress, 'Section Progress:', sectionProgress);
+      } else {
+        setIsInSection5(false);
+      }
 
       console.log('Video position and size updated:', { 
         x: newX, 
         y: newY, 
         scale, 
+        rotation: newRotation,
         width: newWidth,
         section: currentSection,
         progress: sectionProgress,
         scrollProgress: scrollProgress,
         currentSize: currentSize.width,
-        nextSize: nextSize.width
+        nextSize: nextSize.width,
+        ...(currentSection === 4 && { frame: currentFrame })
       });
     };
 
@@ -242,6 +1007,7 @@ function ScrollSyncModel({
           isMounted = false;
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
           }
         };
       } catch (error) {
@@ -257,110 +1023,293 @@ function ScrollSyncModel({
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFooter, showHeader]);
 
 
+  // Get responsive content position configuration
+  const getContentPositionConfig = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return 'mobile-small';
+      if (width <= 767) return 'mobile-large';
+      if (width <= 1023) return 'tablet';
+      if (width <= 1924) return 'desktop';
+      return 'large-desktop';
+    })();
+    
+    const contentPositionConfigs = {
+      'mobile-small': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'mobile-large': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'tablet': [
+        { horizontal: 'center', vertical: 'center' },  // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'desktop': [
+        { horizontal: 'center', vertical: 'top' },     // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ],
+      'large-desktop': [
+        { horizontal: 'center', vertical: 'top' },     // Section 1
+        { horizontal: 'left', vertical: 'center' },    // Section 2
+        { horizontal: 'center', vertical: 'center' },  // Section 3
+        { horizontal: 'right', vertical: 'center' },   // Section 4
+        { horizontal: 'center', vertical: 'top' }      // Section 5
+      ]
+    };
+    
+    return contentPositionConfigs[viewport] || contentPositionConfigs['desktop'];
+  };
+
   const sections = [
     { 
-      title: 'Section 1', 
-      subtitle: 'Model at Center', 
+      // Option 1: Use textSets with multiple cycling sets (NEW!)
+      textSets: {
+        set1: [
+          'Vast and intricate,',
+          'products never stop evolving.'
+        ],
+        set2: [
+          'Enterprise customers have an',
+          'endless spectrum of realities.'
+        ]
+      },
+      
+      // Timing configuration for text set cycling (matching AnimatedSection)
+      textSetTiming: {
+        displayDuration: 3000,      // Show each set for 3 seconds (matching AnimatedSection)
+        fadeOutDuration: 800,       // Slide up/fade out in 800ms = 0.8 seconds (matching AnimatedSection)
+        delayBetweenSets: 0,        // No delay - immediate transition (matching AnimatedSection)
+        loop: false                 // Don't loop - stay on last set
+      },
+      
+      // Option 2: Use simple array (original behavior - no cycling)
+      // textSets: [
+      //   'Vast and intricate,',
+      //   'products never stop evolving.'
+      // ],
+      
+      // Animation configuration for this section's text
+      animationConfig: {
+        type: 'fadeSlideUp',     // Options: 'fadeSlideUp', 'fadeIn', 'slideLeft', 'slideRight', 'stagger', 'typewriter'
+        staggerDelay: 0.3,        // Delay between each text line (for stagger effect)
+        duration: 0.8,            // Animation duration
+        ease: 'power2.out'        // GSAP ease function
+      },
+      
+      // Text alignment configuration
+      textAlign: 'center',       // Options: 'left', 'center', 'right'
+      
       background: '#000000', 
-      border: '2px solid #ffffff',
-      hasHeader: showHeader // Use prop for header visibility
+      border: '1px solid #ffffff',
+      hasHeader: showHeader,
+      showNumber: false,
+      showScrollHint: false
     },
-    { title: 'Section 2', subtitle: 'Model moves Right', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 3', subtitle: 'Model moves Down', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 4', subtitle: 'Model moves Left', background: '#000000', border: '2px solid #ffffff' },
-    { title: 'Section 5', subtitle: 'Model moves Up', background: '#000000', border: '2px solid #ffffff' },
+    { 
+      textSets: {
+        set1: [
+          'The support landscape is',
+          'boundless and shifting'
+        ],
+        set2: [
+          "You're lost.",
+          "",
+          'Outdated, laborious',
+          'and fractional knowledge',
+          "cripple frontline actions."
+        ]
+      },
+      textSetTiming: {
+        displayDuration: 3000,      // Show each set for 3 seconds (matching AnimatedSection)
+        fadeOutDuration: 800,       // Slide up/fade out in 800ms = 0.8 seconds (matching AnimatedSection)
+        delayBetweenSets: 0,        // No delay - immediate transition (matching AnimatedSection)
+        loop: false                 // Don't loop - stay on last set
+      },
+      animationConfig: {
+        type: 'fadeIn',
+        staggerDelay: 0.2,
+        duration: 0.8,              // Match AnimatedSection duration
+        ease: 'power2.out',
+        emptyLineDelay: 4           // Delay in seconds before showing lines after empty string
+      },
+      textAlign: 'left',         // Left-aligned text for section 2
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: false,
+      showScrollHint: false
+    },
+    { 
+      textSets: [
+        'Meet Kahuna AI',
+      ],
+      // textSetTiming: {
+      //   displayDuration: 4000,      // Show each set for 4 seconds
+      //   fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+      //   delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+      //   loop: false                   // Loop back to first set after last
+      // },
+      animationConfig: {
+        type: 'slideLeft',
+        staggerDelay: 0.4,
+        duration: 1,
+        ease: 'power2.inOut'
+      },
+      textAlign: 'center',       // Center-aligned text
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: false,
+      showScrollHint: false
+    },
+    { 
+      textSets: [
+        'Discover',
+        'Transform',
+        'Succeed'
+      ],
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
+      animationConfig: {
+        type: 'fadeIn',
+        staggerDelay: 0.3,
+        duration: 0.7,
+        ease: 'power1.out'
+      },
+      textAlign: 'right',        // Right-aligned text
+      background: '#000000', 
+      border: '1px solid #ffffff',
+      showNumber: false,
+      showScrollHint: false
+    },
+    { 
+      textSets: [
+        'Experience the',
+        'full view'
+      ],
+      textSetTiming: {
+        displayDuration: 4000,      // Show each set for 4 seconds
+        fadeOutDuration: 0.5,       // Fade out in 0.5 seconds
+        delayBetweenSets: 0.3,      // 0.3s delay between fade out and next fade in
+        loop: false                   // Loop back to first set after last
+      },
+      animationConfig: {
+        type: 'fadeSlideUp',
+        staggerDelay: 0.25,
+        duration: 0.8,
+        ease: 'power2.out'
+      },
+      textAlign: 'center',       // Center-aligned text
+      background: '#000000', 
+      border: '1x solid #ffffff',
+      showNumber: false,
+      showScrollHint: false
+    },
     ...(showFooter ? [{ 
       title: 'Footer', 
       subtitle: 'Contact & Links', 
       background: '#0A0A0A', 
-      border: '2px solid #ffffff',
-      isFooter: true // Add footer flag for section 6
+      border: '1px solid #ffffff',
+      isFooter: true
     }] : [])
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+    <div className="scroll-sync-container">
       {/* Debug Info */}
       {showDebugInfo && (
-        <div style={{
-          position: 'fixed',
-          top: '6rem',
-          left: '2rem',
-          zIndex: 20,
-          color: 'white',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          fontSize: '0.875rem'
-        }}>
+        <div className="debug-info">
           <div>ScrollSyncModel Status</div>
           <div>Initialized: {isInitialized ? '✓' : '✗'}</div>
           <div>Video: {videoRef.current ? '✓' : '✗'}</div>
           <div>Scroll Progress: {(scrollProgress * 100).toFixed(1)}%</div>
           <div>Position: ({videoPosition.x.toFixed(1)}%, {videoPosition.y.toFixed(1)}%)</div>
           <div>Scale: {videoPosition.scale.toFixed(2)}</div>
+          <div>Rotation: {videoPosition.rotation.toFixed(1)}°</div>
           <div>Size: {videoSize.width}px</div>
           <div>Header: {headerVisible ? '✓' : '✗'}</div>
-          {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
+          <div>PNG Sequence: {isInSection5 ? '✓' : '✗'}</div>
+          <div>Frame: {currentFrame}/{totalFrames}</div>
+          <div>Start Section: {(() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0 } : { startSection: 4, startProgress: 0.2 };
+            return config.startSection + 1;
+          })()}</div>
+          <div>Start Progress: {(() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startProgress: 0.0 } : { startProgress: 0.2 };
+            return (config.startProgress * 100).toFixed(0) + '%';
+          })()}</div>
+          {error && <div className="debug-error">Error: {error}</div>}
         </div>
       )}
       {/* Fixed Video */}
       <video
         ref={videoRef}
         src={videoSrc}
+        className="fixed-video"
         style={{
-          position: 'fixed',
           left: `${videoPosition.x}%`,
           top: `${videoPosition.y}%`,
-          transform: `translate(-50%, -50%) scale(${videoPosition.scale})`,
+          transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
           width: `${videoSize.width}px`,
-          height: videoSize.height,
+          height: videoSize.height
+        }}
+      />
+
+      {/* Frame Sequence Canvas for Section 5 - Full Screen */}
+      <canvas
+        ref={canvasRef}
+        className="frame-sequence-canvas"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 10,
           pointerEvents: 'none',
-          zIndex: 5,
-          objectFit: 'contain'
+          // Show PNG sequence based on configuration
+          opacity: isInSection5 ? 1 : 0,
+          transition: 'opacity 0.3s ease'
         }}
       />
 
       {/* Header - Only visible on Section 1 */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '80px',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 2rem',
-        zIndex: 15,
-        transition: 'opacity 0.3s ease',
-        opacity: headerVisible ? 1 : 0,
-        pointerEvents: headerVisible ? 'auto' : 'none'
-      }}>
+      <div className={`header ${headerVisible ? 'visible' : 'hidden'}`}>
         {/* Left Logo */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%'
-        }}>
+        <div className="header-left">
           <img 
-            src="/kahuna-logo.svg" 
+            src="/kahuna-logo-3.svg"
             alt="Kahuna Logo" 
-            style={{
-              height: '40px',
-              width: 'auto',
-              filter: 'brightness(0) invert(1)' // Make logo white
-            }}
-            onError={(e) => {
-              // Fallback to final-logo.svg if kahuna-logo.svg fails
-              e.target.src = '/final-logo.svg';
-            }}
+            className="header-logo"
           />
         </div>
 
@@ -370,27 +1319,7 @@ function ScrollSyncModel({
             console.log('Let\'s Talk button clicked!');
             // Add your contact/navigation logic here
           }}
-          style={{
-            backgroundColor: 'transparent',
-            color: 'white',
-            border: '2px solid white',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            textTransform: 'none',
-            letterSpacing: '0.5px'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = 'white';
-            e.target.style.color = 'black';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.color = 'white';
-          }}
+          className="header-button"
         >
           Let's Talk
         </button>
@@ -399,254 +1328,215 @@ function ScrollSyncModel({
       {/* Scrollable Content */}
       <div 
         ref={scrollContainerRef}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100vh',
-          overflowY: 'auto',
-          scrollBehavior: 'smooth'
-        }}
+        className="scroll-container"
       >
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            style={{
-              height: '100vh',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: section.isFooter ? 'flex-end' : 'left',
-              background: section.background,
-              border: section.border,
-              boxSizing: 'border-box',
-              paddingTop: section.hasHeader ? '80px' : '0', // Add top padding for header
-              flexDirection: section.isFooter ? 'column' : 'row'
-            }}
-          >
-            {section.isFooter ? (
-              // Footer UI from HeroScroll
-              <div style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: '4rem',
-                boxSizing: 'border-box',
-                position: "relative"
-              }}>
-                {/* Main Tagline Section */}
-                <img 
-                  src="/final-logo.svg" 
-                  alt="Kahuna Labs" 
-                  style={{
-                    position: 'absolute',
-                    top: '-120px',
-                    left: '4rem',
-                    width: '286px',
-                    height: '317px',
-                    objectFit: 'contain',
-                    filter: 'brightness(0) invert(1)',
-                    opacity: '0.1'
+        {sections.map((section, index) => {
+          const contentPosition = getContentPositionConfig()[index] || { horizontal: 'center', vertical: 'center' };
+          
+          return (
+            <div
+              key={index}
+              ref={(el) => (sectionRefs.current[index] = el)}
+              className={`section ${section.isFooter ? 'footer' : ''} section-justify-${contentPosition.horizontal} section-align-${contentPosition.vertical}`}
+              style={{
+                background: section.background,
+                border: section.border
+              }}
+            >
+              {section.isFooter ? (
+                // Footer UI from HeroScroll
+                <div className="footer-container">
+                  {/* Main Tagline Section */}
+                  <img 
+                    src="/final-logo.svg" 
+                    alt="Kahuna Labs" 
+                    className="footer-logo-bg"
+                  />
+                  <div className="footer-tagline">
+                    <div className="footer-tagline-text">
+                      <div className="footer-tagline-line">Secure. Private. Comprehensive.</div>
+                      <div className="footer-tagline-line">Enterprise Grade.</div>
+                    </div>
+                  </div>
+
+                  {/* Footer Content */}
+                  <div className="footer-content">
+                    <div className="footer-links">
+                      {/* Technology Column */}
+                      <div className="footer-column">
+                        <h3 className="footer-column-title">TECHNOLOGY</h3>
+                        <ul className="footer-links-list">
+                          <li><a href="/technology/frontline-productivity" className="footer-link">Frontline Productivity</a></li>
+                          <li><a href="/technology/agentic-ai-impact" className="footer-link">Estimate Agentic AI Impact</a></li>
+                        </ul>
+                      </div>
+
+                      {/* Company Column */}
+                      <div className="footer-column">
+                        <h3 className="footer-column-title">COMPANY</h3>
+                        <ul className="footer-links-list">
+                          <li><a href="/contact" className="footer-link">Contact us</a></li>
+                          <li><a href="/careers" className="footer-link">Careers</a></li>
+                        </ul>
+                      </div>
+
+                      <div className="footer-column">
+                        <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" className="footer-linkedin">
+                          <img 
+                            src="/LinkedIn-Icon.png" 
+                            alt="LinkedIn" 
+                            className="footer-linkedin-icon"
+                          />
+                          <span>LinkedIn</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Kahuna Labs Logo */}
+                    <div className="footer-logo-section">
+                      <div className="footer-logo-container">
+                        <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Copyright Line */}
+                  <div className="footer-copyright">
+                    <div className="footer-copyright-text">
+                      All rights reserved to Kahuna Labs. Copyright © 2025.
+                    </div>
+                    {/* <div className="footer-copyright-text">
+                      Made by Nester Labs
+                    </div> */}
+                  </div>
+                </div>
+              ) : (
+                // Regular section content
+                <div 
+                  className="section-content"
+                  style={{ 
+                    textAlign: section.textAlign || 'center'  // Apply text alignment from config
                   }}
-                />
-                <div style={{ marginBottom: '50px' }}>
-                  <div style={{
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                    fontSize: '3.5rem',
-                    fontWeight: '600',
-                    lineHeight: '1.1',
-                    margin: '0',
-                    color: '#FFFFFF'
-                  }}>
-                    <div style={{ display: 'block' }}>Secure. Private. Comprehensive.</div>
-                    <div style={{ display: 'block' }}>Enterprise Grade.</div>
-                  </div>
+                >
+                  {section.showNumber !== false && (
+                    <div className="section-number">SECTION {index + 1}</div>
+                  )}
+                  
+                  {/* Render textSets with animations if provided */}
+                  {section.textSets ? (
+                    <div className="text-sets-container">
+                      {/* Check if textSets is an object with multiple sets or a simple array */}
+                      {Array.isArray(section.textSets) ? (
+                        // Simple array - original behavior
+                        section.textSets.map((text, textIndex) => (
+                          <div 
+                            key={textIndex} 
+                            className="text-set-line"
+                            style={{ opacity: 0 }}
+                          >
+                            {text}
+                          </div>
+                        ))
+                      ) : (
+                        // Object with multiple sets - cycling behavior
+                        // Render all sets, each in its own absolutely positioned group
+                        Object.entries(section.textSets).map(([setKey, textArray]) => (
+                          <div 
+                            key={setKey}
+                            className="text-set-group"
+                            data-set={setKey}
+                          >
+                            {textArray.map((text, textIndex) => (
+                              <div 
+                                key={`${setKey}-${textIndex}`} 
+                                className="text-set-line"
+                                data-set={setKey}
+                                style={{ opacity: 0 }}
+                              >
+                                {text}
+                              </div>
+                            ))}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    // Fallback to traditional title/subtitle if no textSets
+                    <>
+                      {section.title && <h2 className="section-title">{section.title}</h2>}
+                      {section.subtitle && <p className="section-subtitle">{section.subtitle}</p>}
+                      {section.description && (
+                        <p className="section-description">{section.description}</p>
+                      )}
+                    </>
+                  )}
+                  
+                  {section.showScrollHint !== false && (
+                    <div className="section-scroll-hint">
+                      <p className="section-scroll-text">
+                        Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Footer Content */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  width: '100%',
-                  marginBottom: '4rem'
-                }}>
-                  <div style={{ display: 'flex', gap: '120px' }}>
-                    {/* Technology Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <h3 style={{
-                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: '#AAAAAA',
-                        marginBottom: '12px',
-                        margin: '0 0 12px 0'
-                      }}>TECHNOLOGY</h3>
-                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/technology/frontline-productivity" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Frontline Productivity</a></li>
-                        <li><a href="/technology/agentic-ai-impact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Estimate Agentic AI Impact</a></li>
-                      </ul>
-                    </div>
-
-                    {/* Company Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <h3 style={{
-                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: '#AAAAAA',
-                        marginBottom: '12px',
-                        margin: '0 0 12px 0'
-                      }}>COMPANY</h3>
-                      <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', color: '#838485' }}>
-                        <li><a href="/contact" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Contact us</a></li>
-                        <li><a href="/careers" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left', display: 'block' }}>Careers</a></li>
-                      </ul>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <a href="https://linkedin.com/company/kahuna-labs" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#838485', textDecoration: 'none', transition: 'color 0.3s ease', textAlign: 'left' }}>
-                        <div style={{ width: '20px', height: '20px', backgroundColor: '#838485', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000000', fontFamily: "'Inter', sans-serif" }}>in</span>
-                        </div>
-                        <span>LinkedIn</span>
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Kahuna Labs Logo */}
-                  <div style={{ display: 'flex', height: '100%', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <img src="/final-logo.svg" alt="Kahuna Labs" style={{ width: '34px', height: '38px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                      <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '1rem', fontWeight: '400', color: '#FFFFFF' }}>Kahuna Labs</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Copyright Line */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
-                    All rights reserved to Kahuna Labs. Copyright © 2025.
-                  </div>
-                  <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: '0.875rem', fontWeight: '400', color: '#414243' }}>
-                    Made by Nester Labs
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Regular section content
-            <div style={{
-              textAlign: 'center',
-              zIndex: 10,
-              padding: '2rem',
-              backdropFilter: 'blur(12px)',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
-              }}>
-                <div style={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginBottom: '1rem',
-                  fontWeight: 'bold'
-                }}>SECTION {index + 1}</div>
-              <h2 style={{
-                fontSize: '3.75rem',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '1rem'
-              }}>{section.title}</h2>
-              <p style={{
-                fontSize: '1.5rem',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>{section.subtitle}</p>
-              <div style={{ marginTop: '1.5rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                <p style={{ fontSize: '0.875rem' }}>
-                  Scroll {index < sections.length - 1 ? '↓' : 'up ↑'}
-                </p>
-              </div>
+              )}
             </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Scroll Indicator */}
       {showScrollIndicator && (
-      <div style={{
-        position: 'fixed',
-        bottom: '2rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        color: 'rgba(255, 255, 255, 0.6)',
-        fontSize: '0.875rem'
-      }}>
+      <div className="scroll-indicator">
           {scrollIndicatorText}
         </div>
       )}
 
       {/* Debug Controls */}
       {showDebugControls && (
-        <div style={{
-          position: 'fixed',
-          top: debugControlsPosition === 'top-left' ? '6rem' : '6rem',
-          right: debugControlsPosition === 'top-right' ? '2rem' : 'auto',
-          left: debugControlsPosition === 'top-left' ? '2rem' : 'auto',
-          zIndex: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
+        <div className={`debug-controls ${debugControlsPosition}`}>
         <button
           onClick={() => {
-            setVideoPosition({ x: 75, y: 50, scale: 1 });
+            setVideoPosition({ x: 75, y: 50, scale: 1, rotation: 0 });
             console.log('Manual position set to right');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button primary"
         >
           Test Move Right
         </button>
         <button
           onClick={() => {
-            setVideoPosition({ x: 50, y: 50, scale: 1 });
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 0 });
             console.log('Manual position set to center');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button primary"
         >
           Test Move Center
+        </button>
+        <button
+          onClick={() => {
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: 45 });
+            console.log('Manual rotation set to 45 degrees');
+          }}
+          className="debug-button purple"
+        >
+          Test 45° Rotation
+        </button>
+        <button
+          onClick={() => {
+            setVideoPosition({ x: 50, y: 50, scale: 1, rotation: -30 });
+            console.log('Manual rotation set to -30 degrees');
+          }}
+          className="debug-button purple"
+        >
+          Test -30° Rotation
         </button>
         <button
           onClick={() => {
             setVideoSize({ width: 300, height: 'auto' });
             console.log('Video size set to small');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button purple"
         >
           Small Size
         </button>
@@ -655,14 +1545,7 @@ function ScrollSyncModel({
             setVideoSize({ width: 600, height: 'auto' });
             console.log('Video size set to large');
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button purple"
         >
           Large Size
         </button>
@@ -680,14 +1563,7 @@ function ScrollSyncModel({
               }
             }, 200);
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button red"
         >
           Test Size Cycle
         </button>
@@ -696,14 +1572,7 @@ function ScrollSyncModel({
             setHeaderVisible(!headerVisible);
             console.log('Header visibility toggled:', !headerVisible);
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: headerVisible ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className={`debug-button ${headerVisible ? 'green' : 'red'}`}
         >
           {headerVisible ? 'Hide Header' : 'Show Header'}
         </button>
@@ -715,14 +1584,7 @@ function ScrollSyncModel({
             // Force re-render by updating a state
             window.location.reload();
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255, 107, 107, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button red"
         >
           Retry Init
         </button>
@@ -746,16 +1608,26 @@ function ScrollSyncModel({
               }
             });
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button green"
         >
           Toggle Video
+        </button>
+        <button
+          onClick={() => {
+            const viewport = window.innerWidth <= 480 ? 'mobile-small' : 
+                           window.innerWidth <= 767 ? 'mobile-large' :
+                           window.innerWidth <= 1023 ? 'tablet' :
+                           window.innerWidth <= 1924 ? 'desktop' : 'large-desktop';
+            const config = viewport === 'desktop' ? { startSection: 4, startProgress: 0.0, endSection: 4, endProgress: 1.0 } : { startSection: 4, startProgress: 0.2, endSection: 4, endProgress: 1.0 };
+            console.log('PNG Sequence Config:', config);
+            console.log('Current Section:', Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+            console.log('Section Progress:', scrollProgress * (showFooter ? 6 : 5) - Math.floor(scrollProgress * (showFooter ? 6 : 5)));
+            console.log('Should Show PNG:', isInSection5);
+            console.log('Current Frame:', currentFrame);
+          }}
+          className="debug-button blue"
+        >
+          PNG Debug Info
         </button>
         <button
           onClick={() => {
@@ -774,16 +1646,9 @@ function ScrollSyncModel({
               });
             }
           }}
-          style={{
-            padding: '0.5rem',
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.25rem',
-            cursor: 'pointer'
-          }}
+          className="debug-button blue"
         >
-          Debug Info
+          Video Debug Info
         </button>
       </div>
       )}
