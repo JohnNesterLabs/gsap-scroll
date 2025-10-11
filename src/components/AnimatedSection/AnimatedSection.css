@@ -76,7 +76,7 @@
 }
 
 .text-position-top {
-  align-items: flex-start;
+  /* align-items: flex-start; */
   justify-content: center;
   /* padding-top: 100px; */
 }
