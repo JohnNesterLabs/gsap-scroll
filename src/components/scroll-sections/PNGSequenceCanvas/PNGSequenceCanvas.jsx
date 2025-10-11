@@ -21,6 +21,14 @@ const PNGSequenceCanvas = ({
       return Promise.resolve(frameImagesRef.current[frameNumber]);
     }
 
+    // Check if image is already preloaded by the asset preloader
+    const imageSrc = `${folderPath}${framePrefix}${String(frameNumber).padStart(4, '0')}${frameSuffix}`;
+    if (window.preloadedImages && window.preloadedImages.has(imageSrc)) {
+      const preloadedImg = window.preloadedImages.get(imageSrc);
+      frameImagesRef.current[frameNumber] = preloadedImg;
+      return Promise.resolve(preloadedImg);
+    }
+
     // Cancel any pending request for this frame
     if (pendingRequestsRef.current.has(frameNumber)) {
       const pendingRequest = pendingRequestsRef.current.get(frameNumber);
@@ -35,7 +43,6 @@ const PNGSequenceCanvas = ({
     img.crossOrigin = 'anonymous'; // Enable CORS for better caching
     img.decoding = 'async'; // Use async decoding
     img.loading = 'lazy'; // Use lazy loading for preloaded frames
-    const imageSrc = `${folderPath}${framePrefix}${String(frameNumber).padStart(4, '0')}${frameSuffix}`;
     
     // Create abort controller for this request
     const controller = new AbortController();
@@ -51,6 +58,12 @@ const PNGSequenceCanvas = ({
       img.onload = () => {
         clearTimeout(timeout);
         pendingRequestsRef.current.delete(frameNumber);
+        
+        // Store in global cache for future use
+        if (window.preloadedImages) {
+          window.preloadedImages.set(imageSrc, img);
+        }
+        
         resolve(img);
       };
       
