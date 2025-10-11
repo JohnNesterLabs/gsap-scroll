@@ -83,12 +83,12 @@ export default function Demo() {
         section7: { width: 0, height: "auto" }, // Footer
       },
       "large-desktop": {
-        section1: { width: 1600, height: "auto" },
-        section2: { width: 1600, height: "auto" },
-        section3: { width: 2200, height: "auto" },
-        section4: { width: 1400, height: "auto" },
-        section5: { width: 1400, height: "auto" },
-        section6: { width: 1600, height: "auto" },
+        section1: { width: 2200, height: "auto" },
+        section2: { width: 2300, height: "auto" },
+        section3: { width: 3000, height: "auto" },
+        section4: { width: 2380, height: "auto" },
+        section5: { width: 3250, height: "auto" },
+        section6: { width: 2500, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
     };
@@ -144,10 +144,10 @@ export default function Demo() {
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
       "large-desktop": [
-        { x: 50, y: 115 }, // Section 1 - Center
-        { x: 50, y: 55 }, // Section 2 - Center (aligned with text)
+        { x: 45, y: 110 }, // Section 1 - Center
+        { x: 90, y: 65 }, // Section 2 - Center (aligned with text)
         { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
-        { x: 50, y: 50 }, // Section 4 - Center
+        { x: 45, y: 50 }, // Section 4 - Center
         { x: 50, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
