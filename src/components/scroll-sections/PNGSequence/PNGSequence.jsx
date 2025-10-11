@@ -27,6 +27,8 @@ const PNGSequence = ({
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [timelineProgress, setTimelineProgress] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
@@ -41,13 +43,13 @@ const PNGSequence = ({
     return frameNum.toString().padStart(4, '0');
   };
 
-  // Preload image with proper request management
+  // Preload image with proper request management and performance optimizations
   const preloadImage = useCallback((frameNumber) => {
     const frameKey = frameNumber;
     
-    // Return cached image if already loaded
+    // Return cached image if already loaded (as resolved Promise)
     if (preloadedImagesRef.current.has(frameKey)) {
-      return preloadedImagesRef.current.get(frameKey);
+      return Promise.resolve(preloadedImagesRef.current.get(frameKey));
     }
 
     // Cancel any pending request for this frame
@@ -59,23 +61,34 @@ const PNGSequence = ({
       pendingRequestsRef.current.delete(frameKey);
     }
 
-    // Create new image element
+    // Create new image element with performance optimizations
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // Enable CORS for better caching
+    img.decoding = 'async'; // Use async decoding
+    img.loading = 'eager'; // Load immediately for current frame
+    
     const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(frameNumber)}${frameSuffix}`;
     
     // Create abort controller for this request
     const controller = new AbortController();
     pendingRequestsRef.current.set(frameKey, controller);
 
-    // Set up image loading
+    // Set up image loading with timeout
     const loadPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        pendingRequestsRef.current.delete(frameKey);
+        reject(new Error(`Timeout loading frame ${frameNumber}`));
+      }, 10000); // 10 second timeout instead of 3 minutes
+
       img.onload = () => {
+        clearTimeout(timeout);
         preloadedImagesRef.current.set(frameKey, img);
         pendingRequestsRef.current.delete(frameKey);
         resolve(img);
       };
       
       img.onerror = () => {
+        clearTimeout(timeout);
         pendingRequestsRef.current.delete(frameKey);
         console.warn(`Failed to load frame ${frameNumber}`);
         reject(new Error(`Failed to load frame ${frameNumber}`));
@@ -88,25 +101,34 @@ const PNGSequence = ({
       pendingRequestsRef.current.delete(frameKey);
     });
 
-    // Start loading
+    // Start loading with priority
     img.src = imageSrc;
     
     return loadPromise;
   }, [folderPath, framePrefix, frameSuffix]);
 
-  // Batch preload nearby frames for smoother scrolling
+  // Batch preload nearby frames for smoother scrolling with throttling
   const preloadNearbyFrames = useCallback((centerFrame) => {
-    const preloadRange = 5; // Preload 5 frames before and after
+    const preloadRange = 3; // Reduced from 5 to 3 frames to reduce network load
     const startFrame = Math.max(1, centerFrame - preloadRange);
     const endFrame = Math.min(totalFrames, centerFrame + preloadRange);
     
+    // Throttle preloading to avoid overwhelming the network
+    const preloadQueue = [];
     for (let frame = startFrame; frame <= endFrame; frame++) {
       if (!preloadedImagesRef.current.has(frame)) {
+        preloadQueue.push(frame);
+      }
+    }
+    
+    // Load frames with delay to prevent network congestion
+    preloadQueue.forEach((frame, index) => {
+      setTimeout(() => {
         preloadImage(frame).catch(() => {
           // Silently handle preload failures
         });
-      }
-    }
+      }, index * 100); // 100ms delay between each preload
+    });
   }, [totalFrames, preloadImage]);
 
   // Cleanup function for pending requests
@@ -284,16 +306,22 @@ const PNGSequence = ({
   // Handle image loading errors
   const handleImageError = () => {
     console.warn(`Failed to load frame ${currentFrame}`);
+    setIsLoading(false);
+    setLoadError(true);
   };
 
   // Handle image load success
   const handleImageLoad = () => {
-    // Image loaded successfully
+    setIsLoading(false);
+    setLoadError(false);
   };
 
-  // Update image source with preloading
+  // Update image source with preloading and loading states
   useEffect(() => {
     if (!isVisible || !imgRef.current) return;
+
+    setIsLoading(true);
+    setLoadError(false);
 
     // Clear any existing timeout
     if (frameLoadTimeoutRef.current) {
@@ -305,6 +333,7 @@ const PNGSequence = ({
     if (preloadedImg && preloadedImg.complete) {
       // Use preloaded image
       imgRef.current.src = preloadedImg.src;
+      setIsLoading(false);
     } else {
       // Fallback to direct loading with timeout
       const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
@@ -315,8 +344,10 @@ const PNGSequence = ({
         if (imgRef.current && imgRef.current.src === imageSrc) {
           // Request is taking too long, try to cancel it
           imgRef.current.src = '';
+          setLoadError(true);
+          setIsLoading(false);
         }
-      }, 3000); // 3 second timeout
+      }, 5000); // 5 second timeout
     }
   }, [currentFrame, isVisible, folderPath, framePrefix, frameSuffix]);
 
@@ -328,6 +359,35 @@ const PNGSequence = ({
 
   return (
     <div className="png-sequence-container">
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading frame {currentFrame}...</div>
+        </div>
+      )}
+      
+      {/* Error overlay */}
+      {loadError && (
+        <div className="error-overlay">
+          <div className="error-text">Failed to load frame {currentFrame}</div>
+          <button 
+            className="retry-button" 
+            onClick={() => {
+              setLoadError(false);
+              setIsLoading(true);
+              // Force reload the current frame
+              const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
+              if (imgRef.current) {
+                imgRef.current.src = imageSrc;
+              }
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
       <img
         ref={imgRef}
         src={imageSrc}
@@ -335,6 +395,7 @@ const PNGSequence = ({
         className="png-sequence-frame"
         onError={handleImageError}
         onLoad={handleImageLoad}
+        style={{ opacity: isLoading ? 0.3 : 1 }}
       />
 
       {/* Timeline Overlay */}

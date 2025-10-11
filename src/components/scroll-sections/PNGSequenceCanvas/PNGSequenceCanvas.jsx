@@ -16,9 +16,9 @@ const PNGSequenceCanvas = ({
 
   // Preload frame images with request management
   const preloadFrame = useCallback((frameNumber) => {
-    // Return cached image if already loaded
+    // Return cached image if already loaded (as resolved Promise)
     if (frameImagesRef.current[frameNumber] && frameImagesRef.current[frameNumber].complete) {
-      return frameImagesRef.current[frameNumber];
+      return Promise.resolve(frameImagesRef.current[frameNumber]);
     }
 
     // Cancel any pending request for this frame
@@ -30,23 +30,37 @@ const PNGSequenceCanvas = ({
       pendingRequestsRef.current.delete(frameNumber);
     }
 
-    // Create new image element
+    // Create new image element with performance optimizations
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // Enable CORS for better caching
+    img.decoding = 'async'; // Use async decoding
+    img.loading = 'lazy'; // Use lazy loading for preloaded frames
     const imageSrc = `${folderPath}${framePrefix}${String(frameNumber).padStart(4, '0')}${frameSuffix}`;
     
     // Create abort controller for this request
     const controller = new AbortController();
     pendingRequestsRef.current.set(frameNumber, controller);
 
-    // Set up image loading
-    img.onload = () => {
+    // Set up image loading with timeout and Promise
+    const timeout = setTimeout(() => {
       pendingRequestsRef.current.delete(frameNumber);
-    };
-    
-    img.onerror = () => {
-      pendingRequestsRef.current.delete(frameNumber);
-      console.warn(`Failed to load frame ${frameNumber}`);
-    };
+      console.warn(`Timeout loading frame ${frameNumber}`);
+    }, 10000); // 10 second timeout
+
+    const loadPromise = new Promise((resolve, reject) => {
+      img.onload = () => {
+        clearTimeout(timeout);
+        pendingRequestsRef.current.delete(frameNumber);
+        resolve(img);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        pendingRequestsRef.current.delete(frameNumber);
+        console.warn(`Failed to load frame ${frameNumber}`);
+        reject(new Error(`Failed to load frame ${frameNumber}`));
+      };
+    });
 
     // Handle abort signal
     controller.signal.addEventListener('abort', () => {
@@ -58,7 +72,7 @@ const PNGSequenceCanvas = ({
     img.src = imageSrc;
     frameImagesRef.current[frameNumber] = img;
     
-    return img;
+    return loadPromise;
   }, [folderPath, framePrefix, frameSuffix]);
 
   // Cleanup function for pending requests
