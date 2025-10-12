@@ -3,6 +3,7 @@ import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
+import WebPSequence from "../WebPSequence/WebPSequence";
 
 // Get initial video position and size for section 1 based on screen size
 const getInitialVideoConfig = () => {
@@ -96,6 +97,12 @@ export default function Demo() {
       top: "60%", // '60%' = below timeline, '40%' = above timeline
       left: "50%", // '50%' = center, '20%' = left, '80%' = right
     },
+  };
+
+  // Check if device is mobile
+  const isMobileDevice = () => {
+    const width = window.innerWidth;
+    return width <= 768; // Use mobile video for tablets and below
   };
 
   // Video size configuration for each section
@@ -860,33 +867,60 @@ export default function Demo() {
           }
         />
 
-        {/* PNG Sequence Animation - Canvas-based for smooth performance */}
-        <PNGSequence
-          startSection={PNG_SEQUENCE_CONFIG.startSection}
-          totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
-          framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
-          frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
-          folderPath={PNG_SEQUENCE_CONFIG.folderPath}
-          activeSection={activeSection}
-          sectionProgress={sectionProgress}
-          // Scroll stop functionality - using configuration
-          stopFrame={SCROLL_STOP_CONFIG.stopFrame}
-          timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
-          timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
-          playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
-          // Video popup functionality
-          // videoSrc="/demo1.mp4"
-          videoSrc="/Final-Ticket-1-(WIP).mp4"
-          showVideoPopup={true}
-          isVideoPreloaded={isVideoPreloaded}
-          videoPreloadProgress={videoPreloadProgress}
-          onTimelineComplete={() => {
-            console.log("Timeline completed - showing play button");
-          }}
-          onPlayButtonClick={() => {
-            console.log("Play button clicked - resuming scroll");
-          }}
-        />
+        {/* Responsive Animation - PNG Sequence for Desktop, WebP Sequence for Mobile */}
+        {isMobileDevice() ? (
+          <WebPSequence
+            startSection={PNG_SEQUENCE_CONFIG.startSection}
+            totalFrames={436} // Updated to match 30fps WebP frames extracted
+            framePrefix="mobile_frame_"
+            frameSuffix=".webp"
+            folderPath="/frames-mobile-30fps/"
+            activeSection={activeSection}
+            sectionProgress={sectionProgress}
+            // Scroll stop functionality - using configuration
+            stopFrame={234} // Adjusted for mobile sequence (234 out of 436 frames - similar to desktop)
+            timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
+            timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
+            playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+            // Video popup functionality
+            videoSrc="/Final-Ticket-1-(WIP).mp4"
+            showVideoPopup={true}
+            isVideoPreloaded={isVideoPreloaded}
+            videoPreloadProgress={videoPreloadProgress}
+            onTimelineComplete={() => {
+              console.log("Mobile WebP sequence timeline completed - showing play button");
+            }}
+            onPlayButtonClick={() => {
+              console.log("Mobile WebP sequence play button clicked - resuming scroll");
+            }}
+          />
+        ) : (
+          <PNGSequence
+            startSection={PNG_SEQUENCE_CONFIG.startSection}
+            totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
+            framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
+            frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
+            folderPath={PNG_SEQUENCE_CONFIG.folderPath}
+            activeSection={activeSection}
+            sectionProgress={sectionProgress}
+            // Scroll stop functionality - using configuration
+            stopFrame={SCROLL_STOP_CONFIG.stopFrame}
+            timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
+            timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
+            playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+            // Video popup functionality
+            videoSrc="/Final-Ticket-1-(WIP).mp4"
+            showVideoPopup={true}
+            isVideoPreloaded={isVideoPreloaded}
+            videoPreloadProgress={videoPreloadProgress}
+            onTimelineComplete={() => {
+              console.log("Desktop PNG sequence timeline completed - showing play button");
+            }}
+            onPlayButtonClick={() => {
+              console.log("Desktop PNG sequence play button clicked - resuming scroll");
+            }}
+          />
+        )}
         {/* <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[4]}
