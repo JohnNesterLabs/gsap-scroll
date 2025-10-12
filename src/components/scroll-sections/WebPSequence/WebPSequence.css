@@ -4,7 +4,8 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 15 !important; /* Higher than video and other elements */
+  z-index: 15 !important;
+  /* Higher than video and other elements */
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -15,7 +16,8 @@
   overflow: hidden;
   /* Performance optimizations */
   will-change: transform;
-  transform: translateZ(0); /* Force hardware acceleration */
+  transform: translateZ(0);
+  /* Force hardware acceleration */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   /* Optimize compositing */
@@ -25,10 +27,12 @@
 .webp-sequence-frame {
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: cover !important; /* Fill entire container while maintaining aspect ratio */
+  object-fit: cover !important;
+  /* Fill entire container while maintaining aspect ratio */
   object-position: center;
   opacity: 1;
-  transition: opacity 0.05s ease-out; /* Faster frame transitions for smoother performance */
+  transition: opacity 0.05s ease-out;
+  /* Faster frame transitions for smoother performance */
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -40,7 +44,8 @@
   left: 0;
   /* Hardware acceleration optimizations */
   will-change: opacity, transform;
-  transform: translateZ(0); /* Force hardware acceleration */
+  transform: translateZ(0);
+  /* Force hardware acceleration */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   /* Image optimization */
@@ -54,7 +59,7 @@
     width: 100vw;
     height: 100vh;
   }
-  
+
   .webp-sequence-frame {
     object-fit: cover;
   }
@@ -65,7 +70,7 @@
     width: 100vw;
     height: 100vh;
   }
-  
+
   .webp-sequence-frame {
     object-fit: cover;
   }
@@ -326,6 +331,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -336,6 +342,7 @@
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -348,18 +355,22 @@
     padding: 16px 24px;
     gap: 10px;
   }
+
   .timeline-track {
     width: 160px;
     height: 3px;
   }
+
   .timeline-text {
     font-size: 12px;
   }
+
   .play-button {
     padding: 12px 24px;
     font-size: 14px;
     gap: 8px;
   }
+
   .play-icon {
     width: 16px;
     height: 16px;
@@ -371,18 +382,22 @@
     padding: 12px 20px;
     gap: 8px;
   }
+
   .timeline-track {
     width: 120px;
     height: 3px;
   }
+
   .timeline-text {
     font-size: 11px;
   }
+
   .play-button {
     padding: 10px 20px;
     font-size: 13px;
     gap: 6px;
   }
+
   .play-icon {
     width: 14px;
     height: 14px;
@@ -396,19 +411,19 @@
     max-height: 95vh;
     padding: 15px;
   }
-  
+
   .video-modal-close {
     width: 35px;
     height: 35px;
     top: 8px;
     right: 8px;
   }
-  
+
   .video-modal-close svg {
     width: 18px;
     height: 18px;
   }
-  
+
   .video-modal-video {
     max-width: 100%;
     max-height: 70vh;
@@ -419,17 +434,96 @@
   .video-modal-content {
     padding: 10px;
   }
-  
+
   .video-modal-close {
     width: 30px;
     height: 30px;
     top: 5px;
     right: 5px;
   }
-  
+
   .video-modal-close svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* Troubleshooting Text Overlay Styles */
+.troubleshooting-text-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.troubleshooting-text {
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 500;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  max-width: 90%;
+  white-space: nowrap;
+  animation: fadeInText 1.2s ease-out;
+}
+
+@keyframes fadeInText {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive Troubleshooting Text */
+@media (max-width: 1024px) {
+  .troubleshooting-text {
+    font-size: 2rem;
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 768px) {
+  .troubleshooting-text {
+    font-size: 1.5rem;
+    max-width: 90%;
+    line-height: 1.3;
+  }
+}
+
+@media (max-width: 480px) {
+  .troubleshooting-text {
+    font-size: 1.2rem;
+    max-width: 95%;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 360px) {
+  .troubleshooting-text {
+    font-size: 1rem;
+    max-width: 98%;
   }
 }
 
@@ -447,6 +541,7 @@
     opacity: 0;
     transform: translate(-50%, -50%) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) translateY(0);

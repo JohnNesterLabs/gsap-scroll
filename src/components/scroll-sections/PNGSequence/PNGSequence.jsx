@@ -467,6 +467,16 @@ const PNGSequence = ({
             </button>
           </div>
         )}
+
+      {/* Troubleshooting Map Text Overlay - Visible from frame 4 to frame 50 */}
+      {currentFrame >= 4 && currentFrame <= 100 && (
+        <div className="troubleshooting-text-overlay">
+          <div className="troubleshooting-text">
+            AI that automatically builds and nurtures your Troubleshooting Map
+          </div>
+        </div>
+      )}
+
       {/* Video Modal Popup */}
       {showVideoModal && (
         <div className="video-modal-overlay" onClick={handleVideoModalClose}>

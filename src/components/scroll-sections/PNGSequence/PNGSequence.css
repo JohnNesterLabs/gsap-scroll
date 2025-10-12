@@ -4,7 +4,8 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 15 !important; /* Higher than video and other elements */
+  z-index: 15 !important;
+  /* Higher than video and other elements */
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -18,10 +19,12 @@
 .png-sequence-frame {
   width: 100vw !important;
   height: 100vh !important;
-  object-fit: cover !important; /* Fill entire container while maintaining aspect ratio */
+  object-fit: cover !important;
+  /* Fill entire container while maintaining aspect ratio */
   object-position: center;
   opacity: 1;
-  transition: opacity 0.1s ease-out; /* Smooth frame transitions */
+  transition: opacity 0.1s ease-out;
+  /* Smooth frame transitions */
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -39,7 +42,7 @@
     width: 100vw;
     height: 100vh;
   }
-  
+
   .png-sequence-frame {
     object-fit: cover;
   }
@@ -50,7 +53,7 @@
     width: 100vw;
     height: 100vh;
   }
-  
+
   .png-sequence-frame {
     object-fit: cover;
   }
@@ -103,8 +106,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -170,6 +178,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -184,6 +193,7 @@
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -193,6 +203,7 @@
   pointer-events: none;
   user-select: none;
 }
+
 .timeline-container {
   display: flex;
   flex-direction: column;
@@ -204,6 +215,7 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .timeline-track {
   width: 200px;
   height: 4px;
@@ -212,6 +224,7 @@
   overflow: hidden;
   position: relative;
 }
+
 .timeline-progress {
   height: 100%;
   background: linear-gradient(90deg, #00D4FF 0%, #0099CC 100%);
@@ -219,6 +232,7 @@
   transition: width 0.1s ease-out;
   position: relative;
 }
+
 .timeline-progress::after {
   content: '';
   position: absolute;
@@ -231,6 +245,7 @@
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
+
 .timeline-text {
   color: white;
   font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -239,11 +254,13 @@
   text-align: center;
   min-width: 30px;
 }
+
 /* Play Button Styles */
 .play-button-overlay {
   pointer-events: auto;
   user-select: none;
 }
+
 .play-button {
   display: flex;
   align-items: center;
@@ -262,84 +279,103 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 .play-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(0, 212, 255, 0.4);
   background: linear-gradient(135deg, #00E5FF 0%, #00AACC 100%);
 }
+
 .play-button:active {
   transform: translateY(0);
   box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
 }
+
 .play-icon {
   width: 20px;
   height: 20px;
   transition: transform 0.2s ease;
 }
+
 .play-button:hover .play-icon {
   transform: scale(1.1);
 }
+
 .play-text {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
 /* Responsive Timeline Styles */
 @media (max-width: 768px) {
   .timeline-container {
     padding: 16px 24px;
     gap: 10px;
   }
+
   .timeline-track {
     width: 160px;
     height: 3px;
   }
+
   .timeline-text {
     font-size: 12px;
   }
+
   .play-button {
     padding: 12px 24px;
     font-size: 14px;
     gap: 8px;
   }
+
   .play-icon {
     width: 16px;
     height: 16px;
   }
 }
+
 @media (max-width: 480px) {
   .timeline-container {
     padding: 12px 20px;
     gap: 8px;
   }
+
   .timeline-track {
     width: 120px;
     height: 3px;
   }
+
   .timeline-text {
     font-size: 11px;
   }
+
   .play-button {
     padding: 10px 20px;
     font-size: 13px;
     gap: 6px;
   }
+
   .play-icon {
     width: 14px;
     height: 14px;
   }
 }
+
 /* Animation for timeline and play button appearance */
 .timeline-overlay {
   animation: slideInUp 0.5s ease-out;
 }
+
 .play-button-overlay {
   animation: slideInUp 0.5s ease-out 0.2s both;
 }
+
 @keyframes slideInUp {
   from {
     opacity: 0;
     transform: translate(-50%, -50%) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) translateY(0);
@@ -474,6 +510,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -484,9 +521,89 @@
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Troubleshooting Text Overlay Styles */
+.troubleshooting-text-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.troubleshooting-text {
+  font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 500;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  max-width: 90%;
+  white-space: nowrap;
+  animation: fadeInText 1.2s ease-out;
+}
+
+@keyframes fadeInText {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive Troubleshooting Text */
+@media (max-width: 1024px) {
+  .troubleshooting-text {
+    font-size: 2rem;
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 768px) {
+  .troubleshooting-text {
+    font-size: 1.5rem;
+    max-width: 90%;
+    line-height: 1.3;
+  }
+}
+
+@media (max-width: 480px) {
+  .troubleshooting-text {
+    font-size: 1.2rem;
+    max-width: 95%;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 360px) {
+  .troubleshooting-text {
+    font-size: 1rem;
+    max-width: 98%;
   }
 }
 
@@ -497,19 +614,19 @@
     max-height: 95vh;
     padding: 15px;
   }
-  
+
   .video-modal-close {
     width: 35px;
     height: 35px;
     top: 8px;
     right: 8px;
   }
-  
+
   .video-modal-close svg {
     width: 18px;
     height: 18px;
   }
-  
+
   .video-modal-video {
     max-width: 100%;
     max-height: 70vh;
@@ -520,14 +637,14 @@
   .video-modal-content {
     padding: 10px;
   }
-  
+
   .video-modal-close {
     width: 30px;
     height: 30px;
     top: 5px;
     right: 5px;
   }
-  
+
   .video-modal-close svg {
     width: 16px;
     height: 16px;
