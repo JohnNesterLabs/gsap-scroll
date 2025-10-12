@@ -59,6 +59,11 @@ export default function Demo() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [sectionProgress, setSectionProgress] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Video preloading state
+  const [isVideoPreloaded, setIsVideoPreloaded] = useState(false);
+  const [videoPreloadProgress, setVideoPreloadProgress] = useState(0);
+  const preloadVideoRef = useRef(null);
 
   // PNG Sequence Configuration
   // CONFIGURATION: Change startSection to control when PNG sequence starts
@@ -660,6 +665,62 @@ export default function Demo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Video preloading - Start immediately on component mount
+  useEffect(() => {
+    const preloadVideo = () => {
+      const video = document.createElement('video');
+      video.src = '/Final-Ticket-1-(WIP).mp4';
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      
+      // Store reference for cleanup
+      preloadVideoRef.current = video;
+      
+      // Track loading progress
+      video.addEventListener('loadstart', () => {
+        console.log('Video preloading started...');
+      });
+      
+      video.addEventListener('progress', () => {
+        if (video.buffered.length > 0) {
+          const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+          const duration = video.duration;
+          if (duration > 0) {
+            const progress = (bufferedEnd / duration) * 100;
+            setVideoPreloadProgress(progress);
+            console.log(`Video preload progress: ${progress.toFixed(1)}%`);
+          }
+        }
+      });
+      
+      video.addEventListener('canplaythrough', () => {
+        console.log('Video preloading completed!');
+        setIsVideoPreloaded(true);
+        setVideoPreloadProgress(100);
+      });
+      
+      video.addEventListener('error', (e) => {
+        console.error('Video preloading failed:', e);
+        // Still mark as preloaded to avoid blocking the app
+        setIsVideoPreloaded(true);
+      });
+      
+      // Start loading
+      video.load();
+    };
+    
+    preloadVideo();
+    
+    // Cleanup
+    return () => {
+      if (preloadVideoRef.current) {
+        preloadVideoRef.current.remove();
+        preloadVideoRef.current = null;
+      }
+    };
+  }, []);
+
   // Initialize video - Only when component is initialized
   useEffect(() => {
     if (!isInitialized) return;
@@ -814,8 +875,11 @@ export default function Demo() {
           timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
           playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
           // Video popup functionality
-          videoSrc="/demo1.mp4"
+          // videoSrc="/demo1.mp4"
+          videoSrc="/Final-Ticket-1-(WIP).mp4"
           showVideoPopup={true}
+          isVideoPreloaded={isVideoPreloaded}
+          videoPreloadProgress={videoPreloadProgress}
           onTimelineComplete={() => {
             console.log("Timeline completed - showing play button");
           }}
