@@ -13,6 +13,13 @@
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden;
+  /* Performance optimizations */
+  will-change: transform;
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Optimize compositing */
+  contain: layout style paint;
 }
 
 .webp-sequence-frame {
@@ -21,7 +28,7 @@
   object-fit: cover !important; /* Fill entire container while maintaining aspect ratio */
   object-position: center;
   opacity: 1;
-  transition: opacity 0.1s ease-out; /* Smooth frame transitions */
+  transition: opacity 0.05s ease-out; /* Faster frame transitions for smoother performance */
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -31,6 +38,14 @@
   position: absolute;
   top: 0;
   left: 0;
+  /* Hardware acceleration optimizations */
+  will-change: opacity, transform;
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Image optimization */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Responsive adjustments */

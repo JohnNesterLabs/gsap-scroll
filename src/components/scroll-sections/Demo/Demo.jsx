@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
+import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 
 // Get initial video position and size for section 1 based on screen size
 const getInitialVideoConfig = () => {
@@ -59,6 +60,9 @@ export default function Demo() {
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [sectionProgress, setSectionProgress] = useState(0);
+
+  // Use the asset preloader hook to preload all frames
+  const { progress: preloadProgress, isLoading: isPreloading, error: preloadError } = useAssetPreloader();
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Video preloading state
@@ -106,7 +110,7 @@ export default function Demo() {
   };
 
   // Video size configuration for each section
-  const getVideoSizeConfig = () => {
+  const getVideoSizeConfig = useCallback(() => {
     const viewport = (() => {
       const width = window.innerWidth;
       if (width <= 480) return "mobile-small";
@@ -164,10 +168,10 @@ export default function Demo() {
       },
     };
     return configs[viewport] || configs["desktop"];
-  };
+  }, []);
 
   // Video position configuration for each section
-  const getPositionConfig = () => {
+  const getPositionConfig = useCallback(() => {
     const viewport = (() => {
       const width = window.innerWidth;
       if (width <= 480) return "mobile-small";
@@ -225,7 +229,7 @@ export default function Demo() {
       ],
     };
     return positionConfigs[viewport] || positionConfigs["desktop"];
-  };
+  }, []);
 
   // Text position configuration for each section
   const getTextPositionConfig = () => {
@@ -340,7 +344,7 @@ export default function Demo() {
   };
 
   // Video rotation configuration for each section
-  const getRotationConfig = () => {
+  const getRotationConfig = useCallback(() => {
     const viewport = (() => {
       const width = window.innerWidth;
       if (width <= 480) return "mobile-small";
@@ -398,7 +402,7 @@ export default function Demo() {
       ],
     };
     return rotationConfigs[viewport] || rotationConfigs["desktop"];
-  };
+  }, []);
 
   // Font size configuration for each section
   const getFontSizeConfig = () => {
@@ -512,11 +516,10 @@ export default function Demo() {
     return fontWeightConfigs[viewport] || fontWeightConfigs["desktop"];
   };
 
-  // Scroll handler function (matching ScrollSyncModel exactly)
-  const handleScroll = () => {
+  // Optimized scroll handler with throttling and performance improvements
+  const handleScroll = useCallback(() => {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || !videoRef.current) {
-      console.log("Missing scroll container or video ref");
       return;
     }
 
@@ -525,105 +528,75 @@ export default function Demo() {
       scrollContainer.scrollHeight - scrollContainer.clientHeight;
 
     if (maxScroll <= 0) {
-      console.log(
-        "No scroll available - maxScroll:",
-        maxScroll,
-        "scrollHeight:",
-        scrollContainer.scrollHeight,
-        "clientHeight:",
-        scrollContainer.clientHeight
-      );
       return;
     }
 
-    const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll)); // Clamp between 0 and 1
+    const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
 
-    console.log(
-      "Scroll progress:",
-      scrollProgress,
-      "ScrollTop:",
-      scrollTop,
-      "MaxScroll:",
-      maxScroll
-    );
+    // Batch state updates to reduce re-renders
+    requestAnimationFrame(() => {
+      setScrollProgress(scrollProgress);
 
-    // Update state for UI display
-    setScrollProgress(scrollProgress);
+      const positions = getPositionConfig();
+      const rotations = getRotationConfig();
+      const videoSizeConfig = getVideoSizeConfig();
 
-    const positions = getPositionConfig();
-    const rotations = getRotationConfig();
-    const videoSizeConfig = getVideoSizeConfig();
+      // Calculate which section we're in and interpolate
+      const totalSections = 7;
+      const sectionIndex = scrollProgress * (totalSections - 1);
+      const currentSection = Math.floor(sectionIndex);
+      const nextSection = Math.min(currentSection + 1, totalSections - 1);
+      const sectionProgress = sectionIndex - currentSection;
 
-    // Calculate which section we're in and interpolate (EXACTLY like ScrollSyncModel)
-    const totalSections = 7; // 6 AnimatedSections + 1 Footer
-    const sectionIndex = scrollProgress * (totalSections - 1); // 0 to totalSections-1
-    const currentSection = Math.floor(sectionIndex);
-    const nextSection = Math.min(currentSection + 1, totalSections - 1);
-    const sectionProgress = sectionIndex - currentSection;
+      // Only update active section if it changed
+      if (currentSection !== activeSection) {
+        setActiveSection(currentSection);
+      }
+      setSectionProgress(sectionProgress);
 
-    // Track active section and section progress
-    if (currentSection !== activeSection) {
-      setActiveSection(currentSection);
-    }
-    setSectionProgress(sectionProgress);
+      // Interpolate between current and next position
+      const currentPos = positions[currentSection];
+      const nextPos = positions[nextSection];
 
-    // Interpolate between current and next position (EXACTLY like ScrollSyncModel)
-    const currentPos = positions[currentSection];
-    const nextPos = positions[nextSection];
+      const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
+      const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
 
-    const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
-    const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+      // Interpolate between current and next rotation
+      const currentRotation = rotations[currentSection];
+      const nextRotation = rotations[nextSection];
+      const newRotation =
+        currentRotation + (nextRotation - currentRotation) * sectionProgress;
 
-    // Interpolate between current and next rotation
-    const currentRotation = rotations[currentSection];
-    const nextRotation = rotations[nextSection];
-    const newRotation =
-      currentRotation + (nextRotation - currentRotation) * sectionProgress;
+      // Scale effect - set section 5 to 0.8 scale, hide video in section 6
+      let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
 
-    // Scale effect - set section 5 to 0.8 scale, hide video in section 6 (like ScrollSyncModel)
-    let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
+      // Dynamic video sizing based on section
+      const sizeKeys = [
+        "section1",
+        "section2",
+        "section3",
+        "section4",
+        "section5",
+        "section6",
+        "section7",
+      ];
+      const currentSizeKey = sizeKeys[currentSection];
+      const nextSizeKey = sizeKeys[nextSection];
 
-    // Dynamic video sizing based on section (EXACTLY like ScrollSyncModel)
-    const sizeKeys = [
-      "section1",
-      "section2",
-      "section3",
-      "section4",
-      "section5",
-      "section6",
-      "section7",
-    ];
-    const currentSizeKey = sizeKeys[currentSection];
-    const nextSizeKey = sizeKeys[nextSection];
+      const currentSize = videoSizeConfig[currentSizeKey];
+      const nextSize = videoSizeConfig[nextSizeKey];
 
-    const currentSize = videoSizeConfig[currentSizeKey];
-    const nextSize = videoSizeConfig[nextSizeKey];
+      // Interpolate between current and next size
+      const newWidth =
+        currentSize.width +
+        (nextSize.width - currentSize.width) * sectionProgress;
 
-    // Interpolate between current and next size
-    const newWidth =
-      currentSize.width +
-      (nextSize.width - currentSize.width) * sectionProgress;
-
-    // Update video position and size state (EXACTLY like ScrollSyncModel)
-    setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
-    setVideoSize({ width: newWidth, height: "auto" });
-
-    // Show header only during section 1 (first 4% of scroll) - matching ScrollSyncModel
-    setHeaderVisible(scrollProgress < 0.04);
-
-    console.log("Video position and size updated:", {
-      x: newX,
-      y: newY,
-      scale,
-      rotation: newRotation,
-      width: newWidth,
-      section: currentSection,
-      progress: sectionProgress,
-      scrollProgress: scrollProgress,
-      currentSize: currentSize.width,
-      nextSize: nextSize.width,
+      // Batch all state updates together
+      setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
+      setVideoSize({ width: newWidth, height: "auto" });
+      setHeaderVisible(scrollProgress < 0.04);
     });
-  };
+  }, [activeSection, getPositionConfig, getRotationConfig, getVideoSizeConfig]);
 
   // Setup scroll listener (matching ScrollSyncModel exactly)
   useEffect(() => {
@@ -646,8 +619,19 @@ export default function Demo() {
 
       console.log("Setting up Demo scroll listener...");
 
-      // Use passive listener for better performance during scroll (like ScrollSyncModel)
-      scrollContainer.addEventListener("scroll", handleScroll, {
+      // Use passive listener with throttling for better performance during scroll
+      let ticking = false;
+      const throttledHandleScroll = () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            handleScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+      
+      scrollContainer.addEventListener("scroll", throttledHandleScroll, {
         passive: true,
       });
 
@@ -754,6 +738,61 @@ export default function Demo() {
       console.error("Video loading error:", e);
     });
   }, [isInitialized]);
+
+  // Show loading screen while assets are being preloaded
+  if (isPreloading) {
+    return (
+      <div className="demo-container" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+        color: 'white',
+        fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+      }}>
+        <div style={{ marginBottom: '20px' }}>
+          <img 
+            src="/final-logo.svg" 
+            alt="Kahuna" 
+            style={{ height: '60px', width: 'auto' }}
+          />
+        </div>
+        <div style={{ 
+          width: '300px', 
+          height: '4px', 
+          backgroundColor: 'rgba(255,255,255,0.2)', 
+          borderRadius: '2px',
+          overflow: 'hidden',
+          marginBottom: '16px'
+        }}>
+          <div style={{
+            width: `${preloadProgress}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
+            transition: 'width 0.3s ease-out',
+            borderRadius: '2px'
+          }} />
+        </div>
+        <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+          Loading Assets...
+        </div>
+        <div style={{ fontSize: '14px', opacity: 0.7 }}>
+          {preloadProgress}% Complete
+        </div>
+        {preloadError && (
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#ff6b6b', 
+            marginTop: '10px',
+            textAlign: 'center'
+          }}>
+            Some assets failed to load, but the experience will continue
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="demo-container">
