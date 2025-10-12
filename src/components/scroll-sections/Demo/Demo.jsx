@@ -5,6 +5,7 @@ import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
+import CanvasVideoPlayer from "./CanvasVideoPlayer";
 
 // Get initial video position and size for section 1 based on screen size
 const getInitialVideoConfig = () => {
@@ -64,6 +65,21 @@ export default function Demo() {
   // Use the asset preloader hook to preload all frames
   const { progress: preloadProgress, isLoading: isPreloading, error: preloadError } = useAssetPreloader();
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Mobile detection for video rendering approach
+  const isMobileDeviceForVideo = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    return /iPad|iPhone|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  };
+
+  // Use Canvas video for mobile devices, regular video for desktop
+  const shouldUseCanvasVideo = isMobileDeviceForVideo();
+  
+  // Debug logging
+  useEffect(() => {
+    console.log(`🎥 Video Rendering Approach: ${shouldUseCanvasVideo ? 'Canvas (Mobile)' : 'HTML5 Video (Desktop)'}`);
+    console.log(`📱 Device Detection: ${isMobileDeviceForVideo() ? 'Mobile Device' : 'Desktop Device'}`);
+  }, [shouldUseCanvasVideo]);
 
   // Video preloading state
   const [isVideoPreloaded, setIsVideoPreloaded] = useState(false);
@@ -777,7 +793,13 @@ export default function Demo() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Set video properties for mobile Safari/iPhone compatibility
+    // For Canvas video player, the initialization is handled internally
+    if (shouldUseCanvasVideo) {
+      console.log("Using Canvas video player for mobile device");
+      return;
+    }
+
+    // Set video properties for desktop Safari/Chrome/Firefox compatibility
     video.loop = true;
     video.muted = true;
     video.autoplay = true;
@@ -789,19 +811,15 @@ export default function Demo() {
     video.defaultMuted = true;
     video.controls = false;
 
-    // Handle video loading with mobile Safari compatibility
+    // Handle video loading with desktop browser compatibility
     const handleVideoReady = () => {
-      console.log("Demo video loaded successfully");
+      console.log("Desktop video loaded successfully");
       
-      // Force play for mobile Safari
+      // Force play for desktop browsers
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn("Autoplay failed:", err);
-          // Try again after user interaction for mobile Safari
-          document.addEventListener('touchstart', () => {
-            video.play().catch(console.warn);
-          }, { once: true });
+          console.warn("Desktop autoplay failed:", err);
         });
       }
     };
@@ -811,14 +829,14 @@ export default function Demo() {
     
     // Firefox specific handling
     video.addEventListener("loadedmetadata", () => {
-      console.log("Video metadata loaded - Firefox compatibility");
+      console.log("Desktop video metadata loaded - Firefox compatibility");
       handleVideoReady();
     });
 
     video.addEventListener("error", (e) => {
-      console.error("Video loading error:", e);
+      console.error("Desktop video loading error:", e);
     });
-  }, [isInitialized]);
+  }, [isInitialized, shouldUseCanvasVideo]);
 
   // Show loading screen while assets are being preloaded
   // if (isPreloading) {
@@ -879,35 +897,64 @@ export default function Demo() {
     <div className="demo-container">
       {/* Fixed Video - Only show after initialization to prevent glitch */}
       {isInitialized && (
-        <video
-          ref={videoRef}
-          src="/hero4.mp4"
-          // src="/final-hero-video1.mp4"
-          className="demo-fixed-video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          webkit-playsinline="true"
-          style={{
-            position: "fixed",
-            zIndex: 5,
-            pointerEvents: "none",
-            left: `${videoPosition.x}%`,
-            top: `${videoPosition.y}%`,
-            transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
-            width: `${videoSize.width}px`,
-            height: videoSize.height,
-            opacity: isInitialized ? 1 : 0, // Smooth fade-in when initialized
-            transition: 'opacity 0.3s ease-in-out',
-            // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
-            // Mobile Safari specific optimizations
-            WebkitTransform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
-            WebkitBackfaceVisibility: 'hidden',
-            backfaceVisibility: 'hidden',
-          }}
-        />
+        <>
+          {/* Canvas Video for Mobile Devices */}
+          {shouldUseCanvasVideo ? (
+            <CanvasVideoPlayer
+              ref={videoRef}
+              videoSrc="/hero4.mp4"
+              className="demo-fixed-video"
+              style={{
+                position: "fixed",
+                zIndex: 5,
+                pointerEvents: "none",
+                left: `${videoPosition.x}%`,
+                top: `${videoPosition.y}%`,
+                transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+                width: `${videoSize.width}px`,
+                height: videoSize.height,
+                opacity: isInitialized ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out',
+                // Mobile Safari specific optimizations
+                WebkitTransform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+                WebkitBackfaceVisibility: 'hidden',
+                backfaceVisibility: 'hidden',
+              }}
+              onLoad={() => console.log("Canvas video loaded successfully")}
+              onError={(e) => console.error("Canvas video error:", e)}
+            />
+          ) : (
+            /* Regular Video for Desktop */
+            <video
+              ref={videoRef}
+              src="/hero4.mp4"
+              // src="/final-hero-video1.mp4"
+              className="demo-fixed-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              webkit-playsinline="true"
+              style={{
+                position: "fixed",
+                zIndex: 5,
+                pointerEvents: "none",
+                left: `${videoPosition.x}%`,
+                top: `${videoPosition.y}%`,
+                transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+                width: `${videoSize.width}px`,
+                height: videoSize.height,
+                opacity: isInitialized ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out',
+                // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
+                WebkitTransform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+                WebkitBackfaceVisibility: 'hidden',
+                backfaceVisibility: 'hidden',
+              }}
+            />
+          )}
+        </>
       )}
 
       {/* Header - Only visible on Section 1 and after initialization */}
