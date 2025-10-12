@@ -507,7 +507,7 @@ const PNGSequence = ({
         </div>
       )}
       {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="png-sequence-debug">
           <div>Section: {activeSection}</div>
           <div>Progress: {(sectionProgress * 100).toFixed(1)}%</div>
@@ -544,7 +544,7 @@ const PNGSequence = ({
             Video Progress: {videoPreloadProgress.toFixed(1)}%
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

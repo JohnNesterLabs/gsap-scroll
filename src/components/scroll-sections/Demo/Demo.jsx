@@ -769,59 +769,59 @@ export default function Demo() {
   }, [isInitialized]);
 
   // Show loading screen while assets are being preloaded
-  if (isPreloading) {
-    return (
-      <div className="demo-container" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-        color: 'white',
-        fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
-      }}>
-        <div style={{ marginBottom: '20px' }}>
-          <img 
-            src="/final-logo.svg" 
-            alt="Kahuna" 
-            style={{ height: '60px', width: 'auto' }}
-          />
-        </div>
-        <div style={{ 
-          width: '300px', 
-          height: '4px', 
-          backgroundColor: 'rgba(255,255,255,0.2)', 
-          borderRadius: '2px',
-          overflow: 'hidden',
-          marginBottom: '16px'
-        }}>
-          <div style={{
-            width: `${preloadProgress}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
-            transition: 'width 0.3s ease-out',
-            borderRadius: '2px'
-          }} />
-        </div>
-        <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
-          Loading Assets...
-        </div>
-        <div style={{ fontSize: '14px', opacity: 0.7 }}>
-          {preloadProgress}% Complete
-        </div>
-        {preloadError && (
-          <div style={{ 
-            fontSize: '12px', 
-            color: '#ff6b6b', 
-            marginTop: '10px',
-            textAlign: 'center'
-          }}>
-            Some assets failed to load, but the experience will continue
-          </div>
-        )}
-      </div>
-    );
-  }
+  // if (isPreloading) {
+  //   return (
+  //     <div className="demo-container" style={{
+  //       display: 'flex',
+  //       flexDirection: 'column',
+  //       alignItems: 'center',
+  //       justifyContent: 'center',
+  //       background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+  //       color: 'white',
+  //       fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+  //     }}>
+  //       <div style={{ marginBottom: '20px' }}>
+  //         <img 
+  //           src="/final-logo.svg" 
+  //           alt="Kahuna" 
+  //           style={{ height: '60px', width: 'auto' }}
+  //         />
+  //       </div>
+  //       <div style={{ 
+  //         width: '300px', 
+  //         height: '4px', 
+  //         backgroundColor: 'rgba(255,255,255,0.2)', 
+  //         borderRadius: '2px',
+  //         overflow: 'hidden',
+  //         marginBottom: '16px'
+  //       }}>
+  //         <div style={{
+  //           width: `${preloadProgress}%`,
+  //           height: '100%',
+  //           background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
+  //           transition: 'width 0.3s ease-out',
+  //           borderRadius: '2px'
+  //         }} />
+  //       </div>
+  //       <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+  //         Loading Assets...
+  //       </div>
+  //       <div style={{ fontSize: '14px', opacity: 0.7 }}>
+  //         {preloadProgress}% Complete
+  //       </div>
+  //       {preloadError && (
+  //         <div style={{ 
+  //           fontSize: '12px', 
+  //           color: '#ff6b6b', 
+  //           marginTop: '10px',
+  //           textAlign: 'center'
+  //         }}>
+  //           Some assets failed to load, but the experience will continue
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="demo-container">

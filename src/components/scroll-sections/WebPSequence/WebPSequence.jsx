@@ -435,7 +435,7 @@ const WebPSequence = ({
       )}
       
       {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="webp-sequence-debug">
           <div>📱 WebP Sequence</div>
           <div>Section: {activeSection}</div>
@@ -470,7 +470,7 @@ const WebPSequence = ({
             Video Progress: {videoPreloadProgress.toFixed(1)}%
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
