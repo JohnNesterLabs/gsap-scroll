@@ -32,6 +32,7 @@ const PNGSequence = ({
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false); // Allow smooth scrolling after video watched
   const [shouldReturnToStopFrame, setShouldReturnToStopFrame] = useState(false); // Track if we should return to stop frame after video cancel
   const imgRef = useRef(null);
+  const [hasGoneBelowStopFrame, setHasGoneBelowStopFrame] = useState(false); // Track if user has scrolled below stop frame to reset behavior
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
   // Debug logging for all state changes
@@ -42,6 +43,7 @@ const PNGSequence = ({
       hasWatchedVideo,
       allowSmoothScrolling,
       shouldReturnToStopFrame,
+      hasGoneBelowStopFrame,
       showPlayButton,
       isScrollStopped,
       showTimeline,
@@ -49,7 +51,7 @@ const PNGSequence = ({
       activeSection,
       sectionProgress
     });
-  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, shouldReturnToStopFrame, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
+  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, shouldReturnToStopFrame, hasGoneBelowStopFrame, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
   // Calculate frame index based on section progress
   useEffect(() => {
     // Skip frame calculation if we need to return to stop frame after video cancel
@@ -123,22 +125,42 @@ const PNGSequence = ({
           // User is at or past the stop frame - keep it at stop frame
           clampedFrame = stopFrame;
         }
-      } else if (allowSmoothScrolling) {
-        // After video has been watched once, allow smooth scrolling through all frames
-        // BUT: If user cancelled video, keep them at stop frame until they scroll forward
-        if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
-          // User cancelled video and is at or before stop frame - keep at stop frame
-          clampedFrame = stopFrame;
-          console.log('Video was cancelled - keeping at stop frame:', stopFrame);
-        } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
-          // User cancelled video but scrolled forward - allow normal progression
-          console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
-          setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
-        } else {
-          // Normal smooth scrolling
-          console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
+      }else if (allowSmoothScrolling) {
+          // Check if user has gone below stop frame to reset behavior
+          if (clampedFrame < stopFrame && hasWatchedVideo) {
+            console.log('User scrolled below stop frame after watching video - resetting behavior');
+            setHasGoneBelowStopFrame(true);
+            // Reset video watched state to allow fresh experience
+            setHasWatchedVideo(false);
+            setAllowSmoothScrolling(false);
+            setShowPlayButton(false);
+            setShouldReturnToStopFrame(false);
+          }
+          // If user reaches stop frame again after going below it, restart the sequence
+          if (clampedFrame >= stopFrame && hasGoneBelowStopFrame && !hasWatchedVideo) {
+            console.log('User reached stop frame again after going below - restarting sequence');
+            clampedFrame = stopFrame;
+            setIsScrollStopped(true);
+            setShowTimeline(true);
+            setHasGoneBelowStopFrame(false); // Reset the flag
+            stopForwardScroll();
+          } else if (allowSmoothScrolling && !hasGoneBelowStopFrame) {
+            // After video has been watched once, allow smooth scrolling through all frames
+            // BUT: If user cancelled video, keep them at stop frame until they scroll forward
+            if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
+              // User cancelled video and is at or before stop frame - keep at stop frame
+              clampedFrame = stopFrame;
+              console.log('Video was cancelled - keeping at stop frame:', stopFrame);
+            } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
+              // User cancelled video but scrolled forward - allow normal progression
+              console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
+              setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
+            } else {
+              // Normal smooth scrolling
+              console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
+            }
+          }
         }
-      }
       setCurrentFrame(clampedFrame);
     } else {
       // User scrolled back to before start section - hide PNG sequence
@@ -154,7 +176,7 @@ const PNGSequence = ({
       // Clean up scroll prevention when component is not visible
       resumeScroll();
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, shouldReturnToStopFrame]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, shouldReturnToStopFrame, hasGoneBelowStopFrame]);
   // Handle showing Continue CTA again when user reaches frame 234 after watching video once
   useEffect(() => {
     console.log(':dart: Play button useEffect triggered:', {
@@ -494,6 +516,9 @@ const PNGSequence = ({
           </div>
           <div style={{ color: allowSmoothScrolling ? 'green' : 'red' }}>
             Allow Smooth Scrolling: {allowSmoothScrolling ? 'Yes' : 'No'}
+          </div>
+          <div style={{ color: hasGoneBelowStopFrame ? 'orange' : 'gray' }}>
+            Has Gone Below Stop Frame: {hasGoneBelowStopFrame ? 'Yes' : 'No'}
           </div>
           <div style={{ color: isVisible ? 'green' : 'red' }}>
             Is Visible: {isVisible ? 'Yes' : 'No'}
