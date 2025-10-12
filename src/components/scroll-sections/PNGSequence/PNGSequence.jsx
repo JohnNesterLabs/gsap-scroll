@@ -16,8 +16,10 @@ const PNGSequence = ({
   onTimelineComplete, // Callback when timeline completes
   onPlayButtonClick, // Callback when play button is clicked
   // Video popup props
-  videoSrc = '/demo1.mp4', // Default video source for popup
-  showVideoPopup = true // Whether to show video popup on continue
+  videoSrc = '/Final-Ticket-1-(WIP).mp4', // Default video source for popup
+  showVideoPopup = true, // Whether to show video popup on continue
+  isVideoPreloaded = false, // Whether the video has been preloaded
+  videoPreloadProgress = 0 // Video preload progress percentage
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -28,6 +30,7 @@ const PNGSequence = ({
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false); // Track if user has watched video once
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false); // Allow smooth scrolling after video watched
+  const [shouldReturnToStopFrame, setShouldReturnToStopFrame] = useState(false); // Track if we should return to stop frame after video cancel
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
@@ -38,6 +41,7 @@ const PNGSequence = ({
       stopFrame,
       hasWatchedVideo,
       allowSmoothScrolling,
+      shouldReturnToStopFrame,
       showPlayButton,
       isScrollStopped,
       showTimeline,
@@ -45,9 +49,16 @@ const PNGSequence = ({
       activeSection,
       sectionProgress
     });
-  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
+  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, shouldReturnToStopFrame, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
   // Calculate frame index based on section progress
   useEffect(() => {
+    // Skip frame calculation if we need to return to stop frame after video cancel
+    if (shouldReturnToStopFrame) {
+      console.log('Skipping frame calculation - should return to stop frame');
+      // Ensure we stay at stop frame
+      setCurrentFrame(stopFrame);
+      return;
+    }
     if (activeSection >= startSection) {
       // Calculate frame based on section progress
       const sectionOffset = activeSection - startSection;
@@ -58,7 +69,6 @@ const PNGSequence = ({
       const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
       // const clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
       let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
-      
       // Hide PNG sequence after completing all frames (frame 328)
       if (clampedFrame >= totalFrames) {
         console.log('PNG sequence completed all frames - hiding sequence and allowing footer to show');
@@ -82,6 +92,7 @@ const PNGSequence = ({
           stopFrame,
           isScrollStopped,
           allowSmoothScrolling,
+          shouldReturnToStopFrame,
           hasWatchedVideo,
           showPlayButton: showPlayButton
         });
@@ -114,8 +125,19 @@ const PNGSequence = ({
         }
       } else if (allowSmoothScrolling) {
         // After video has been watched once, allow smooth scrolling through all frames
-        // No scroll stopping, just smooth frame progression
-        console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
+        // BUT: If user cancelled video, keep them at stop frame until they scroll forward
+        if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
+          // User cancelled video and is at or before stop frame - keep at stop frame
+          clampedFrame = stopFrame;
+          console.log('Video was cancelled - keeping at stop frame:', stopFrame);
+        } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
+          // User cancelled video but scrolled forward - allow normal progression
+          console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
+          setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
+        } else {
+          // Normal smooth scrolling
+          console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
+        }
       }
       setCurrentFrame(clampedFrame);
     } else {
@@ -132,7 +154,7 @@ const PNGSequence = ({
       // Clean up scroll prevention when component is not visible
       resumeScroll();
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, shouldReturnToStopFrame]);
   // Handle showing Continue CTA again when user reaches frame 234 after watching video once
   useEffect(() => {
     console.log(':dart: Play button useEffect triggered:', {
@@ -175,6 +197,30 @@ const PNGSequence = ({
       resumeScroll();
     };
   }, []);
+  // Handle clearing the return to stop frame flag when user scrolls forward
+  useEffect(() => {
+    if (shouldReturnToStopFrame && allowSmoothScrolling) {
+      const handleScrollForward = () => {
+        const scrollContainer = document.querySelector('.demo-scroll-container');
+        if (scrollContainer) {
+          const currentScrollTop = scrollContainer.scrollTop;
+          const maxScrollTop = parseFloat(scrollContainer.dataset.maxScrollTop || '0');
+          // If user has scrolled forward beyond the stop point, clear the flag
+          if (currentScrollTop > maxScrollTop + 10) { // 10px threshold
+            console.log('User scrolled forward - clearing shouldReturnToStopFrame flag');
+            setShouldReturnToStopFrame(false);
+          }
+        }
+      };
+      const scrollContainer = document.querySelector('.demo-scroll-container');
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', handleScrollForward, { passive: true });
+        return () => {
+          scrollContainer.removeEventListener('scroll', handleScrollForward);
+        };
+      }
+    }
+  }, [shouldReturnToStopFrame, allowSmoothScrolling]);
   // Format frame number with leading zeros
   const formatFrameNumber = (frameNum) => {
     return frameNum.toString().padStart(4, '0');
@@ -276,8 +322,14 @@ const PNGSequence = ({
   const handlePlayButtonClick = () => {
     setShowPlayButton(false);
     if (showVideoPopup && videoSrc) {
-      // Show video popup instead of immediately resuming scroll
-      setShowVideoModal(true);
+      // Check if video is preloaded before showing popup
+      if (isVideoPreloaded) {
+        console.log('Video is preloaded - showing popup immediately');
+        setShowVideoModal(true);
+      } else {
+        console.log('Video not yet preloaded - showing popup anyway (will load on demand)');
+        setShowVideoModal(true);
+      }
     } else {
       // Resume scroll immediately if no video popup
       resumeScroll();
@@ -293,15 +345,17 @@ const PNGSequence = ({
     // Mark that user has watched the video once
     setHasWatchedVideo(true);
     setAllowSmoothScrolling(true);
+    // CRITICAL: Set flag to return to stop frame when video is cancelled
+    console.log('Video cancelled - setting flag to return to frame:', stopFrame);
+    setShouldReturnToStopFrame(true);
+    setCurrentFrame(stopFrame);
     // Small delay to ensure state update before resuming scroll
     setTimeout(() => {
       resumeScroll(); // Resume scroll after closing video
       console.log('Scroll resumed after video close - smooth scrolling enabled');
-      // Check if we're at frame 234 and show play button if so
-      if (currentFrame === stopFrame) {
-        console.log('At frame 234 after video close - showing play button');
-        setShowPlayButton(true);
-      }
+      // Force show play button since we're back at frame 234
+      console.log('At frame 234 after video close - showing play button');
+      setShowPlayButton(true);
     }, 100);
   };
   // Handle image loading errors
@@ -449,6 +503,12 @@ const PNGSequence = ({
           </div>
           <div style={{ color: isContinueCTAVisible() ? 'green' : 'red', fontWeight: 'bold', fontSize: '14px' }}>
             CTA VISIBLE: {isContinueCTAVisible() ? 'YES' : 'NO'}
+          </div>
+          <div style={{ color: isVideoPreloaded ? 'green' : 'orange', fontWeight: 'bold', fontSize: '14px' }}>
+            VIDEO PRELOADED: {isVideoPreloaded ? 'YES' : 'NO'}
+          </div>
+          <div style={{ color: 'cyan', fontSize: '12px' }}>
+            Video Progress: {videoPreloadProgress.toFixed(1)}%
           </div>
         </div>
       )}

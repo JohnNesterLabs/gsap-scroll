@@ -1,12 +1,15 @@
 /* AnimatedSection Styles */
 .animated-section {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
   /* border: 1px solid white; */
+}
+.animated-section.section-5{
+  height: 100vh !important;
 }
 
 /* Dynamic alignment based on textPosition prop */
