@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getDeviceInfo } from '../utils/deviceDetection';
 
 // Global image cache for preloaded images
 window.preloadedImages = window.preloadedImages || new Map();
@@ -23,22 +24,29 @@ const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-m
     return frames;
 };
 
-// Define all assets that need to be preloaded
-const ASSETS_TO_PRELOAD = [
-    // Main demo video
-    '/hero4.mp4',
-    '/demo1.mp4',
-    '/Final-Ticket-1-(WIP).mp4', // Video popup
-
-    // Logo assets
+// Define critical assets that must load first (for iOS progressive loading)
+const CRITICAL_ASSETS = [
+    // Logo assets (essential for UI)
     '/Logo-color.svg',
     '/kahuna-logo-3.svg',
     '/final-logo.svg',
     '/LinkedIn-Icon.png',
-    
+];
+
+// Define large assets that can be loaded progressively
+const LARGE_ASSETS = [
+    // Main demo video (21.4MB - this is the problematic one)
+    '/hero4.mp4',
+    '/demo1.mp4',
+    '/Final-Ticket-1-(WIP).mp4', // Video popup
+];
+
+// Define all assets that need to be preloaded (for non-iOS devices)
+const ALL_ASSETS = [
+    ...CRITICAL_ASSETS,
+    ...LARGE_ASSETS,
     // PNG Sequence frames (all 328 frames for desktop)
     ...generatePNGFramePaths(328, '/frames-journey/'),
-    
     // WebP Mobile Sequence frames (all 436 frames for mobile)
     ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
 ];
@@ -48,6 +56,8 @@ export const useAssetPreloader = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [loadedAssets, setLoadedAssets] = useState(new Set());
     const [error, setError] = useState(null);
+    const [loadingPhase, setLoadingPhase] = useState('initializing'); // Track loading phase
+    const [deviceInfo, setDeviceInfo] = useState(null);
 
     const preloadAsset = useCallback((src) => {
         return new Promise((resolve, reject) => {
@@ -74,7 +84,7 @@ export const useAssetPreloader = () => {
                 img.onload = () => {
                     // Store the loaded image in global cache
                     window.preloadedImages.set(src, img);
-                    
+
                     if (isPNGFrame) {
                         console.log(`✓ PNG frame loaded: ${src}`);
                     } else if (isWebPFrame) {
@@ -109,98 +119,181 @@ export const useAssetPreloader = () => {
         });
     }, []);
 
+    // Progressive loading for iOS devices
+    const loadCriticalAssetsFirst = useCallback(async () => {
+        setLoadingPhase('critical');
+        console.log('📦 Loading critical assets first (iOS optimized)...');
+
+        let loadedCount = 0;
+        const totalCritical = CRITICAL_ASSETS.length;
+
+        for (const asset of CRITICAL_ASSETS) {
+            try {
+                await preloadAsset(asset);
+                loadedCount++;
+                setLoadedAssets(prev => new Set([...prev, asset]));
+                // Show progress based on critical assets only
+                setProgress(Math.round((loadedCount / totalCritical) * 100));
+            } catch (error) {
+                console.warn(`Failed to preload critical asset ${asset}:`, error);
+                loadedCount++;
+                setProgress(Math.round((loadedCount / totalCritical) * 100));
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.log('✅ Critical assets loaded, allowing app to start...');
+        return loadedCount;
+    }, [preloadAsset]);
+
+    // Load large assets after critical assets are done
+    const loadLargeAssetsProgressively = useCallback(async () => {
+        setLoadingPhase('large');
+        console.log('🎬 Loading large assets progressively...');
+
+        let loadedCount = 0;
+        const totalLarge = LARGE_ASSETS.length;
+
+        for (const asset of LARGE_ASSETS) {
+            try {
+                await preloadAsset(asset);
+                loadedCount++;
+                setLoadedAssets(prev => new Set([...prev, asset]));
+                setProgress(Math.round((loadedCount / totalLarge) * 100));
+            } catch (error) {
+                console.warn(`Failed to preload large asset ${asset}:`, error);
+                loadedCount++;
+                setProgress(Math.round((loadedCount / totalLarge) * 100));
+            }
+            // Longer delay for large assets
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        console.log('✅ Large assets loaded progressively');
+        return loadedCount;
+    }, [preloadAsset]);
+
+    // Standard loading for non-iOS devices
+    const loadAllAssetsStandard = useCallback(async () => {
+        setLoadingPhase('standard');
+        console.log('🎬 Loading all assets (standard mode)...');
+
+        const totalAssets = ALL_ASSETS.length;
+        let loadedCount = 0;
+
+        // Load critical assets first
+        const criticalAssets = ALL_ASSETS.slice(0, CRITICAL_ASSETS.length);
+        const frameAssets = ALL_ASSETS.slice(CRITICAL_ASSETS.length);
+
+        // Load critical assets
+        for (const asset of criticalAssets) {
+            try {
+                await preloadAsset(asset);
+                loadedCount++;
+                setLoadedAssets(prev => new Set([...prev, asset]));
+                setProgress(Math.round((loadedCount / totalAssets) * 100));
+            } catch (error) {
+                console.warn(`Failed to preload critical asset ${asset}:`, error);
+                loadedCount++;
+                setProgress(Math.round((loadedCount / totalAssets) * 100));
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Load frame sequences in batches
+        const batchSize = 20;
+        const totalBatches = Math.ceil(frameAssets.length / batchSize);
+
+        for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+            const startIndex = batchIndex * batchSize;
+            const endIndex = Math.min(startIndex + batchSize, frameAssets.length);
+            const batch = frameAssets.slice(startIndex, endIndex);
+
+            const batchPromises = batch.map(async (asset) => {
+                try {
+                    await preloadAsset(asset);
+                    return { success: true, asset };
+                } catch (error) {
+                    console.warn(`Failed to preload frame ${asset}:`, error);
+                    return { success: false, asset, error };
+                }
+            });
+
+            const batchResults = await Promise.allSettled(batchPromises);
+
+            let batchLoadedCount = 0;
+            const batchLoadedAssets = [];
+
+            batchResults.forEach((result) => {
+                batchLoadedCount++;
+                if (result.status === 'fulfilled' && result.value.success) {
+                    batchLoadedAssets.push(result.value.asset);
+                }
+            });
+
+            loadedCount += batchLoadedCount;
+            setLoadedAssets(prev => new Set([...prev, ...batchLoadedAssets]));
+            setProgress(Math.round((loadedCount / totalAssets) * 100));
+
+            if (batchIndex < totalBatches - 1) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+
+        setProgress(100);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('✅ All assets loaded successfully!');
+        return loadedCount;
+    }, [preloadAsset]);
+
     const preloadAssets = useCallback(async () => {
         setIsLoading(true);
         setProgress(0);
         setError(null);
         setLoadedAssets(new Set());
+        setLoadingPhase('initializing');
 
-        const totalAssets = ASSETS_TO_PRELOAD.length;
-        let loadedCount = 0;
+        // Get device info
+        const device = getDeviceInfo();
+        setDeviceInfo(device);
+
+        console.log('🔍 Device detected:', {
+            platform: device.isIOS ? 'iOS' : device.isAndroid ? 'Android' : 'Desktop',
+            memory: `${device.memory}GB`,
+            progressiveLoading: device.shouldUseProgressiveLoading
+        });
 
         try {
-            console.log('🎬 Loading Demo assets...');
-            
-            // Separate critical assets from frame sequences
-            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 7); // First 7 are critical (videos + logos)
-            const frameAssets = ASSETS_TO_PRELOAD.slice(7); // Rest are frame sequences (PNG + WebP)
-            
-            // Load critical assets first
-            console.log('📦 Loading critical assets...');
-            for (const asset of criticalAssets) {
-                try {
-                    await preloadAsset(asset);
-                    loadedCount++;
-                    setLoadedAssets(prev => new Set([...prev, asset]));
-                    setProgress(Math.round((loadedCount / totalAssets) * 100));
-                } catch (error) {
-                    console.warn(`Failed to preload critical asset ${asset}:`, error);
-                    loadedCount++;
-                    setProgress(Math.round((loadedCount / totalAssets) * 100));
-                }
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-            
-            // Load frame sequences in batches for better performance
-            console.log('🖼️ Loading frame sequences in batches...');
-            const batchSize = 20; // Load 20 frames at a time
-            const totalBatches = Math.ceil(frameAssets.length / batchSize);
-            
-            for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-                const startIndex = batchIndex * batchSize;
-                const endIndex = Math.min(startIndex + batchSize, frameAssets.length);
-                const batch = frameAssets.slice(startIndex, endIndex);
-                
-                // Load batch in parallel
-                const batchPromises = batch.map(async (asset) => {
-                    try {
-                        await preloadAsset(asset);
-                        return { success: true, asset };
-                    } catch (error) {
-                        console.warn(`Failed to preload frame ${asset}:`, error);
-                        return { success: false, asset, error };
-                    }
-                });
-                
-                // Wait for all promises in batch to complete
-                const batchResults = await Promise.allSettled(batchPromises);
-                
-                // Update progress for each completed asset
-                let batchLoadedCount = 0;
-                const batchLoadedAssets = [];
-                
-                batchResults.forEach((result) => {
-                    batchLoadedCount++;
-                    if (result.status === 'fulfilled' && result.value.success) {
-                        batchLoadedAssets.push(result.value.asset);
-                    }
-                });
-                
-                // Update counters
-                loadedCount += batchLoadedCount;
-                setLoadedAssets(prev => new Set([...prev, ...batchLoadedAssets]));
-                setProgress(Math.round((loadedCount / totalAssets) * 100));
-                
-                // Small delay between batches to prevent overwhelming the network
-                if (batchIndex < totalBatches - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                }
+            if (device.shouldUseProgressiveLoading) {
+                // iOS Progressive Loading Strategy
+                console.log('📱 Using iOS progressive loading strategy...');
+
+                // Phase 1: Load critical assets first
+                await loadCriticalAssetsFirst();
+
+                // Allow app to start with critical assets
+                setIsLoading(false);
+                setProgress(100);
+
+                // Phase 2: Load large assets in background (after a delay)
+                setTimeout(async () => {
+                    console.log('🔄 Starting background loading of large assets...');
+                    await loadLargeAssetsProgressively();
+                }, 2000); // 2 second delay
+
+            } else {
+                // Standard loading for Android/Desktop
+                console.log('🖥️ Using standard loading strategy...');
+                await loadAllAssetsStandard();
+                setIsLoading(false);
             }
 
-            // Ensure progress reaches 100%
-            setProgress(100);
-
-            // Small delay before completing to show 100% briefly
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            console.log('✅ All assets loaded successfully!');
-            setIsLoading(false);
         } catch (error) {
             console.error('Asset preloading failed:', error);
             setError(error);
             setIsLoading(false);
         }
-    }, [preloadAsset]);
+    }, [preloadAsset, loadCriticalAssetsFirst, loadLargeAssetsProgressively, loadAllAssetsStandard]);
 
     // Start preloading when hook is first used
     useEffect(() => {
@@ -213,7 +306,10 @@ export const useAssetPreloader = () => {
         loadedAssets,
         error,
         retry: preloadAssets,
-        totalAssets: ASSETS_TO_PRELOAD.length,
-        loadedCount: loadedAssets.size
+        totalAssets: deviceInfo?.shouldUseProgressiveLoading ? CRITICAL_ASSETS.length : ALL_ASSETS.length,
+        loadedCount: loadedAssets.size,
+        loadingPhase,
+        deviceInfo,
+        isProgressiveLoading: deviceInfo?.shouldUseProgressiveLoading || false
     };
 };
