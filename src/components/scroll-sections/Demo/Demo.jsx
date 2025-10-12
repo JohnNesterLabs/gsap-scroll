@@ -748,19 +748,42 @@ export default function Demo() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Set video properties
+    // Set video properties for mobile Safari/iPhone compatibility
     video.loop = true;
     video.muted = true;
     video.autoplay = true;
     video.playsInline = true;
     video.preload = "auto";
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('x-webkit-airplay', 'allow');
+    video.defaultMuted = true;
+    video.controls = false;
 
-    // Handle video loading
-    video.addEventListener("loadeddata", () => {
+    // Handle video loading with mobile Safari compatibility
+    const handleVideoReady = () => {
       console.log("Demo video loaded successfully");
-      video.play().catch((err) => {
-        console.warn("Autoplay failed:", err);
-      });
+      
+      // Force play for mobile Safari
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Autoplay failed:", err);
+          // Try again after user interaction for mobile Safari
+          document.addEventListener('touchstart', () => {
+            video.play().catch(console.warn);
+          }, { once: true });
+        });
+      }
+    };
+
+    video.addEventListener("loadeddata", handleVideoReady);
+    video.addEventListener("canplaythrough", handleVideoReady);
+    
+    // Firefox specific handling
+    video.addEventListener("loadedmetadata", () => {
+      console.log("Video metadata loaded - Firefox compatibility");
+      handleVideoReady();
     });
 
     video.addEventListener("error", (e) => {
@@ -832,6 +855,12 @@ export default function Demo() {
           src="/hero4.mp4"
           // src="/final-hero-video1.mp4"
           className="demo-fixed-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          webkit-playsinline="true"
           style={{
             position: "fixed",
             zIndex: 5,
@@ -844,6 +873,10 @@ export default function Demo() {
             opacity: isInitialized ? 1 : 0, // Smooth fade-in when initialized
             transition: 'opacity 0.3s ease-in-out',
             // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
+            // Mobile Safari specific optimizations
+            WebkitTransform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
           }}
         />
       )}
