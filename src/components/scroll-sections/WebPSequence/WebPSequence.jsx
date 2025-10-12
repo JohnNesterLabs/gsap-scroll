@@ -358,10 +358,28 @@ const WebPSequence = ({
                 style={{ width: `${timelineProgress * 100}%` }}
               />
             </div>
-            <div className="timeline-text">
+            {/* <div className="timeline-text">
               {Math.ceil((1 - timelineProgress) * (timelineDuration / 1000))}s
-            </div>
+            </div> */}
           </div>
+        </div>
+      )}
+
+{(shouldShowPlayButton() || isContinueCTAVisible()) && (
+        <div
+          className="text-overlay-bottom-mobile"
+          style={{
+            position: 'absolute',
+            zIndex: 20
+          }}
+        >
+          <button
+            className="play-button"
+            onClick={handlePlayButtonClick}
+            aria-label="Continue scrolling"
+          >
+           Click To Enter Ticket No. 1535
+          </button>
         </div>
       )}
       
@@ -382,14 +400,25 @@ const WebPSequence = ({
             onClick={handlePlayButtonClick}
             aria-label="Continue scrolling"
           >
-            <svg
-              className="play-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            <span className="play-text">Continue</span>
+              <svg
+                className="play-circle-icon"
+                viewBox="0 0 47 47"
+                width="47"
+                height="47"
+                fill="none"
+              >
+                <circle
+                  cx="23.5"
+                  cy="23.5"
+                  r="23"
+                  fill="white"
+                  stroke="none"
+                />
+                <path
+                  d="M18 14l14 9.5L18 33V14z"
+                  fill="black"
+                />
+              </svg>
           </button>
         </div>
       )}
