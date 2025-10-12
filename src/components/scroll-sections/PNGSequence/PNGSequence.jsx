@@ -11,8 +11,8 @@ const PNGSequence = ({
   // New props for scroll stop functionality
   stopFrame = 234, // Frame to stop at (frame_0234.png)
   timelineDuration = 5000, // 5 seconds in milliseconds
-  timelinePosition = { top: '50%', left: '50%' }, // Customizable timeline position
-  playButtonPosition = { top: '60%', left: '50%' }, // Customizable play button position
+  timelinePosition = { top: '70%', left: '80%' }, // Customizable timeline position
+  playButtonPosition = { top: '30%', left: '43%' }, // Customizable play button position
   onTimelineComplete, // Callback when timeline completes
   onPlayButtonClick, // Callback when play button is clicked
   // Video popup props
@@ -429,12 +429,25 @@ const PNGSequence = ({
                 style={{ width: `${timelineProgress * 100}%` }}
               />
             </div>
-            <div className="timeline-text">
+            {/* <div className="timeline-text">
               {Math.ceil((1 - timelineProgress) * (timelineDuration / 1000))}s
-            </div>
+            </div> */}
           </div>
         </div>
       )}
+
+      {(() => {
+        const shouldShow = shouldShowPlayButton() || isContinueCTAVisible();
+        console.log(':video_game: RENDER: Play button should show:', shouldShow);
+        return shouldShow;
+      })() && (
+        <div
+        className="text-overlay-bottom"
+      >
+          Click To Enter Ticket No. 1535
+      </div>
+        )}
+
       {/* Play Button Overlay */}
       {(() => {
         const shouldShow = shouldShowPlayButton() || isContinueCTAVisible();
@@ -457,13 +470,25 @@ const PNGSequence = ({
               aria-label="Continue scrolling"
             >
               <svg
-                className="play-icon"
-                viewBox="0 0 24 24"
-                fill="currentColor"
+                className="play-circle-icon"
+                viewBox="0 0 47 47"
+                width="47"
+                height="47"
+                fill="none"
               >
-                <path d="M8 5v14l11-7z" />
+                <circle
+                  cx="23.5"
+                  cy="23.5"
+                  r="23"
+                  fill="white"
+                  stroke="none"
+                />
+                <path
+                  d="M18 14l14 9.5L18 33V14z"
+                  fill="black"
+                />
               </svg>
-              <span className="play-text">Continue</span>
+              <span className="play-text">Enter Ticket</span>
             </button>
           </div>
         )}

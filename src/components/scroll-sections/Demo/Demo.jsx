@@ -93,13 +93,13 @@ export default function Demo() {
     timelineDuration: 5000, // 5 seconds in milliseconds
     // Timeline position - customize these values
     timelinePosition: {
-      top: "50%", // '50%' = center, '30%' = upper, '70%' = lower
-      left: "50%", // '50%' = center, '20%' = left, '80%' = right
+      top: "80%", // '50%' = center, '30%' = upper, '70%' = lower
+      left: "77.5%", // '50%' = center, '20%' = left, '80%' = right
     },
     // Play button position - customize these values
     playButtonPosition: {
-      top: "60%", // '60%' = below timeline, '40%' = above timeline
-      left: "50%", // '50%' = center, '20%' = left, '80%' = right
+      top: "30%", // '60%' = below timeline, '40%' = above timeline
+      left: "43%", // '50%' = center, '20%' = left, '80%' = right
     },
   };
 
@@ -623,7 +623,7 @@ export default function Demo() {
       // Batch all state updates together
       setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       setVideoSize({ width: newWidth, height: "auto" });
-      setHeaderVisible(scrollProgress < 0.04);
+      setHeaderVisible(scrollProgress < 0.02);
     });
   }, [activeSection, getPositionConfig, getRotationConfig, getVideoSizeConfig]);
 
