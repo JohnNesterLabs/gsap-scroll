@@ -27,7 +27,7 @@ export default function Demo() {
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
   const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // Change this to 4 or 5 to control when PNG sequence starts
+    startSection: 4, // PNG sequence starts from section 4 and completes all 328 frames
     totalFrames: 328,
     framePrefix: 'frame_',
     frameSuffix: '.png',
@@ -98,7 +98,7 @@ export default function Demo() {
         section3: { width: 2500, height: "auto" },  
         section4: { width: 1080, height: "auto" },
         section5: { width: 2150, height: "auto" },
-        section6: { width: 2000, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       "large-desktop": {
@@ -770,7 +770,7 @@ export default function Demo() {
             console.log('Play button clicked - resuming scroll');
           }}
         />
-        <AnimatedSection
+        {/* <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[4]}
           textAlign={getTextAlignConfig()[4]}
@@ -779,7 +779,7 @@ export default function Demo() {
           firstSet={[
             "",
           ]}
-        />
+        /> */}
         {/* <AnimatedSection
           sectionNumber={7}
           textPosition={getTextPositionConfig()[5]}
