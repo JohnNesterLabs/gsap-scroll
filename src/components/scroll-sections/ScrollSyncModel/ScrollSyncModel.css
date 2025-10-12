@@ -393,11 +393,11 @@ Main container
   align-items: center;
 }
 
-.footer-copyright {
+/* .footer-copyright {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
+} */
 
 /* .footer-copyright-text {
   font-family: 'Prodigy Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -688,11 +688,11 @@ Main container
     height: 28px;
   }
   
-  .footer-copyright {
+  /* .footer-copyright {
     flex-direction: column-reverse;
     gap: 2px;
     align-items: flex-start;
-  }
+  } */
   
   /* .footer-copyright-text {
     font-size: 12px;
