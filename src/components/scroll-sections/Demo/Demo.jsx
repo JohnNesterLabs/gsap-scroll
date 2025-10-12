@@ -5,6 +5,7 @@ import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
+import CanvasVideo from "./CanvasVideo";
 
 // Get initial video position and size for section 1 based on screen size
 const getInitialVideoConfig = () => {
@@ -748,20 +749,39 @@ export default function Demo() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Set video properties
+    // Set video properties for mobile Safari compatibility
     video.loop = true;
     video.muted = true;
     video.autoplay = true;
     video.playsInline = true;
     video.preload = "auto";
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('x-webkit-airplay', 'allow');
+    
+    // Mobile Safari specific properties
+    video.defaultMuted = true;
+    video.controls = false;
 
-    // Handle video loading
-    video.addEventListener("loadeddata", () => {
+    // Handle video loading with mobile Safari compatibility
+    const handleVideoReady = () => {
       console.log("Demo video loaded successfully");
-      video.play().catch((err) => {
-        console.warn("Autoplay failed:", err);
-      });
-    });
+      
+      // Force play for mobile Safari
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Autoplay failed:", err);
+          // Try again after user interaction for mobile Safari
+          document.addEventListener('touchstart', () => {
+            video.play().catch(console.warn);
+          }, { once: true });
+        });
+      }
+    };
+
+    video.addEventListener("loadeddata", handleVideoReady);
+    video.addEventListener("canplaythrough", handleVideoReady);
 
     video.addEventListener("error", (e) => {
       console.error("Video loading error:", e);
@@ -769,69 +789,77 @@ export default function Demo() {
   }, [isInitialized]);
 
   // Show loading screen while assets are being preloaded
-  if (isPreloading) {
-    return (
-      <div className="demo-container" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-        color: 'white',
-        fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
-      }}>
-        <div style={{ marginBottom: '20px' }}>
-          <img 
-            src="/final-logo.svg" 
-            alt="Kahuna" 
-            style={{ height: '60px', width: 'auto' }}
-          />
-        </div>
-        <div style={{ 
-          width: '300px', 
-          height: '4px', 
-          backgroundColor: 'rgba(255,255,255,0.2)', 
-          borderRadius: '2px',
-          overflow: 'hidden',
-          marginBottom: '16px'
-        }}>
-          <div style={{
-            width: `${preloadProgress}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
-            transition: 'width 0.3s ease-out',
-            borderRadius: '2px'
-          }} />
-        </div>
-        <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
-          Loading Assets...
-        </div>
-        <div style={{ fontSize: '14px', opacity: 0.7 }}>
-          {preloadProgress}% Complete
-        </div>
-        {preloadError && (
-          <div style={{ 
-            fontSize: '12px', 
-            color: '#ff6b6b', 
-            marginTop: '10px',
-            textAlign: 'center'
-          }}>
-            Some assets failed to load, but the experience will continue
-          </div>
-        )}
-      </div>
-    );
-  }
+  // if (isPreloading) {
+  //   return (
+  //     <div className="demo-container" style={{
+  //       display: 'flex',
+  //       flexDirection: 'column',
+  //       alignItems: 'center',
+  //       justifyContent: 'center',
+  //       background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+  //       color: 'white',
+  //       fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
+  //     }}>
+  //       <div style={{ marginBottom: '20px' }}>
+  //         <img 
+  //           src="/final-logo.svg" 
+  //           alt="Kahuna" 
+  //           style={{ height: '60px', width: 'auto' }}
+  //         />
+  //       </div>
+  //       <div style={{ 
+  //         width: '300px', 
+  //         height: '4px', 
+  //         backgroundColor: 'rgba(255,255,255,0.2)', 
+  //         borderRadius: '2px',
+  //         overflow: 'hidden',
+  //         marginBottom: '16px'
+  //       }}>
+  //         <div style={{
+  //           width: `${preloadProgress}%`,
+  //           height: '100%',
+  //           background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
+  //           transition: 'width 0.3s ease-out',
+  //           borderRadius: '2px'
+  //         }} />
+  //       </div>
+  //       <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
+  //         Loading Assets...
+  //       </div>
+  //       <div style={{ fontSize: '14px', opacity: 0.7 }}>
+  //         {preloadProgress}% Complete
+  //       </div>
+  //       {preloadError && (
+  //         <div style={{ 
+  //           fontSize: '12px', 
+  //           color: '#ff6b6b', 
+  //           marginTop: '10px',
+  //           textAlign: 'center'
+  //         }}>
+  //           Some assets failed to load, but the experience will continue
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="demo-container">
       {/* Fixed Video - Only show after initialization to prevent glitch */}
       {isInitialized && (
-        <video
+        <>
+          {/* Standard video element with mobile Safari fixes */}
+          <video
           ref={videoRef}
           src="/hero4.mp4"
           // src="/final-hero-video1.mp4"
           className="demo-fixed-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          webkit-playsinline="true"
           style={{
             position: "fixed",
             zIndex: 5,
@@ -844,8 +872,35 @@ export default function Demo() {
             opacity: isInitialized ? 1 : 0, // Smooth fade-in when initialized
             transition: 'opacity 0.3s ease-in-out',
             // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
+            // Mobile Safari specific optimizations
+            WebkitTransform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
           }}
         />
+          
+          {/* Alternative: Canvas-based video for maximum mobile compatibility */}
+          {/* Uncomment this and comment out the video above if you still have mobile issues */}
+          {/* 
+          <CanvasVideo
+            videoSrc="/hero4.mp4"
+            className="demo-fixed-video"
+            style={{
+              position: "fixed",
+              zIndex: 5,
+              pointerEvents: "none",
+              left: `${videoPosition.x}%`,
+              top: `${videoPosition.y}%`,
+              transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+              width: `${videoSize.width}px`,
+              height: videoSize.height,
+              opacity: isInitialized ? 1 : 0,
+              transition: 'opacity 0.3s ease-in-out',
+            }}
+            onLoad={() => console.log("Canvas video loaded successfully")}
+          />
+          */}
+        </>
       )}
 
       {/* Header - Only visible on Section 1 and after initialization */}
