@@ -40,6 +40,10 @@
   padding-left: 5vw;
 }
 
+.animated-section.section-5{
+  z-index: 1;
+}
+
 .animated-section.gradient-1 {
   /* border: 1px solid white; */
   background-color: black;

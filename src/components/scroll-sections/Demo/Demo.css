@@ -372,7 +372,12 @@
   font-weight: 500;
   color: #414243;
   margin: 0px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  width: 100%;
 }
+
 .footer-copyright-text p{
  margin: 0px;
  font-size: 15px;

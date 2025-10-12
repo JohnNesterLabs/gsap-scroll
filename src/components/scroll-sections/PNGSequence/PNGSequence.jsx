@@ -49,7 +49,6 @@ const PNGSequence = ({
   // Calculate frame index based on section progress
   useEffect(() => {
     if (activeSection >= startSection) {
-      setIsVisible(true);
       // Calculate frame based on section progress
       const sectionOffset = activeSection - startSection;
       const progressInSection = sectionProgress;
@@ -59,6 +58,21 @@ const PNGSequence = ({
       const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
       // const clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
       let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+      
+      // Hide PNG sequence after completing all frames (frame 328)
+      if (clampedFrame >= totalFrames) {
+        console.log('PNG sequence completed all frames - hiding sequence and allowing footer to show');
+        setIsVisible(false);
+        // Reset all PNG sequence states when completed
+        setIsScrollStopped(false);
+        setShowTimeline(false);
+        setShowPlayButton(false);
+        setTimelineProgress(0);
+        resumeScroll(); // Ensure scroll is not blocked
+        return;
+      } else {
+        setIsVisible(true);
+      }
       // Debug logging
       if (process.env.NODE_ENV === 'development') {
         console.log('Frame calculation:', {
@@ -105,6 +119,7 @@ const PNGSequence = ({
       }
       setCurrentFrame(clampedFrame);
     } else {
+      // User scrolled back to before start section - hide PNG sequence
       setIsVisible(false);
       setCurrentFrame(1);
       setIsScrollStopped(false);
@@ -117,7 +132,7 @@ const PNGSequence = ({
       // Clean up scroll prevention when component is not visible
       resumeScroll();
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
   // Handle showing Continue CTA again when user reaches frame 234 after watching video once
   useEffect(() => {
     console.log(':dart: Play button useEffect triggered:', {
@@ -146,7 +161,7 @@ const PNGSequence = ({
         hasWatchedVideo
       });
     }
-  }, [currentFrame, stopFrame, allowSmoothScrolling, hasWatchedVideo, isVisible]);
+  }, [currentFrame, stopFrame, allowSmoothScrolling, hasWatchedVideo, isVisible, showPlayButton]);
   // Force play button to show when at frame 234 after video watched
   useEffect(() => {
     if (allowSmoothScrolling && hasWatchedVideo && currentFrame === stopFrame && isVisible) {
@@ -408,7 +423,7 @@ const PNGSequence = ({
         </div>
       )}
       {/* Debug info - remove in production */}
-      {/* {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === 'development' && (
         <div className="png-sequence-debug">
           <div>Section: {activeSection}</div>
           <div>Progress: {(sectionProgress * 100).toFixed(1)}%</div>
@@ -436,7 +451,7 @@ const PNGSequence = ({
             CTA VISIBLE: {isContinueCTAVisible() ? 'YES' : 'NO'}
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
