@@ -10,7 +10,16 @@ function App() {
 
   const [showLoader, setShowLoader] = useState(true);
   const [loaderFadeOut, setLoaderFadeOut] = useState(false);
-  const { progress, isLoading, error, loadedCount, totalAssets } = useAssetPreloader();
+  const {
+    progress,
+    isLoading,
+    error,
+    loadedCount,
+    totalAssets,
+    loadingPhase,
+    deviceInfo,
+    isProgressiveLoading
+  } = useAssetPreloader();
 
   // Handle loader completion
   const handleLoaderComplete = () => {
@@ -25,13 +34,17 @@ function App() {
   // Auto-complete loader when assets are loaded
   useEffect(() => {
     if (!isLoading && progress === 100 && !error) {
-      console.log(`✅ All assets loaded: ${loadedCount}/${totalAssets}`);
-      // Show 100% for a moment before auto-completing
+      console.log(`✅ Assets loaded: ${loadedCount}/${totalAssets}`);
+      console.log(`📱 Device: ${deviceInfo?.isIOS ? 'iOS' : deviceInfo?.isAndroid ? 'Android' : 'Desktop'}`);
+      console.log(`🔄 Loading strategy: ${isProgressiveLoading ? 'Progressive' : 'Standard'}`);
+
+      // For progressive loading, show 100% for a shorter time since we're only loading critical assets
+      const delay = isProgressiveLoading ? 400 : 800;
       setTimeout(() => {
         handleLoaderComplete();
-      }, 800);
+      }, delay);
     }
-  }, [isLoading, progress, error, loadedCount, totalAssets]);
+  }, [isLoading, progress, error, loadedCount, totalAssets, deviceInfo, isProgressiveLoading]);
 
   // Handle errors by allowing user to skip
   useEffect(() => {
@@ -49,11 +62,14 @@ function App() {
           loadedCount={loadedCount}
           totalAssets={totalAssets}
           error={error}
+          loadingPhase={loadingPhase}
+          isProgressiveLoading={isProgressiveLoading}
+          deviceInfo={deviceInfo}
         />
       )}
 
       {!showLoader && (
-        <Demo/>
+        <Demo />
       )}
     </div>
   );

@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import './Loader.css';
 
-const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, totalAssets = 0, error = null }) => {
+const Loader = ({
+    onComplete,
+    progress = 0,
+    fadeOut = false,
+    loadedCount = 0,
+    totalAssets = 0,
+    error = null,
+    loadingPhase = 'initializing',
+    isProgressiveLoading = false,
+    deviceInfo = null
+}) => {
     const [displayProgress, setDisplayProgress] = useState(0);
     const [loadingText, setLoadingText] = useState('Initializing...');
 
@@ -19,22 +29,44 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
         return () => clearInterval(timer);
     }, [progress]);
 
-    // Update loading text based on progress
+    // Update loading text based on progress and loading strategy
     useEffect(() => {
-        if (progress < 5) {
-            setLoadingText('Initializing Kahuna AI...');
-        } else if (progress < 30) {
-            setLoadingText('Loading demo video...');
-        } else if (progress < 70) {
-            setLoadingText('Loading assets...');
-        } else if (progress < 95) {
-            setLoadingText('Almost ready...');
-        } else if (progress < 100) {
-            setLoadingText('Finalizing...');
+        if (isProgressiveLoading) {
+            // iOS Progressive Loading Messages
+            if (loadingPhase === 'initializing') {
+                setLoadingText('Initializing Kahuna AI...');
+            } else if (loadingPhase === 'critical') {
+                if (progress < 25) {
+                    setLoadingText('Loading essential assets...');
+                } else if (progress < 50) {
+                    setLoadingText('Preparing interface...');
+                } else if (progress < 75) {
+                    setLoadingText('Almost ready...');
+                } else if (progress < 100) {
+                    setLoadingText('Finalizing...');
+                } else {
+                    setLoadingText('Welcome to Kahuna AI');
+                }
+            } else if (loadingPhase === 'large') {
+                setLoadingText('Loading additional content...');
+            }
         } else {
-            setLoadingText('Welcome to Kahuna AI');
+            // Standard Loading Messages
+            if (progress < 5) {
+                setLoadingText('Initializing Kahuna AI...');
+            } else if (progress < 30) {
+                setLoadingText('Loading demo video...');
+            } else if (progress < 70) {
+                setLoadingText('Loading assets...');
+            } else if (progress < 95) {
+                setLoadingText('Almost ready...');
+            } else if (progress < 100) {
+                setLoadingText('Finalizing...');
+            } else {
+                setLoadingText('Welcome to Kahuna AI');
+            }
         }
-    }, [progress, loadedCount, totalAssets]);
+    }, [progress, loadedCount, totalAssets, loadingPhase, isProgressiveLoading]);
 
     return (
         <div className={`loader-container ${fadeOut ? 'fade-out' : ''}`}>
@@ -42,9 +74,9 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
             <div className="loader-content">
                 {/* Logo/Brand */}
                 <div className="loader-logo">
-                    <img 
-                        src="/Logo-color.svg" 
-                        alt="Kahuna AI" 
+                    <img
+                        src="/Logo-color.svg"
+                        alt="Kahuna AI"
                         className="loader-logo-svg"
                     />
                 </div>
@@ -66,6 +98,20 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
                 <div className="loading-text">
                     {loadingText}
                 </div>
+
+                {/* Debug info for testing (remove in production) */}
+                {deviceInfo && (
+                    <div style={{
+                        fontSize: '12px',
+                        opacity: 0.7,
+                        marginTop: '10px',
+                        textAlign: 'center'
+                    }}>
+                        Device: {deviceInfo.isIOS ? 'iOS' : deviceInfo.isAndroid ? 'Android' : 'Desktop'} |
+                        Strategy: {isProgressiveLoading ? 'Progressive' : 'Standard'} |
+                        Phase: {loadingPhase}
+                    </div>
+                )}
 
                 {/* Animated dots */}
                 {/* <div className="loading-dots">
