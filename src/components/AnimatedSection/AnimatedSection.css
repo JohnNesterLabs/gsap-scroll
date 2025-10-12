@@ -202,6 +202,7 @@
 }
 .text-line {
   font-size: 26px;
+  text-align: center;
 }
 }
 
@@ -233,7 +234,7 @@
   font-size: 2rem;
   font-weight: 300;
   color: white;
-  /* text-align: center; */
+  text-align: center;
   /* line-height: 1.5; */
 }
 

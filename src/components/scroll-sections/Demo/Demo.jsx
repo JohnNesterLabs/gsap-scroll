@@ -516,6 +516,35 @@ export default function Demo() {
     return fontWeightConfigs[viewport] || fontWeightConfigs["desktop"];
   };
 
+  // Text content configuration for section 1 - mobile vs desktop
+  const getSection1TextSets = () => {
+    const viewport = (() => {
+      const width = window.innerWidth;
+      if (width <= 480) return "mobile-small";
+      if (width <= 767) return "mobile-large";
+      if (width <= 1023) return "tablet";
+      if (width <= 1924) return "desktop";
+      return "large-desktop";
+    })();
+    // For mobile devices, combine the text into a single line without comma
+    if (viewport === "mobile-small" || viewport === "mobile-large") {
+      return {
+        firstSet: ["Vast and intricate products never stop evolving."],
+        secondSet: [
+          "Enterprise customers have an endless spectrum of realities."
+        ]
+      };
+    }
+    // For tablet, desktop, and large-desktop, use the original format
+    return {
+      firstSet: ["Vast and intricate,", "products never stop evolving."],
+      secondSet: [
+        "Enterprise customers have an",
+        "endless spectrum of realities.",
+      ]
+    };
+  };
+
   // Optimized scroll handler with throttling and performance improvements
   const handleScroll = useCallback(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -860,11 +889,8 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[0]}
           fontSize={getFontSizeConfig()[0]}
           fontWeight={getFontWeightConfig()[0]}
-          firstSet={["Vast and intricate,", "products never stop evolving."]}
-          secondSet={[
-            "Enterprise customers have an",
-            "endless spectrum of realities.",
-          ]}
+          firstSet={getSection1TextSets().firstSet}
+          secondSet={getSection1TextSets().secondSet}
         />
         <AnimatedSection
           sectionNumber={2}
