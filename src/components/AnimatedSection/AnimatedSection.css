@@ -167,7 +167,16 @@
     padding-top: 60px;
     align-items: flex-start;
   }
-  
+
+  .scroll-indicator-container{
+    bottom: 5rem !important;
+  }
+
+  .scroll-arrow{
+    width: 12px !important;
+    height: 12px !important;
+  }
+
   .text-position-bottom,
   .text-position-bottom-left,
   .text-position-bottom-right {

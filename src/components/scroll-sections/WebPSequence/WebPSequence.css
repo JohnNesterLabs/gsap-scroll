@@ -202,8 +202,8 @@
 
 .video-modal-content {
   position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
+  width: 95vw;
+  height: 95vh;
   width: auto;
   height: auto;
   background: rgba(0, 0, 0, 0.8);
@@ -253,8 +253,8 @@
 .video-modal-video {
   width: 100%;
   height: auto;
-  max-width: 90vw;
-  max-height: 90vh;
+  width: 95vw;
+  height: 95vh;
   border-radius: 8px;
   background: black;
   outline: none;

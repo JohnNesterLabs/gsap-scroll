@@ -122,7 +122,7 @@ export default function Demo() {
         section2: { width: 1820, height: "auto" },
         section3: { width: 2020, height: "auto" },
         section4: { width: 800, height: "auto" },
-        section5: { width: 100, height: "auto" },
+        section5: { width: 2100, height: "auto" },
         section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
@@ -183,7 +183,7 @@ export default function Demo() {
         { x: 110, y: 70 }, // Section 2 - Center
         { x: 40, y: 50 }, // Section 3 - Center
         { x: 38, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
+        { x: 40, y: 50 }, // Section 5 - Center
         { x: 50, y: 50 }, // Section 6 - Center
         { x: 50, y: 50 }, // Section 7 - Footer
       ],
@@ -878,7 +878,7 @@ export default function Demo() {
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={234} // Adjusted for mobile sequence (234 out of 436 frames - similar to desktop)
+            stopFrame={320} // Adjusted for mobile sequence (320 out of 436 frames - similar to desktop)
             timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
             timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
             playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
