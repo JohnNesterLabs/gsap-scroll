@@ -4,20 +4,61 @@ import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
 
+// Get initial video position and size for section 1 based on screen size
+const getInitialVideoConfig = () => {
+  const viewport = (() => {
+    const width = window.innerWidth;
+    if (width <= 480) return "mobile-small";
+    if (width <= 767) return "mobile-large";
+    if (width <= 1023) return "tablet";
+    if (width <= 1924) return "desktop";
+    return "large-desktop";
+  })();
+
+  const positionConfigs = {
+    "mobile-small": { x: 20, y: 90 }, // Section 1 - Center
+    "mobile-large": { x: 50, y: 50 }, // Section 1 - Center
+    tablet: { x: 50, y: 60 }, // Section 1 - Center
+    desktop: { x: 45, y: 110 }, // Section 1 - Center
+    "large-desktop": { x: 45, y: 110 }, // Section 1 - Center
+  };
+
+  const sizeConfigs = {
+    "mobile-small": { width: 1520, height: "auto" }, // Section 1
+    "mobile-large": { width: 700, height: "auto" }, // Section 1
+    tablet: { width: 800, height: "auto" }, // Section 1
+    desktop: { width: 1700, height: "auto" }, // Section 1
+    "large-desktop": { width: 2200, height: "auto" }, // Section 1
+  };
+
+  return {
+    position: positionConfigs[viewport] || positionConfigs["desktop"],
+    size: sizeConfigs[viewport] || sizeConfigs["desktop"],
+  };
+};
+
 export default function Demo() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [, setScrollProgress] = useState(0);
+  
+  // Get initial config based on screen size
+  const initialConfig = getInitialVideoConfig();
+  
   const [videoPosition, setVideoPosition] = useState({
-    x: 50,
-    y: 50,
+    x: initialConfig.position.x,
+    y: initialConfig.position.y,
     scale: 1,
     rotation: 0,
   });
-  const [videoSize, setVideoSize] = useState({ width: 400, height: "auto" });
+  const [videoSize, setVideoSize] = useState({ 
+    width: initialConfig.size.width, 
+    height: initialConfig.size.height 
+  });
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [sectionProgress, setSectionProgress] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // PNG Sequence Configuration
   // CONFIGURATION: Change startSection to control when PNG sequence starts
@@ -70,7 +111,7 @@ export default function Demo() {
         section3: { width: 2020, height: "auto" },
         section4: { width: 800, height: "auto" },
         section5: { width: 100, height: "auto" },
-        section6: { width: 100, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       "mobile-large": {
@@ -79,7 +120,7 @@ export default function Demo() {
         section3: { width: 500, height: "auto" },
         section4: { width: 380, height: "auto" },
         section5: { width: 380, height: "auto" },
-        section6: { width: 400, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       tablet: {
@@ -88,7 +129,7 @@ export default function Demo() {
         section3: { width: 1000, height: "auto" },
         section4: { width: 700, height: "auto" },
         section5: { width: 700, height: "auto" },
-        section6: { width: 800, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
       desktop: {
@@ -106,7 +147,7 @@ export default function Demo() {
         section3: { width: 3000, height: "auto" },
         section4: { width: 2380, height: "auto" },
         section5: { width: 3250, height: "auto" },
-        section6: { width: 2500, height: "auto" },
+        section6: { width: 0, height: "auto" },
         section7: { width: 0, height: "auto" }, // Footer
       },
     };
@@ -601,7 +642,12 @@ export default function Demo() {
       // Set initial position
       handleScroll();
 
-      console.log("Demo scroll listener attached successfully");
+      // Small delay to ensure position is calculated before showing video
+      setTimeout(() => {
+        // Mark as initialized to show video
+        setIsInitialized(true);
+        console.log("Demo scroll listener attached successfully");
+      }, 100);
     };
 
     setupScrollListener();
@@ -614,8 +660,10 @@ export default function Demo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initialize video
+  // Initialize video - Only when component is initialized
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const video = videoRef.current;
     if (!video) return;
 
@@ -637,31 +685,36 @@ export default function Demo() {
     video.addEventListener("error", (e) => {
       console.error("Video loading error:", e);
     });
-  }, []);
+  }, [isInitialized]);
 
   return (
     <div className="demo-container">
-      {/* Fixed Video */}
-      <video
-        ref={videoRef}
-        src="/hero4.mp4"
-        // src="/final-hero-video1.mp4"
-        className="demo-fixed-video"
-        style={{
-          position: "fixed",
-          zIndex: 5,
-          pointerEvents: "none",
-          left: `${videoPosition.x}%`,
-          top: `${videoPosition.y}%`,
-          transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
-          width: `${videoSize.width}px`,
-          height: videoSize.height,
-          // NO CSS transition - let JavaScript handle all animations for smoothness
-        }}
-      />
+      {/* Fixed Video - Only show after initialization to prevent glitch */}
+      {isInitialized && (
+        <video
+          ref={videoRef}
+          src="/hero4.mp4"
+          // src="/final-hero-video1.mp4"
+          className="demo-fixed-video"
+          style={{
+            position: "fixed",
+            zIndex: 5,
+            pointerEvents: "none",
+            left: `${videoPosition.x}%`,
+            top: `${videoPosition.y}%`,
+            transform: `translate(-50%, -50%) scale(${videoPosition.scale}) rotate(${videoPosition.rotation}deg)`,
+            width: `${videoSize.width}px`,
+            height: videoSize.height,
+            opacity: isInitialized ? 1 : 0, // Smooth fade-in when initialized
+            transition: 'opacity 0.3s ease-in-out',
+            // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
+          }}
+        />
+      )}
 
-      {/* Header - Only visible on Section 1 */}
-      <div className={`demo-header ${headerVisible ? "visible" : "hidden"}`}>
+      {/* Header - Only visible on Section 1 and after initialization */}
+      {isInitialized && (
+        <div className={`demo-header ${headerVisible ? "visible" : "hidden"}`}>
         {/* Left Logo */}
         <div className="demo-header-left">
           <img
@@ -681,7 +734,8 @@ export default function Demo() {
         >
           <a href="mailto:info@kahunalabs.ai">Let's Talk</a>
         </button>
-      </div>
+        </div>
+      )}
 
       {/* Scrollable Content */}
       <div
