@@ -51,93 +51,70 @@ const WebPSequence = ({
     });
   }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
 
-  // Calculate frame index based on section progress
+  // Optimized frame calculation with throttling and performance improvements
   useEffect(() => {
-    if (activeSection >= startSection) {
-      // Calculate frame based on section progress
-      const sectionOffset = activeSection - startSection;
-      const progressInSection = sectionProgress;
-      // Total progress across all sections from start section
-      const totalProgress = sectionOffset + progressInSection;
-      // Map progress to frame range (0 to totalFrames-1)
-      const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-      let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
-      
-      // Hide WebP sequence after completing all frames
-      if (clampedFrame >= totalFrames) {
-        console.log('📱 WebP sequence completed all frames - hiding sequence and allowing footer to show');
-        setIsVisible(false);
-        // Reset all WebP sequence states when completed
-        setIsScrollStopped(false);
-        setShowTimeline(false);
-        setShowPlayButton(false);
-        setTimelineProgress(0);
-        resumeScroll(); // Ensure scroll is not blocked
-        return;
-      } else {
-        setIsVisible(true);
-      }
-
-      // Debug logging
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📱 WebP Frame calculation:', {
-          totalProgress: totalProgress.toFixed(3),
-          frameIndex,
-          clampedFrame,
-          stopFrame,
-          isScrollStopped,
-          allowSmoothScrolling,
-          hasWatchedVideo,
-          showPlayButton: showPlayButton
-        });
-      }
-
-      // Handle scroll stop logic
-      if (clampedFrame >= stopFrame && !isScrollStopped && !allowSmoothScrolling) {
-        // First time reaching the stop frame - stop here (only if video hasn't been watched)
-        clampedFrame = stopFrame;
-        setIsScrollStopped(true);
-        setShowTimeline(true);
-        console.log('📱 Stopping at WebP frame:', stopFrame, 'Original calculated frame:', frameIndex + 1);
-        stopForwardScroll();
-      } else if (isScrollStopped && !allowSmoothScrolling) {
-        // We're in scroll stopped state (only if video hasn't been watched)
-        if (clampedFrame < stopFrame) {
-          // User scrolled back below the stop frame - reset everything
-          console.log('📱 User scrolled back below stop frame, resetting scroll stop');
+    // Use requestAnimationFrame to throttle frame updates for smooth performance
+    const updateFrame = () => {
+      if (activeSection >= startSection) {
+        // Calculate frame based on section progress
+        const sectionOffset = activeSection - startSection;
+        const progressInSection = sectionProgress;
+        // Total progress across all sections from start section
+        const totalProgress = sectionOffset + progressInSection;
+        // Map progress to frame range (0 to totalFrames-1)
+        const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
+        let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+        
+        // Hide WebP sequence after completing all frames
+        if (clampedFrame >= totalFrames) {
+          setIsVisible(false);
+          // Reset all WebP sequence states when completed
           setIsScrollStopped(false);
           setShowTimeline(false);
-          // Only reset play button if smooth scrolling is not enabled
-          if (!allowSmoothScrolling) {
-            setShowPlayButton(false);
-          }
+          setShowPlayButton(false);
           setTimelineProgress(0);
           resumeScroll();
-          // Allow normal frame progression (user is scrolling back)
+          return;
         } else {
-          // User is at or past the stop frame - keep it at stop frame
-          clampedFrame = stopFrame;
+          setIsVisible(true);
         }
-      } else if (allowSmoothScrolling) {
-        // After video has been watched once, allow smooth scrolling through all frames
-        // No scroll stopping, just smooth frame progression
-        console.log('📱 Smooth scrolling enabled - allowing WebP frame progression to:', clampedFrame);
+
+        // Handle scroll stop logic
+        if (clampedFrame >= stopFrame && !isScrollStopped && !allowSmoothScrolling) {
+          clampedFrame = stopFrame;
+          setIsScrollStopped(true);
+          setShowTimeline(true);
+          stopForwardScroll();
+        } else if (isScrollStopped && !allowSmoothScrolling) {
+          if (clampedFrame < stopFrame) {
+            setIsScrollStopped(false);
+            setShowTimeline(false);
+            if (!allowSmoothScrolling) {
+              setShowPlayButton(false);
+            }
+            setTimelineProgress(0);
+            resumeScroll();
+          } else {
+            clampedFrame = stopFrame;
+          }
+        }
+        
+        setCurrentFrame(clampedFrame);
+      } else {
+        // User scrolled back to before start section - hide WebP sequence
+        setIsVisible(false);
+        setCurrentFrame(1);
+        setIsScrollStopped(false);
+        setShowTimeline(false);
+        if (!allowSmoothScrolling) {
+          setShowPlayButton(false);
+        }
+        setTimelineProgress(0);
+        resumeScroll();
       }
-      setCurrentFrame(clampedFrame);
-    } else {
-      // User scrolled back to before start section - hide WebP sequence
-      setIsVisible(false);
-      setCurrentFrame(1);
-      setIsScrollStopped(false);
-      setShowTimeline(false);
-      // Only reset play button if smooth scrolling is not enabled
-      if (!allowSmoothScrolling) {
-        setShowPlayButton(false);
-      }
-      setTimelineProgress(0);
-      // Clean up scroll prevention when component is not visible
-      resumeScroll();
-    }
+    };
+
+    requestAnimationFrame(updateFrame);
   }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
 
   // Handle showing Continue CTA again when user reaches stop frame after watching video once
@@ -344,15 +321,22 @@ const WebPSequence = ({
 
   const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
   
+  // Use preloaded image if available, otherwise fall back to src
+  const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
+  
   return (
     <div className="webp-sequence-container">
       <img
         ref={imgRef}
-        src={imageSrc}
+        src={preloadedImg ? preloadedImg.src : imageSrc}
         alt={`Mobile WebP Frame ${currentFrame}`}
         className="webp-sequence-frame"
         onError={handleImageError}
         onLoad={handleImageLoad}
+        style={{
+          // Optimize rendering for preloaded images
+          willChange: preloadedImg ? 'auto' : 'transform',
+        }}
       />
       
       {/* Timeline Overlay */}

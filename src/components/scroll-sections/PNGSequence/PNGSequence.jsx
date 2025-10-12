@@ -392,15 +392,23 @@ const PNGSequence = ({
     return null;
   }
   const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
+  
+  // Use preloaded image if available, otherwise fall back to src
+  const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
+  
   return (
     <div className="png-sequence-container">
       <img
         ref={imgRef}
-        src={imageSrc}
+        src={preloadedImg ? preloadedImg.src : imageSrc}
         alt={`Journey Frame ${currentFrame}`}
         className="png-sequence-frame"
         onError={handleImageError}
         onLoad={handleImageLoad}
+        style={{
+          // Optimize rendering for preloaded images
+          willChange: preloadedImg ? 'auto' : 'transform',
+        }}
       />
       {/* Timeline Overlay */}
       {showTimeline && (

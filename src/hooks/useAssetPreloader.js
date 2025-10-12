@@ -13,11 +13,22 @@ const generatePNGFramePaths = (totalFrames = 328, folderPath = '/frames-journey/
     return frames;
 };
 
+// Generate WebP mobile frame paths
+const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-mobile-30fps/') => {
+    const frames = [];
+    for (let i = 1; i <= totalFrames; i++) {
+        const frameNumber = i.toString().padStart(4, '0');
+        frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
+    }
+    return frames;
+};
+
 // Define all assets that need to be preloaded
 const ASSETS_TO_PRELOAD = [
     // Main demo video
     '/hero4.mp4',
     '/demo1.mp4',
+    '/Final-Ticket-1-(WIP).mp4', // Video popup
 
     // Logo assets
     '/Logo-color.svg',
@@ -25,8 +36,11 @@ const ASSETS_TO_PRELOAD = [
     '/final-logo.svg',
     '/LinkedIn-Icon.png',
     
-    // PNG Sequence frames (all 328 frames)
+    // PNG Sequence frames (all 328 frames for desktop)
     ...generatePNGFramePaths(328, '/frames-journey/'),
+    
+    // WebP Mobile Sequence frames (all 436 frames for mobile)
+    ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
 ];
 
 export const useAssetPreloader = () => {
@@ -39,8 +53,9 @@ export const useAssetPreloader = () => {
         return new Promise((resolve, reject) => {
             // Determine asset type
             const isVideo = src.includes('.mp4');
-            const isImage = src.includes('.jpg') || src.includes('.png') || src.includes('.gif') || src.includes('.svg');
-            const isPNGFrame = src.includes('/frames/frame_');
+            const isImage = src.includes('.jpg') || src.includes('.png') || src.includes('.gif') || src.includes('.svg') || src.includes('.webp');
+            const isPNGFrame = src.includes('/frames-journey/frame_');
+            const isWebPFrame = src.includes('/frames-mobile-30fps/mobile_frame_');
 
             if (isVideo) {
                 const video = document.createElement('video');
@@ -62,6 +77,8 @@ export const useAssetPreloader = () => {
                     
                     if (isPNGFrame) {
                         console.log(`✓ PNG frame loaded: ${src}`);
+                    } else if (isWebPFrame) {
+                        console.log(`✓ WebP mobile frame loaded: ${src}`);
                     } else {
                         console.log(`✓ Image loaded: ${src}`);
                     }
@@ -104,9 +121,9 @@ export const useAssetPreloader = () => {
         try {
             console.log('🎬 Loading Demo assets...');
             
-            // Separate critical assets from PNG frames
-            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 6); // First 13 are critical (videos + logos)
-            const pngFrames = ASSETS_TO_PRELOAD.slice(6); // Rest are PNG frames
+            // Separate critical assets from frame sequences
+            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 7); // First 7 are critical (videos + logos)
+            const frameAssets = ASSETS_TO_PRELOAD.slice(7); // Rest are frame sequences (PNG + WebP)
             
             // Load critical assets first
             console.log('📦 Loading critical assets...');
@@ -124,15 +141,15 @@ export const useAssetPreloader = () => {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            // Load PNG frames in batches for better performance
-            console.log('🖼️ Loading PNG frames in batches...');
+            // Load frame sequences in batches for better performance
+            console.log('🖼️ Loading frame sequences in batches...');
             const batchSize = 20; // Load 20 frames at a time
-            const totalBatches = Math.ceil(pngFrames.length / batchSize);
+            const totalBatches = Math.ceil(frameAssets.length / batchSize);
             
             for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
                 const startIndex = batchIndex * batchSize;
-                const endIndex = Math.min(startIndex + batchSize, pngFrames.length);
-                const batch = pngFrames.slice(startIndex, endIndex);
+                const endIndex = Math.min(startIndex + batchSize, frameAssets.length);
+                const batch = frameAssets.slice(startIndex, endIndex);
                 
                 // Load batch in parallel
                 const batchPromises = batch.map(async (asset) => {
@@ -140,7 +157,7 @@ export const useAssetPreloader = () => {
                         await preloadAsset(asset);
                         return { success: true, asset };
                     } catch (error) {
-                        console.warn(`Failed to preload PNG frame ${asset}:`, error);
+                        console.warn(`Failed to preload frame ${asset}:`, error);
                         return { success: false, asset, error };
                     }
                 });
