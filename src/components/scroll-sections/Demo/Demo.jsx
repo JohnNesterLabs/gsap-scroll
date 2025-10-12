@@ -42,25 +42,25 @@ export default function Demo() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [, setScrollProgress] = useState(0);
-  
+
   // Get initial config based on screen size
   const initialConfig = getInitialVideoConfig();
-  
+
   const [videoPosition, setVideoPosition] = useState({
     x: initialConfig.position.x,
     y: initialConfig.position.y,
     scale: 1,
     rotation: 0,
   });
-  const [videoSize, setVideoSize] = useState({ 
-    width: initialConfig.size.width, 
-    height: initialConfig.size.height 
+  const [videoSize, setVideoSize] = useState({
+    width: initialConfig.size.width,
+    height: initialConfig.size.height
   });
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [sectionProgress, setSectionProgress] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Video preloading state
   const [isVideoPreloaded, setIsVideoPreloaded] = useState(false);
   const [videoPreloadProgress, setVideoPreloadProgress] = useState(0);
@@ -680,15 +680,15 @@ export default function Demo() {
       video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
-      
+
       // Store reference for cleanup
       preloadVideoRef.current = video;
-      
+
       // Track loading progress
       video.addEventListener('loadstart', () => {
         console.log('Video preloading started...');
       });
-      
+
       video.addEventListener('progress', () => {
         if (video.buffered.length > 0) {
           const bufferedEnd = video.buffered.end(video.buffered.length - 1);
@@ -700,25 +700,25 @@ export default function Demo() {
           }
         }
       });
-      
+
       video.addEventListener('canplaythrough', () => {
         console.log('Video preloading completed!');
         setIsVideoPreloaded(true);
         setVideoPreloadProgress(100);
       });
-      
+
       video.addEventListener('error', (e) => {
         console.error('Video preloading failed:', e);
         // Still mark as preloaded to avoid blocking the app
         setIsVideoPreloaded(true);
       });
-      
+
       // Start loading
       video.load();
     };
-    
+
     preloadVideo();
-    
+
     // Cleanup
     return () => {
       if (preloadVideoRef.current) {
@@ -731,7 +731,7 @@ export default function Demo() {
   // Initialize video - Only when component is initialized
   useEffect(() => {
     if (!isInitialized) return;
-    
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -783,25 +783,25 @@ export default function Demo() {
       {/* Header - Only visible on Section 1 and after initialization */}
       {isInitialized && (
         <div className={`demo-header ${headerVisible ? "visible" : "hidden"}`}>
-        {/* Left Logo */}
-        <div className="demo-header-left">
-          <img
-            src="/kahuna-logo-3.svg"
-            alt="Kahuna Logo"
-            className="demo-header-logo"
-          />
-        </div>
+          {/* Left Logo */}
+          <div className="demo-header-left">
+            <img
+              src="/kahuna-logo-3.svg"
+              alt="Kahuna Logo"
+              className="demo-header-logo"
+            />
+          </div>
 
-        {/* Right Let's Talk Button */}
-        <button
-          onClick={() => {
-            console.log("Let's Talk button clicked!");
-            // Add your contact/navigation logic here
-          }}
-          className="demo-header-button"
-        >
-          <a href="mailto:info@kahunalabs.ai">Let's Talk</a>
-        </button>
+          {/* Right Let's Talk Button */}
+          <button
+            onClick={() => {
+              console.log("Let's Talk button clicked!");
+              // Add your contact/navigation logic here
+            }}
+            className="demo-header-button"
+          >
+            <a href="mailto:info@kahunalabs.ai">Let's Talk</a>
+          </button>
         </div>
       )}
 
@@ -854,7 +854,7 @@ export default function Demo() {
           sectionNumber={4}
           words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]}
         />
-        <AnimatedSection
+        {/* <AnimatedSection
           sectionNumber={5}
           textPosition={getTextPositionConfig()[3]}
           textAlign={getTextAlignConfig()[3]}
@@ -865,7 +865,7 @@ export default function Demo() {
               // "AI that automatically builds and nurtures your Troubleshooting Map",
             ]
           }
-        />
+        /> */}
 
         {/* Responsive Animation - PNG Sequence for Desktop, WebP Sequence for Mobile */}
         {isMobileDevice() ? (
@@ -921,6 +921,38 @@ export default function Demo() {
             }}
           />
         )}
+
+        {/* Last Frame Section - Section 5 */}
+        <AnimatedSection
+          sectionNumber={5}
+          textPosition={getTextPositionConfig()[3]}
+          textAlign={getTextAlignConfig()[3]}
+          fontSize={getFontSizeConfig()[3]}
+          fontWeight={getFontWeightConfig()[3]}
+          firstSet={[
+            // "AI that automatically builds and nurtures your Troubleshooting Map",
+          ]}
+        />
+
+        {/* Last Frame Display - Desktop PNG and Mobile WebP */}
+        {isMobileDevice() ? (
+          <div className="demo-section last-frame-section">
+            <img
+              src="/frames-mobile-30fps/mobile_frame_0436.webp"
+              alt="Mobile Journey Final Frame"
+              className="last-frame-image"
+            />
+          </div>
+        ) : (
+          <div className="demo-section last-frame-section">
+            <img
+              src="/frames-journey/frame_0328.png"
+              alt="Desktop Journey Final Frame"
+              className="last-frame-image"
+            />
+          </div>
+        )}
+
         {/* <AnimatedSection
           sectionNumber={6}
           textPosition={getTextPositionConfig()[4]}
