@@ -18,24 +18,23 @@ export default function Demo() {
   const [activeSection, setActiveSection] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [sectionProgress, setSectionProgress] = useState(0);
-  
+
   // PNG Sequence Configuration
   // CONFIGURATION: Change startSection to control when PNG sequence starts
   // - startSection: 4 = PNG sequence starts from section 4 (after L657 section)
   // - startSection: 5 = PNG sequence starts from section 5 (after section 4)
-  // 
+  //
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
   const PNG_SEQUENCE_CONFIG = {
     startSection: 4, // PNG sequence starts from section 4 and completes all 328 frames
     totalFrames: 328,
-    framePrefix: 'frame_',
-    frameSuffix: '.png',
-    folderPath: '/frames-journey/'
+    framePrefix: "frame_",
+    frameSuffix: ".png",
+    folderPath: "/frames-journey/",
   };
 
-
-    // Scroll Stop Configuration
+  // Scroll Stop Configuration
   // CUSTOMIZE: Timeline and Play Button positions
   // You can change these values to position the timeline and play button anywhere on screen
   const SCROLL_STOP_CONFIG = {
@@ -43,14 +42,14 @@ export default function Demo() {
     timelineDuration: 5000, // 5 seconds in milliseconds
     // Timeline position - customize these values
     timelinePosition: {
-      top: '50%', // '50%' = center, '30%' = upper, '70%' = lower
-      left: '50%' // '50%' = center, '20%' = left, '80%' = right
+      top: "50%", // '50%' = center, '30%' = upper, '70%' = lower
+      left: "50%", // '50%' = center, '20%' = left, '80%' = right
     },
     // Play button position - customize these values
     playButtonPosition: {
-      top: '60%', // '60%' = below timeline, '40%' = above timeline
-      left: '50%' // '50%' = center, '20%' = left, '80%' = right
-    }
+      top: "60%", // '60%' = below timeline, '40%' = above timeline
+      left: "50%", // '50%' = center, '20%' = left, '80%' = right
+    },
   };
 
   // Video size configuration for each section
@@ -95,7 +94,7 @@ export default function Demo() {
       desktop: {
         section1: { width: 1700, height: "auto" },
         section2: { width: 1800, height: "auto" },
-        section3: { width: 2500, height: "auto" },  
+        section3: { width: 2500, height: "auto" },
         section4: { width: 1080, height: "auto" },
         section5: { width: 2150, height: "auto" },
         section6: { width: 0, height: "auto" },
@@ -680,9 +679,7 @@ export default function Demo() {
           }}
           className="demo-header-button"
         >
-          <a href="mailto:info@kahunalabs.ai">
-            Let's Talk
-          </a>
+          <a href="mailto:info@kahunalabs.ai">Let's Talk</a>
         </button>
       </div>
 
@@ -741,11 +738,13 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[3]}
           fontSize={getFontSizeConfig()[3]}
           fontWeight={getFontWeightConfig()[3]}
-          firstSet={[
-            "AI that automatically builds and nurtures your Troubleshooting Map",
-          ]}
+          firstSet={
+            [
+              // "AI that automatically builds and nurtures your Troubleshooting Map",
+            ]
+          }
         />
-        
+
         {/* PNG Sequence Animation - Canvas-based for smooth performance */}
         <PNGSequence
           startSection={PNG_SEQUENCE_CONFIG.startSection}
@@ -764,10 +763,10 @@ export default function Demo() {
           videoSrc="/demo1.mp4"
           showVideoPopup={true}
           onTimelineComplete={() => {
-            console.log('Timeline completed - showing play button');
+            console.log("Timeline completed - showing play button");
           }}
           onPlayButtonClick={() => {
-            console.log('Play button clicked - resuming scroll');
+            console.log("Play button clicked - resuming scroll");
           }}
         />
         {/* <AnimatedSection
@@ -840,12 +839,18 @@ export default function Demo() {
                   <h3 className="footer-column-title">COMPANY</h3>
                   <ul className="footer-links-list">
                     <li>
-                      <a href="mailto:info@kahunalabs.ai" className="footer-link">
+                      <a
+                        href="mailto:info@kahunalabs.ai"
+                        className="footer-link"
+                      >
                         Contact us
                       </a>
                     </li>
                     <li>
-                      <a href="mailto:careers@kahunalabs.ai" className="footer-link">
+                      <a
+                        href="mailto:careers@kahunalabs.ai"
+                        className="footer-link"
+                      >
                         Careers
                       </a>
                     </li>
@@ -880,14 +885,16 @@ export default function Demo() {
             {/* Bottom Copyright Line */}
             <div className="footer-copyright">
               <div className="footer-copyright-text">
-                <p>
-                  Kahuna AI and its components are trademarks of Kahuna Labs.
-                </p>
-                <p>
-                  The proprietary technology of Kahuna AI is protected by
-                  multiple issued and pending U.S. and international patents
-                  owned by Kahuna Labs.
-                </p>
+                <div>
+                  <p>
+                    Kahuna AI and its components are trademarks of Kahuna Labs.
+                  </p>
+                  <p>
+                    The proprietary technology of Kahuna AI is protected by
+                    multiple issued and pending U.S. and international patents
+                    owned by Kahuna Labs.
+                  </p>
+                </div>
                 <p>All rights reserved.</p>
               </div>
             </div>
