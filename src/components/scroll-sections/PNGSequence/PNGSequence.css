@@ -377,6 +377,13 @@
   animation: slideInUp 0.5s ease-out;
 }
 
+.text-overlay-bottom{
+  position: absolute;
+  font-family: "IBM Plex Mono", monospace;
+  bottom: 50px;
+  color: #FAFAFA;
+}
+
 .play-button-overlay {
   animation: slideInUp 0.5s ease-out 0.2s both;
 }

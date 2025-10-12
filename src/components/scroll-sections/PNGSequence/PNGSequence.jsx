@@ -435,6 +435,19 @@ const PNGSequence = ({
           </div>
         </div>
       )}
+
+      {(() => {
+        const shouldShow = shouldShowPlayButton() || isContinueCTAVisible();
+        console.log(':video_game: RENDER: Play button should show:', shouldShow);
+        return shouldShow;
+      })() && (
+        <div
+        className="text-overlay-bottom"
+      >
+          Click To Enter Ticket No. 1535
+      </div>
+        )}
+
       {/* Play Button Overlay */}
       {(() => {
         const shouldShow = shouldShowPlayButton() || isContinueCTAVisible();
