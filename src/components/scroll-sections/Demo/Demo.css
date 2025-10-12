@@ -112,6 +112,16 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  
+  /* Mobile Safari scrolling fixes */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Prevent scroll chaining on mobile */
+  overscroll-behavior-y: none;
+  -webkit-overscroll-behavior: none;
 }
 
 /* Custom scrollbar for demo */

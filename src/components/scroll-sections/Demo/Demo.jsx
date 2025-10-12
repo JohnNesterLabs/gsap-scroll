@@ -647,6 +647,20 @@ export default function Demo() {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       console.log("Setting up Demo scroll listener...");
+      
+      // Ensure scroll container has proper mobile Safari properties
+      scrollContainer.style.webkitOverflowScrolling = 'touch';
+      scrollContainer.style.overscrollBehavior = 'none';
+      
+      // Mobile Safari specific fixes
+      const isMobileSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+      if (isMobileSafari) {
+        console.log("Mobile Safari detected - applying iOS-specific scroll fixes");
+        scrollContainer.style.webkitTransform = 'translateZ(0)';
+        scrollContainer.style.transform = 'translateZ(0)';
+        scrollContainer.style.webkitBackfaceVisibility = 'hidden';
+        scrollContainer.style.backfaceVisibility = 'hidden';
+      }
 
       // Use passive listener with throttling for better performance during scroll
       let ticking = false;
@@ -660,9 +674,24 @@ export default function Demo() {
         }
       };
       
+      // Add scroll listener with mobile Safari compatibility
       scrollContainer.addEventListener("scroll", throttledHandleScroll, {
         passive: true,
       });
+      
+      // Add touch event listeners for mobile Safari
+      scrollContainer.addEventListener("touchstart", () => {
+        console.log("Touch start detected - mobile Safari compatibility");
+      }, { passive: true });
+      
+      scrollContainer.addEventListener("touchmove", throttledHandleScroll, {
+        passive: true,
+      });
+      
+      // Debug scroll events for mobile
+      scrollContainer.addEventListener("scroll", () => {
+        console.log("Scroll event fired:", scrollContainer.scrollTop);
+      }, { passive: true });
 
       // Set initial position
       handleScroll();
