@@ -294,17 +294,21 @@ const PNGSequence = ({
       // Store the current scroll position as the maximum allowed
       const currentScrollTop = scrollContainer.scrollTop;
       scrollContainer.dataset.maxScrollTop = currentScrollTop;
-      // Create scroll prevention handler
-      const handleScrollPrevention = (e) => {
-        if (scrollContainer.scrollTop > currentScrollTop) {
-          e.preventDefault();
-          scrollContainer.scrollTop = currentScrollTop;
-        }
+      // Create scroll prevention handler that works with mobile Safari
+      const handleScrollPrevention = () => {
+        // Use requestAnimationFrame to avoid blocking touch events
+        requestAnimationFrame(() => {
+          if (scrollContainer.scrollTop > currentScrollTop) {
+            scrollContainer.scrollTop = currentScrollTop;
+          }
+        });
       };
+      
       // Store the handler reference for cleanup
       scrollPreventionHandlerRef.current = handleScrollPrevention;
-      // Add scroll event listener to prevent forward scrolling
-      scrollContainer.addEventListener('scroll', handleScrollPrevention, { passive: false });
+      
+      // Add scroll event listener with passive: true for mobile compatibility
+      scrollContainer.addEventListener('scroll', handleScrollPrevention, { passive: true });
       scrollContainer.dataset.scrollHandler = 'true';
     }
   };
