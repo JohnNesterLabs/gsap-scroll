@@ -112,6 +112,11 @@
   /* backdrop-filter: blur(10px); */
   /* border: 1px solid rgba(255, 255, 255, 0.1); */
 }
+.text-overlay-bottom-mobile{
+  font-family: "IBM Plex Mono", monospace;
+  bottom: 40px;
+  color: gray;
+}
 
 .timeline-track {
   width: 200px;

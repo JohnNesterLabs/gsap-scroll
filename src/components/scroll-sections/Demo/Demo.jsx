@@ -86,22 +86,58 @@ export default function Demo() {
   };
 
   // Scroll Stop Configuration
-  // CUSTOMIZE: Timeline and Play Button positions
+  // CUSTOMIZE: Timeline and Play Button positions for different devices
   // You can change these values to position the timeline and play button anywhere on screen
-  const SCROLL_STOP_CONFIG = {
-    stopFrame: 234, // Frame to stop at (frame_0234.png)
-    timelineDuration: 5000, // 5 seconds in milliseconds
-    // Timeline position - customize these values
-    timelinePosition: {
-      top: "80%", // '50%' = center, '30%' = upper, '70%' = lower
-      left: "77.5%", // '50%' = center, '20%' = left, '80%' = right
-    },
-    // Play button position - customize these values
-    playButtonPosition: {
-      top: "30%", // '60%' = below timeline, '40%' = above timeline
-      left: "43%", // '50%' = center, '20%' = left, '80%' = right
-    },
+  const getScrollStopConfig = () => {
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Mobile Configuration
+      return {
+        stopFrame: 234, // Frame to stop at (frame_0234.png)
+        timelineDuration: 5000, // 5 seconds in milliseconds
+        // Timeline position - mobile optimized
+        timelinePosition: {
+          top: "92%", // Adjusted for mobile
+          left: "50%", // Centered on mobile
+        },
+        // Play button position - mobile optimized
+        playButtonPosition: {
+          top: "58%", // Higher on mobile for better touch access
+          left: "80%", // Centered on mobile
+        },
+      };
+    } else {
+      // Desktop Configuration
+      return {
+        stopFrame: 234, // Frame to stop at (frame_0234.png)
+        timelineDuration: 5000, // 5 seconds in milliseconds
+        // Timeline position - desktop optimized
+        timelinePosition: {
+          top: "80%", // '50%' = center, '30%' = upper, '70%' = lower
+          left: "77.5%", // '50%' = center, '20%' = left, '80%' = right
+        },
+        // Play button position - desktop optimized
+        playButtonPosition: {
+          top: "30%", // '60%' = below timeline, '40%' = above timeline
+          left: "43%", // '50%' = center, '20%' = left, '80%' = right
+        },
+      };
+    }
   };
+
+  // Initialize scroll stop config state
+  const [scrollStopConfig, setScrollStopConfig] = useState(getScrollStopConfig);
+
+  // Handle responsive config updates on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setScrollStopConfig(getScrollStopConfig());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Check if device is mobile
   const isMobileDevice = () => {
@@ -768,61 +804,6 @@ export default function Demo() {
     });
   }, [isInitialized]);
 
-  // Show loading screen while assets are being preloaded
-  // if (isPreloading) {
-  //   return (
-  //     <div className="demo-container" style={{
-  //       display: 'flex',
-  //       flexDirection: 'column',
-  //       alignItems: 'center',
-  //       justifyContent: 'center',
-  //       background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-  //       color: 'white',
-  //       fontFamily: 'Prodigy Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'
-  //     }}>
-  //       <div style={{ marginBottom: '20px' }}>
-  //         <img 
-  //           src="/final-logo.svg" 
-  //           alt="Kahuna" 
-  //           style={{ height: '60px', width: 'auto' }}
-  //         />
-  //       </div>
-  //       <div style={{ 
-  //         width: '300px', 
-  //         height: '4px', 
-  //         backgroundColor: 'rgba(255,255,255,0.2)', 
-  //         borderRadius: '2px',
-  //         overflow: 'hidden',
-  //         marginBottom: '16px'
-  //       }}>
-  //         <div style={{
-  //           width: `${preloadProgress}%`,
-  //           height: '100%',
-  //           background: 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)',
-  //           transition: 'width 0.3s ease-out',
-  //           borderRadius: '2px'
-  //         }} />
-  //       </div>
-  //       <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>
-  //         Loading Assets...
-  //       </div>
-  //       <div style={{ fontSize: '14px', opacity: 0.7 }}>
-  //         {preloadProgress}% Complete
-  //       </div>
-  //       {preloadError && (
-  //         <div style={{ 
-  //           fontSize: '12px', 
-  //           color: '#ff6b6b', 
-  //           marginTop: '10px',
-  //           textAlign: 'center'
-  //         }}>
-  //           Some assets failed to load, but the experience will continue
-  //         </div>
-  //       )}
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="demo-container">
       {/* Fixed Video - Only show after initialization to prevent glitch */}
@@ -830,7 +811,6 @@ export default function Demo() {
         <video
           ref={videoRef}
           src="/hero4.mp4"
-          // src="/final-hero-video1.mp4"
           className="demo-fixed-video"
           style={{
             position: "fixed",
@@ -944,11 +924,11 @@ export default function Demo() {
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
             stopFrame={320} // Adjusted for mobile sequence (320 out of 436 frames - similar to desktop)
-            timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
-            timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
-            playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+            timelineDuration={scrollStopConfig.timelineDuration}
+            timelinePosition={scrollStopConfig.timelinePosition}
+            playButtonPosition={scrollStopConfig.playButtonPosition}
             // Video popup functionality
-            videoSrc="/Final-Ticket-1-(WIP).mp4"
+            videoSrc="/Ticket1.mp4"
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
@@ -969,12 +949,12 @@ export default function Demo() {
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={SCROLL_STOP_CONFIG.stopFrame}
-            timelineDuration={SCROLL_STOP_CONFIG.timelineDuration}
-            timelinePosition={SCROLL_STOP_CONFIG.timelinePosition}
-            playButtonPosition={SCROLL_STOP_CONFIG.playButtonPosition}
+            stopFrame={scrollStopConfig.stopFrame}
+            timelineDuration={scrollStopConfig.timelineDuration}
+            timelinePosition={scrollStopConfig.timelinePosition}
+            playButtonPosition={scrollStopConfig.playButtonPosition}
             // Video popup functionality
-            videoSrc="/Final-Ticket-1-(WIP).mp4"
+            videoSrc="/Ticket1.mp4"
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
