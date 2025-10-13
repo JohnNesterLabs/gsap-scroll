@@ -77,8 +77,8 @@ export default function Demo() {
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
   const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // PNG sequence starts from section 4 and completes all 328 frames
-    totalFrames: 328,
+    startSection: 4, // PNG sequence starts from section 4 and completes all 378 frames
+    totalFrames: 378,
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
