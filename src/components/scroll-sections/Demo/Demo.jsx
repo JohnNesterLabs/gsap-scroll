@@ -88,8 +88,8 @@ export default function Demo() {
   // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
   // Using WebP format for better performance on desktop devices
   const DESKTOP_WEBP_SEQUENCE_CONFIG = {
-    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 328 frames
-    totalFrames: 328,
+    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
+    totalFrames: 428,
     framePrefix: "frame_",
     frameSuffix: ".webp",
     folderPath: "/frames-desktop-webp/",
@@ -100,7 +100,7 @@ export default function Demo() {
   // You can change these values to position the timeline and play button anywhere on screen
   const getScrollStopConfig = () => {
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
       // Mobile Configuration
       return {
@@ -705,7 +705,7 @@ export default function Demo() {
           ticking = true;
         }
       };
-      
+
       scrollContainer.addEventListener("scroll", throttledHandleScroll, {
         passive: true,
       });
