@@ -1119,7 +1119,7 @@ function ScrollSyncModel({
       textAlign: 'center',       // Options: 'left', 'center', 'right'
       
       background: '#000000', 
-      border: '1px solid #ffffff',
+      // border: '1px solid #ffffff',
       hasHeader: showHeader,
       showNumber: false,
       showScrollHint: false
@@ -1153,7 +1153,7 @@ function ScrollSyncModel({
       },
       textAlign: 'left',         // Left-aligned text for section 2
       background: '#000000', 
-      border: '1px solid #ffffff',
+      // border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: false
     },
@@ -1175,7 +1175,7 @@ function ScrollSyncModel({
       },
       textAlign: 'center',       // Center-aligned text
       background: '#000000', 
-      border: '1px solid #ffffff',
+      // border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: false
     },
@@ -1199,7 +1199,7 @@ function ScrollSyncModel({
       },
       textAlign: 'right',        // Right-aligned text
       background: '#000000', 
-      border: '1px solid #ffffff',
+      // border: '1px solid #ffffff',
       showNumber: false,
       showScrollHint: false
     },
@@ -1222,7 +1222,7 @@ function ScrollSyncModel({
       },
       textAlign: 'center',       // Center-aligned text
       background: '#000000', 
-      border: '1x solid #ffffff',
+      // border: '1x solid #ffffff',
       showNumber: false,
       showScrollHint: false
     },
@@ -1230,7 +1230,7 @@ function ScrollSyncModel({
       title: 'Footer', 
       subtitle: 'Contact & Links', 
       background: '#0A0A0A', 
-      border: '1px solid #ffffff',
+      // border: '1px solid #ffffff',
       isFooter: true
     }] : [])
   ];

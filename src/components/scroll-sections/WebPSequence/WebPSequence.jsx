@@ -20,7 +20,9 @@ const WebPSequence = ({
   videoSrc = '/Final-Ticket-1-(WIP).mp4', // Default video source for popup
   showVideoPopup = true, // Whether to show video popup on continue
   isVideoPreloaded = false, // Whether the video has been preloaded
-  videoPreloadProgress = 0 // Video preload progress percentage
+  videoPreloadProgress = 0, // Video preload progress percentage
+  // Frame mapping function for custom frame repetition
+  getSourceFrameNumber = null // Optional function to map current frame to source frame
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -319,7 +321,9 @@ const WebPSequence = ({
     return null;
   }
 
-  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
+  // Use custom frame mapping if provided, otherwise use current frame directly
+  const sourceFrameNumber = getSourceFrameNumber ? getSourceFrameNumber(currentFrame) : currentFrame;
+  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(sourceFrameNumber)}${frameSuffix}`;
   
   // Use preloaded image if available, otherwise fall back to src
   const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);

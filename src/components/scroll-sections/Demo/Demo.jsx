@@ -87,12 +87,43 @@ export default function Demo() {
   // Desktop WebP Sequence Configuration
   // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
   // Using WebP format for better performance on desktop devices
+  // Frame repetition: frames 1-233 repeat 20 times each, frame 234 repeats 150 times, frames 235-328 repeat 20 times each
   const DESKTOP_WEBP_SEQUENCE_CONFIG = {
-    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 328 frames
-    totalFrames: 328,
+    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all frames
+    totalFrames: 6690, // Total frames with repetition: (233×20) + (1×150) + (94×20) = 4,660 + 150 + 1,880 = 6,690
     framePrefix: "frame_",
     frameSuffix: ".webp",
     folderPath: "/frames-desktop-webp/",
+    // Frame repetition configuration
+    frameRepetition: {
+      earlyFrames: 233, // Frames 1-233
+      earlyRepetition: 20, // Each repeated 20 times
+      specialFrame: 234, // Frame 234
+      specialRepetition: 150, // Repeated 150 times
+      lateFrames: 94, // Frames 235-328 (94 frames total)
+      lateRepetition: 20, // Each repeated 20 times
+    }
+  };
+
+  // Function to map current frame index to actual source frame number
+  const getSourceFrameNumber = (currentFrameIndex, config) => {
+    const { earlyFrames, earlyRepetition, specialRepetition, lateFrames, lateRepetition } = config.frameRepetition;
+    
+    // Calculate boundaries for each section
+    const earlyTotalFrames = earlyFrames * earlyRepetition; // 233 * 20 = 4,660
+    const specialTotalFrames = specialRepetition; // 150
+    
+    if (currentFrameIndex <= earlyTotalFrames) {
+      // Within early frames (1-233, each repeated 20 times)
+      return Math.ceil(currentFrameIndex / earlyRepetition);
+    } else if (currentFrameIndex <= earlyTotalFrames + specialTotalFrames) {
+      // Within special frame (234, repeated 150 times)
+      return 234;
+    } else {
+      // Within late frames (235-328, each repeated 20 times)
+      const lateFrameIndex = currentFrameIndex - earlyTotalFrames - specialTotalFrames;
+      return 234 + Math.ceil(lateFrameIndex / lateRepetition);
+    }
   };
 
   // Scroll Stop Configuration
@@ -100,6 +131,10 @@ export default function Demo() {
   // You can change these values to position the timeline and play button anywhere on screen
   const getScrollStopConfig = () => {
     const isMobile = window.innerWidth <= 768;
+    
+    // Calculate stop frame for desktop with frame repetition
+    // Stop at the end of frame 234's repetitions: (233 * 20) + 150 = 4,660 + 150 = 4,810
+    const desktopStopFrame = (DESKTOP_WEBP_SEQUENCE_CONFIG.frameRepetition.earlyFrames * DESKTOP_WEBP_SEQUENCE_CONFIG.frameRepetition.earlyRepetition) + DESKTOP_WEBP_SEQUENCE_CONFIG.frameRepetition.specialRepetition;
     
     if (isMobile) {
       // Mobile Configuration
@@ -120,7 +155,7 @@ export default function Demo() {
     } else {
       // Desktop Configuration
       return {
-        stopFrame: 234, // Frame to stop at (frame_0234.png)
+        stopFrame: desktopStopFrame, // Frame to stop at (end of standard frames with repetition)
         timelineDuration: 5000, // 5 seconds in milliseconds
         // Timeline position - desktop optimized
         timelinePosition: {
@@ -981,6 +1016,8 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
+            // Custom frame mapping for repetition
+            getSourceFrameNumber={(currentFrame) => getSourceFrameNumber(currentFrame, DESKTOP_WEBP_SEQUENCE_CONFIG)}
             onTimelineComplete={() => {
               console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
