@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './PNGSequence.css';
 const PNGSequence = ({
   startSection = 4, // Configurable start section (4 or 5)
-  totalFrames = 328,
+  totalFrames = 378,
   framePrefix = 'frame_',
   frameSuffix = '.png',
   folderPath = '/frames-journey/',
@@ -125,42 +125,42 @@ const PNGSequence = ({
           // User is at or past the stop frame - keep it at stop frame
           clampedFrame = stopFrame;
         }
-      }else if (allowSmoothScrolling) {
-          // Check if user has gone below stop frame to reset behavior
-          if (clampedFrame < stopFrame && hasWatchedVideo) {
-            console.log('User scrolled below stop frame after watching video - resetting behavior');
-            setHasGoneBelowStopFrame(true);
-            // Reset video watched state to allow fresh experience
-            setHasWatchedVideo(false);
-            setAllowSmoothScrolling(false);
-            setShowPlayButton(false);
-            setShouldReturnToStopFrame(false);
-          }
-          // If user reaches stop frame again after going below it, restart the sequence
-          if (clampedFrame >= stopFrame && hasGoneBelowStopFrame && !hasWatchedVideo) {
-            console.log('User reached stop frame again after going below - restarting sequence');
+      } else if (allowSmoothScrolling) {
+        // Check if user has gone below stop frame to reset behavior
+        if (clampedFrame < stopFrame && hasWatchedVideo) {
+          console.log('User scrolled below stop frame after watching video - resetting behavior');
+          setHasGoneBelowStopFrame(true);
+          // Reset video watched state to allow fresh experience
+          setHasWatchedVideo(false);
+          setAllowSmoothScrolling(false);
+          setShowPlayButton(false);
+          setShouldReturnToStopFrame(false);
+        }
+        // If user reaches stop frame again after going below it, restart the sequence
+        if (clampedFrame >= stopFrame && hasGoneBelowStopFrame && !hasWatchedVideo) {
+          console.log('User reached stop frame again after going below - restarting sequence');
+          clampedFrame = stopFrame;
+          setIsScrollStopped(true);
+          setShowTimeline(true);
+          setHasGoneBelowStopFrame(false); // Reset the flag
+          stopForwardScroll();
+        } else if (allowSmoothScrolling && !hasGoneBelowStopFrame) {
+          // After video has been watched once, allow smooth scrolling through all frames
+          // BUT: If user cancelled video, keep them at stop frame until they scroll forward
+          if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
+            // User cancelled video and is at or before stop frame - keep at stop frame
             clampedFrame = stopFrame;
-            setIsScrollStopped(true);
-            setShowTimeline(true);
-            setHasGoneBelowStopFrame(false); // Reset the flag
-            stopForwardScroll();
-          } else if (allowSmoothScrolling && !hasGoneBelowStopFrame) {
-            // After video has been watched once, allow smooth scrolling through all frames
-            // BUT: If user cancelled video, keep them at stop frame until they scroll forward
-            if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
-              // User cancelled video and is at or before stop frame - keep at stop frame
-              clampedFrame = stopFrame;
-              console.log('Video was cancelled - keeping at stop frame:', stopFrame);
-            } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
-              // User cancelled video but scrolled forward - allow normal progression
-              console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
-              setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
-            } else {
-              // Normal smooth scrolling
-              console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
-            }
+            console.log('Video was cancelled - keeping at stop frame:', stopFrame);
+          } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
+            // User cancelled video but scrolled forward - allow normal progression
+            console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
+            setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
+          } else {
+            // Normal smooth scrolling
+            console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
           }
         }
+      }
       setCurrentFrame(clampedFrame);
     } else {
       // User scrolled back to before start section - hide PNG sequence
@@ -392,10 +392,10 @@ const PNGSequence = ({
     return null;
   }
   const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
-  
+
   // Use preloaded image if available, otherwise fall back to src
   const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
-  
+
   return (
     <div className="png-sequence-container">
       <img
@@ -441,11 +441,11 @@ const PNGSequence = ({
         console.log(':video_game: RENDER: Play button should show:', shouldShow);
         return shouldShow;
       })() && (
-        <div
-        className="text-overlay-bottom"
-      >
-          Click To Enter Ticket No. 1535
-      </div>
+          <div
+            className="text-overlay-bottom"
+          >
+            Click To Enter Ticket No. 1535
+          </div>
         )}
 
       {/* Play Button Overlay */}
