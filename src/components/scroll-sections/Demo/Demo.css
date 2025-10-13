@@ -90,6 +90,15 @@
   backface-visibility: hidden;
   -webkit-perspective: 1000;
   perspective: 1000;
+  
+  /* iOS Touch Action - Allow vertical scrolling */
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .demo-scroll-container {
