@@ -1,0 +1,320 @@
+.desktop-webp-sequence-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 15 !important;
+    /* Higher than video and other elements */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    /* Performance optimizations */
+    will-change: transform;
+    transform: translateZ(0);
+    /* Force hardware acceleration */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Optimize compositing */
+    contain: layout style paint;
+}
+
+.desktop-webp-sequence-frame {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    /* Fill entire container while maintaining aspect ratio */
+    object-position: center;
+    opacity: 1;
+    transition: opacity 0.05s ease-out;
+    /* Faster frame transitions for smoother performance */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Hardware acceleration optimizations */
+    will-change: opacity, transform;
+    transform: translateZ(0);
+    /* Force hardware acceleration */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Image optimization */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Timeline styles */
+.timeline-overlay {
+    pointer-events: none;
+}
+
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    animation: timelinePulse 2s ease-in-out infinite;
+}
+
+@keyframes timelinePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
+}
+
+.timeline-track {
+    width: 250px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.timeline-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 3px;
+    transition: width 0.1s ease-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+/* Play button styles */
+.play-button-overlay {
+    pointer-events: auto;
+    transition: transform 0.2s ease-out;
+}
+
+.play-button-overlay:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.play-button {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: all 0.2s ease-out;
+    animation: playButtonPulse 1.5s ease-in-out infinite;
+}
+
+.play-button:hover {
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+    animation: none;
+}
+
+@keyframes playButtonPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+/* Continue CTA styles */
+.continue-cta {
+    pointer-events: auto;
+}
+
+.continue-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.continue-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.continue-button:active {
+    transform: translateY(0);
+}
+
+/* Text overlay styles */
+.text-overlay-bottom {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    z-index: 20;
+    pointer-events: none;
+    animation: fadeInUp 0.5s ease-out;
+    max-width: 80%;
+    padding: 0 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Video modal styles */
+.video-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.video-modal {
+    position: relative;
+    width: 80vw;
+    height: 80vh;
+    max-width: 1200px;
+    max-height: 800px;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.video-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.video-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .desktop-webp-sequence-container {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .desktop-webp-sequence-frame {
+        object-fit: cover;
+    }
+
+    .timeline-track {
+        width: 150px;
+    }
+
+    .text-overlay-bottom {
+        font-size: 16px;
+        bottom: 15%;
+    }
+
+    .continue-button {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .desktop-webp-sequence-container {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .desktop-webp-sequence-frame {
+        object-fit: cover;
+    }
+
+    .timeline-track {
+        width: 120px;
+    }
+
+    .text-overlay-bottom {
+        font-size: 14px;
+        bottom: 10%;
+    }
+
+    .continue-button {
+        padding: 10px 20px;
+        font-size: 12px;
+    }
+}
+
+/* Debug info styling */
+.desktop-webp-sequence-debug {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.desktop-webp-sequence-debug div {
+    margin: 2px 0;
+}
