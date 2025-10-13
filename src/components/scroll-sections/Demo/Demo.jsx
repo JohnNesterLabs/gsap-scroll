@@ -812,6 +812,13 @@ export default function Demo() {
           ref={videoRef}
           src="/hero4.mp4"
           className="demo-fixed-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          webkit-playsinline="true"
+          x-webkit-airplay="deny"
           style={{
             position: "fixed",
             zIndex: 5,
