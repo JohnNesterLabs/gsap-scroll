@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
-import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 
@@ -83,6 +82,17 @@ export default function Demo() {
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
+  };
+
+  // Desktop WebP Sequence Configuration
+  // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
+  // Using WebP format for better performance on desktop devices
+  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
+    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 328 frames
+    totalFrames: 328,
+    framePrefix: "frame_",
+    frameSuffix: ".webp",
+    folderPath: "/frames-desktop-webp/",
   };
 
   // Scroll Stop Configuration
@@ -925,7 +935,7 @@ export default function Demo() {
           }
         /> */}
 
-        {/* Responsive Animation - PNG Sequence for Desktop, WebP Sequence for Mobile */}
+        {/* Responsive Animation - WebP Sequence for both Desktop and Mobile */}
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
@@ -953,12 +963,12 @@ export default function Demo() {
             }}
           />
         ) : (
-          <PNGSequence
-            startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
-            framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
-            frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
-            folderPath={PNG_SEQUENCE_CONFIG.folderPath}
+          <WebPSequence
+            startSection={DESKTOP_WEBP_SEQUENCE_CONFIG.startSection}
+            totalFrames={DESKTOP_WEBP_SEQUENCE_CONFIG.totalFrames}
+            framePrefix={DESKTOP_WEBP_SEQUENCE_CONFIG.framePrefix}
+            frameSuffix={DESKTOP_WEBP_SEQUENCE_CONFIG.frameSuffix}
+            folderPath={DESKTOP_WEBP_SEQUENCE_CONFIG.folderPath}
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
@@ -972,10 +982,10 @@ export default function Demo() {
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
             onTimelineComplete={() => {
-              console.log("Desktop PNG sequence timeline completed - showing play button");
+              console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
             onPlayButtonClick={() => {
-              console.log("Desktop PNG sequence play button clicked - resuming scroll");
+              console.log("Desktop WebP sequence play button clicked - resuming scroll");
             }}
           />
         )}
