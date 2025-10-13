@@ -426,7 +426,7 @@
   background: rgba(0, 0, 0, 0.8);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* border: 1px solid rgba(255, 255, 255, 0.1); */
   cursor: default;
   animation: scaleInModal 0.3s ease-out;
   pointer-events: auto;
