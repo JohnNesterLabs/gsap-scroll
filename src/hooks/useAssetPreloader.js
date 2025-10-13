@@ -28,7 +28,8 @@ const ASSETS_TO_PRELOAD = [
     // Main demo video
     '/hero4.mp4',
     '/demo1.mp4',
-    '/Ticket1.mp4', // Video popup
+    '/Ticket1.mp4', // Video popup (legacy)
+    '/Ticket1_web.mp4', // Video popup (new)
 
     // Logo assets
     '/Logo-color.svg',

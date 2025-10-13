@@ -725,7 +725,7 @@ export default function Demo() {
   useEffect(() => {
     const preloadVideo = () => {
       const video = document.createElement('video');
-      video.src = '/Final-Ticket-1-(WIP).mp4';
+      video.src = '/Ticket1_web.mp4';
       video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
@@ -819,6 +819,8 @@ export default function Demo() {
           preload="auto"
           webkit-playsinline="true"
           x-webkit-airplay="deny"
+          disablePictureInPicture
+          controls={false}
           style={{
             position: "fixed",
             zIndex: 5,
@@ -830,6 +832,10 @@ export default function Demo() {
             height: videoSize.height,
             opacity: isInitialized ? 1 : 0, // Smooth fade-in when initialized
             transition: 'opacity 0.3s ease-in-out',
+            // iOS-specific touch handling
+            touchAction: 'pan-y',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
             // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
           }}
         />
@@ -935,7 +941,7 @@ export default function Demo() {
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}
             // Video popup functionality
-            videoSrc="/Ticket1.mp4"
+            videoSrc="/Ticket1_web.mp4"
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
@@ -961,7 +967,7 @@ export default function Demo() {
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}
             // Video popup functionality
-            videoSrc="/Ticket1.mp4"
+            videoSrc="/Ticket1_web.mp4"
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
