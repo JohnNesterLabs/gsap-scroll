@@ -1049,14 +1049,14 @@ export default function Demo() {
                 <div className="footer-column">
                   <h3 className="footer-column-title">TECHNOLOGY</h3>
                   <ul className="footer-links-list">
-                    <li>
+                    {/* <li>
                       <a
                         href="/technology/frontline-productivity"
                         className="footer-link"
                       >
                         Frontline Productivity
                       </a>
-                    </li>
+                    </li> */}
                     <li>
                       <a
                         href="https://form.jotform.com/251278392049160"
