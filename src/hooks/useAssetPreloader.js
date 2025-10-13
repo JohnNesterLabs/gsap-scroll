@@ -23,6 +23,16 @@ const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-m
     return frames;
 };
 
+// Generate WebP desktop frame paths
+const generateWebPDesktopFramePaths = (totalFrames = 328, folderPath = '/frames-desktop-webp/') => {
+    const frames = [];
+    for (let i = 1; i <= totalFrames; i++) {
+        const frameNumber = i.toString().padStart(4, '0');
+        frames.push(`${folderPath}frame_${frameNumber}.webp`);
+    }
+    return frames;
+};
+
 // Define all assets that need to be preloaded
 const ASSETS_TO_PRELOAD = [
     // Main demo video
@@ -35,10 +45,13 @@ const ASSETS_TO_PRELOAD = [
     '/kahuna-logo-3.svg',
     '/final-logo.svg',
     '/LinkedIn-Icon.png',
-    
-    // PNG Sequence frames (all 328 frames for desktop)
-    ...generatePNGFramePaths(328, '/frames-journey/'),
-    
+
+    // PNG Sequence frames (all 328 frames for desktop) - DEPRECATED, keeping for fallback
+    // ...generatePNGFramePaths(328, '/frames-journey/'),
+
+    // WebP Desktop Sequence frames (all 328 frames for desktop)
+    ...generateWebPDesktopFramePaths(328, '/frames-desktop-webp/'),
+
     // WebP Mobile Sequence frames (all 436 frames for mobile)
     ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
 ];
@@ -55,7 +68,8 @@ export const useAssetPreloader = () => {
             const isVideo = src.includes('.mp4');
             const isImage = src.includes('.jpg') || src.includes('.png') || src.includes('.gif') || src.includes('.svg') || src.includes('.webp');
             const isPNGFrame = src.includes('/frames-journey/frame_');
-            const isWebPFrame = src.includes('/frames-mobile-30fps/mobile_frame_');
+            const isWebPDesktopFrame = src.includes('/frames-desktop-webp/frame_');
+            const isWebPMobileFrame = src.includes('/frames-mobile-30fps/mobile_frame_');
 
             if (isVideo) {
                 const video = document.createElement('video');
@@ -74,10 +88,12 @@ export const useAssetPreloader = () => {
                 img.onload = () => {
                     // Store the loaded image in global cache
                     window.preloadedImages.set(src, img);
-                    
+
                     if (isPNGFrame) {
                         console.log(`✓ PNG frame loaded: ${src}`);
-                    } else if (isWebPFrame) {
+                    } else if (isWebPDesktopFrame) {
+                        console.log(`✓ WebP desktop frame loaded: ${src}`);
+                    } else if (isWebPMobileFrame) {
                         console.log(`✓ WebP mobile frame loaded: ${src}`);
                     } else {
                         console.log(`✓ Image loaded: ${src}`);
@@ -120,11 +136,11 @@ export const useAssetPreloader = () => {
 
         try {
             console.log('🎬 Loading Demo assets...');
-            
+
             // Separate critical assets from frame sequences
             const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 7); // First 7 are critical (videos + logos)
             const frameAssets = ASSETS_TO_PRELOAD.slice(7); // Rest are frame sequences (PNG + WebP)
-            
+
             // Load critical assets first
             console.log('📦 Loading critical assets...');
             for (const asset of criticalAssets) {
@@ -140,17 +156,17 @@ export const useAssetPreloader = () => {
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
+
             // Load frame sequences in batches for better performance
             console.log('🖼️ Loading frame sequences in batches...');
             const batchSize = 20; // Load 20 frames at a time
             const totalBatches = Math.ceil(frameAssets.length / batchSize);
-            
+
             for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
                 const startIndex = batchIndex * batchSize;
                 const endIndex = Math.min(startIndex + batchSize, frameAssets.length);
                 const batch = frameAssets.slice(startIndex, endIndex);
-                
+
                 // Load batch in parallel
                 const batchPromises = batch.map(async (asset) => {
                     try {
@@ -161,26 +177,26 @@ export const useAssetPreloader = () => {
                         return { success: false, asset, error };
                     }
                 });
-                
+
                 // Wait for all promises in batch to complete
                 const batchResults = await Promise.allSettled(batchPromises);
-                
+
                 // Update progress for each completed asset
                 let batchLoadedCount = 0;
                 const batchLoadedAssets = [];
-                
+
                 batchResults.forEach((result) => {
                     batchLoadedCount++;
                     if (result.status === 'fulfilled' && result.value.success) {
                         batchLoadedAssets.push(result.value.asset);
                     }
                 });
-                
+
                 // Update counters
                 loadedCount += batchLoadedCount;
                 setLoadedAssets(prev => new Set([...prev, ...batchLoadedAssets]));
                 setProgress(Math.round((loadedCount / totalAssets) * 100));
-                
+
                 // Small delay between batches to prevent overwhelming the network
                 if (batchIndex < totalBatches - 1) {
                     await new Promise(resolve => setTimeout(resolve, 50));

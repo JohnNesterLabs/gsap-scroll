@@ -4,6 +4,7 @@ import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
+import DesktopWebPSequence from "../DesktopWebPSequence/DesktopWebPSequence";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 
 // Get initial video position and size for section 1 based on screen size
@@ -70,19 +71,19 @@ export default function Demo() {
   const [videoPreloadProgress, setVideoPreloadProgress] = useState(0);
   const preloadVideoRef = useRef(null);
 
-  // PNG Sequence Configuration
-  // CONFIGURATION: Change startSection to control when PNG sequence starts
-  // - startSection: 4 = PNG sequence starts from section 4 (after L657 section)
-  // - startSection: 5 = PNG sequence starts from section 5 (after section 4)
+  // Desktop WebP Sequence Configuration
+  // CONFIGURATION: Change startSection to control when WebP sequence starts
+  // - startSection: 4 = WebP sequence starts from section 4 (after L657 section)
+  // - startSection: 5 = WebP sequence starts from section 5 (after section 4)
   //
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
-  const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // PNG sequence starts from section 4 and completes all 328 frames
+  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
+    startSection: 4, // WebP sequence starts from section 4 and completes all 328 frames
     totalFrames: 328,
     framePrefix: "frame_",
-    frameSuffix: ".png",
-    folderPath: "/frames-journey/",
+    frameSuffix: ".webp",
+    folderPath: "/frames-desktop-webp/",
   };
 
   // Scroll Stop Configuration
@@ -90,7 +91,7 @@ export default function Demo() {
   // You can change these values to position the timeline and play button anywhere on screen
   const getScrollStopConfig = () => {
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
       // Mobile Configuration
       return {
@@ -112,15 +113,15 @@ export default function Demo() {
       return {
         stopFrame: 234, // Frame to stop at (frame_0234.png)
         timelineDuration: 5000, // 5 seconds in milliseconds
-        // Timeline position - desktop optimized
+        // Timeline position - desktop optimized for frame 234
         timelinePosition: {
-          top: "80%", // '50%' = center, '30%' = upper, '70%' = lower
-          left: "77.5%", // '50%' = center, '20%' = left, '80%' = right
+          top: "75%", // Positioned lower for better visibility
+          left: "50%", // Centered horizontally
         },
-        // Play button position - desktop optimized
+        // Play button position - desktop optimized for frame 234
         playButtonPosition: {
-          top: "30%", // '60%' = below timeline, '40%' = above timeline
-          left: "43%", // '50%' = center, '20%' = left, '80%' = right
+          top: "25%", // Positioned higher to avoid conflicts
+          left: "50%", // Centered horizontally
         },
       };
     }
@@ -695,7 +696,7 @@ export default function Demo() {
           ticking = true;
         }
       };
-      
+
       scrollContainer.addEventListener("scroll", throttledHandleScroll, {
         passive: true,
       });
@@ -919,10 +920,10 @@ export default function Demo() {
           }
         /> */}
 
-        {/* Responsive Animation - PNG Sequence for Desktop, WebP Sequence for Mobile */}
+        {/* Responsive Animation - Desktop WebP Sequence for Desktop, WebP Sequence for Mobile */}
         {isMobileDevice() ? (
           <WebPSequence
-            startSection={PNG_SEQUENCE_CONFIG.startSection}
+            startSection={DESKTOP_WEBP_SEQUENCE_CONFIG.startSection}
             totalFrames={436} // Updated to match 30fps WebP frames extracted
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
@@ -947,12 +948,12 @@ export default function Demo() {
             }}
           />
         ) : (
-          <PNGSequence
-            startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
-            framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
-            frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
-            folderPath={PNG_SEQUENCE_CONFIG.folderPath}
+          <DesktopWebPSequence
+            startSection={DESKTOP_WEBP_SEQUENCE_CONFIG.startSection}
+            totalFrames={DESKTOP_WEBP_SEQUENCE_CONFIG.totalFrames}
+            framePrefix={DESKTOP_WEBP_SEQUENCE_CONFIG.framePrefix}
+            frameSuffix={DESKTOP_WEBP_SEQUENCE_CONFIG.frameSuffix}
+            folderPath={DESKTOP_WEBP_SEQUENCE_CONFIG.folderPath}
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
@@ -966,10 +967,10 @@ export default function Demo() {
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
             onTimelineComplete={() => {
-              console.log("Desktop PNG sequence timeline completed - showing play button");
+              console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
             onPlayButtonClick={() => {
-              console.log("Desktop PNG sequence play button clicked - resuming scroll");
+              console.log("Desktop WebP sequence play button clicked - resuming scroll");
             }}
           />
         )}
@@ -986,7 +987,7 @@ export default function Demo() {
           ]}
         />
 
-        {/* Last Frame Display - Desktop PNG and Mobile WebP */}
+        {/* Last Frame Display - Desktop WebP and Mobile WebP */}
         {isMobileDevice() ? (
           <div className="demo-section last-frame-section">
             <img
@@ -998,7 +999,7 @@ export default function Demo() {
         ) : (
           <div className="demo-section last-frame-section">
             <img
-              src="/frames-journey/frame_0328.png"
+              src="/frames-desktop-webp/frame_0328.webp"
               alt="Desktop Journey Final Frame"
               className="last-frame-image"
             />
