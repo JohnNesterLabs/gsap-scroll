@@ -82,6 +82,14 @@
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   /* NO CSS transition - JavaScript handles all animations for maximum smoothness */
+  
+  /* iOS Safari specific optimizations */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
 }
 
 .demo-scroll-container {
