@@ -9,6 +9,11 @@ const WebPSequence = ({
   folderPath = '/frames-mobile/', // New folder for mobile WebP frames
   activeSection,
   sectionProgress,
+  // Animation speed controls
+  animationSpeed = .3, // 1.0 = normal, 0.5 = half speed, 2.0 = double speed
+  frameHoldDuration = 15, // Minimum milliseconds between frame updates (minimal to prevent sticking)
+  scrollDistanceMultiplier = 3.0, // How much more scrolling is needed (3x = 3 times more scroll)
+  frameRangeCompression = 0.6, // Use only 60% of total frames for slower progression
   // Scroll stop functionality
   stopFrame = 200, // Frame to stop at (equivalent to frame 234 in desktop)
   timelineDuration = 5000, // 5 seconds in milliseconds
@@ -31,6 +36,17 @@ const WebPSequence = ({
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false);
+  const [lastFrameUpdateTime, setLastFrameUpdateTime] = useState(0);
+  const [lastFrameNumber, setLastFrameNumber] = useState(1);
+  // Debug state for display
+  const [debugInfo, setDebugInfo] = useState({
+    shouldUpdateFrame: false,
+    significantProgress: false,
+    forceUpdate: false,
+    frameHasChanged: false,
+    frameDifference: 0,
+    timeSinceLastUpdate: 0
+  });
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
@@ -61,12 +77,62 @@ const WebPSequence = ({
         const progressInSection = sectionProgress;
         // Total progress across all sections from start section
         const totalProgress = sectionOffset + progressInSection;
-        // Map progress to frame range (0 to totalFrames-1)
-        const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-        let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
-        
-        // Hide WebP sequence after completing all frames
-        if (clampedFrame >= totalFrames) {
+
+        // DRAMATIC SLOWDOWN: Apply scroll distance multiplier
+        // This makes users need to scroll much more to complete the sequence
+        const scrollAdjustedProgress = totalProgress / scrollDistanceMultiplier;
+
+        // Apply easing function to slow down the animation
+        // Ease-in-out function: starts slow, speeds up in middle, slows down at end
+        const easeInOutCubic = (t) => {
+          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        };
+
+        // Apply easing to scroll-adjusted progress
+        const easedProgress = easeInOutCubic(scrollAdjustedProgress);
+
+        // Apply animation speed multiplier (lower = slower animation)
+        const speedAdjustedProgress = easedProgress * animationSpeed;
+
+        // FRAME RANGE COMPRESSION: Use only a portion of total frames
+        // This makes the animation use fewer frames, requiring more scroll per frame
+        const compressedFrameRange = Math.floor(totalFrames * frameRangeCompression);
+
+        // Map speed-adjusted progress to compressed frame range
+        const frameIndex = Math.floor(speedAdjustedProgress * (compressedFrameRange - 1));
+        let clampedFrame = Math.max(1, Math.min(compressedFrameRange, frameIndex + 1));
+
+        // SOLID SOLUTION: Always allow frame progression - no blocking returns
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = currentTime - lastFrameUpdateTime;
+
+        // Check if frame number has actually changed from last update
+        const frameHasChanged = clampedFrame !== lastFrameNumber;
+
+        // Determine if we should update the displayed frame
+        const shouldUpdateNow = frameHasChanged || timeSinceLastUpdate >= frameHoldDuration;
+
+        // Update debug info for display
+        setDebugInfo({
+          shouldUpdateFrame: timeSinceLastUpdate >= frameHoldDuration,
+          significantProgress: frameHasChanged,
+          forceUpdate: timeSinceLastUpdate >= 200,
+          frameHasChanged,
+          frameDifference: Math.abs(clampedFrame - lastFrameNumber),
+          timeSinceLastUpdate
+        });
+
+        // ALWAYS update the frame if it has changed or enough time has passed
+        // NO RETURN STATEMENTS - this ensures smooth progression
+        if (shouldUpdateNow) {
+          setLastFrameUpdateTime(currentTime);
+          setLastFrameNumber(clampedFrame);
+          // Update the displayed frame immediately when conditions are met
+          setCurrentFrame(clampedFrame);
+        }
+
+        // Hide WebP sequence after completing compressed frame range
+        if (clampedFrame >= compressedFrameRange) {
           setIsVisible(false);
           // Reset all WebP sequence states when completed
           setIsScrollStopped(false);
@@ -79,27 +145,57 @@ const WebPSequence = ({
           setIsVisible(true);
         }
 
-        // Handle scroll stop logic
-        if (clampedFrame >= stopFrame && !isScrollStopped && !allowSmoothScrolling) {
-          clampedFrame = stopFrame;
-          setIsScrollStopped(true);
-          setShowTimeline(true);
-          stopForwardScroll();
-        } else if (isScrollStopped && !allowSmoothScrolling) {
-          if (clampedFrame < stopFrame) {
-            setIsScrollStopped(false);
-            setShowTimeline(false);
-            if (!allowSmoothScrolling) {
-              setShowPlayButton(false);
+        // No scroll stopping - allow continuous scrolling through all frames
+        // CTA will be shown on frames 320-420 without stopping scroll
+
+        // Enhanced console debugging for frame sequence
+        if (process.env.NODE_ENV === 'development') {
+          const frameInfo = {
+            currentFrame: clampedFrame,
+            totalFrames: totalFrames,
+            compressedFrameRange: compressedFrameRange,
+            scrollDistanceMultiplier: scrollDistanceMultiplier,
+            frameRangeCompression: frameRangeCompression,
+            scrollAdjustedProgress: (scrollAdjustedProgress * 100).toFixed(1) + '%',
+            frameUpdateInfo: {
+              shouldUpdateFrame: debugInfo.shouldUpdateFrame,
+              significantProgress: debugInfo.significantProgress,
+              forceUpdate: debugInfo.forceUpdate,
+              frameHasChanged: debugInfo.frameHasChanged,
+              frameDifference: debugInfo.frameDifference,
+              timeSinceLastUpdate: debugInfo.timeSinceLastUpdate,
+              lastFrameNumber
+            },
+            isCTAZone: clampedFrame >= 320 && clampedFrame <= 420,
+            frameType: clampedFrame >= 320 && clampedFrame <= 420 ? 'CTA_ZONE' : 'ORIGINAL',
+            displayFrame: clampedFrame >= 320 && clampedFrame <= 420 ? 320 : clampedFrame > 420 ? clampedFrame - 100 : clampedFrame,
+            sectionInfo: {
+              activeSection,
+              startSection,
+              sectionProgress: (sectionProgress * 100).toFixed(1) + '%',
+              totalProgress: ((sectionOffset + progressInSection) * 100).toFixed(1) + '%'
+            },
+            scrollState: {
+              isScrollStopped,
+              allowSmoothScrolling,
+              showTimeline,
+              showPlayButton,
+              hasWatchedVideo
             }
-            setTimelineProgress(0);
-            resumeScroll();
-          } else {
-            clampedFrame = stopFrame;
+          };
+
+          console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
+
+          // Warning if frame seems stuck
+          if (debugInfo.frameDifference === 0 && debugInfo.timeSinceLastUpdate > 100) {
+            console.warn(`⚠️ FRAME STUCK WARNING: Frame ${clampedFrame} hasn't changed for ${debugInfo.timeSinceLastUpdate}ms`);
+          }
+
+          // Special logging for CTA zone
+          if (clampedFrame >= 320 && clampedFrame <= 420) {
+            console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (duplicate of frame_0320)`);
           }
         }
-        
-        setCurrentFrame(clampedFrame);
       } else {
         // User scrolled back to before start section - hide WebP sequence
         setIsVisible(false);
@@ -167,41 +263,41 @@ const WebPSequence = ({
     return frameNum.toString().padStart(4, '0');
   };
 
-  // Calculate if play button should be shown
+  // Calculate which frame to actually display (duplicate frame 320 for frames 320-420)
+  const getDisplayFrame = (frameNum) => {
+    // For frames 320-420, always show frame 320 (mobile_frame_0320.webp)
+    if (frameNum >= 320 && frameNum <= 420) {
+      return 320;
+    }
+    // For frames after 420, adjust the frame number to account for the 100 duplicate frames
+    else if (frameNum > 420) {
+      return frameNum - 100;
+    }
+    // For frames before 320, show the original frame
+    else {
+      return frameNum;
+    }
+  };
+
+  // Calculate if play button should be shown - now shows on frames 320-420
   const shouldShowPlayButton = () => {
-    // Primary condition: user has watched video and is at stop frame
-    const primaryCondition = allowSmoothScrolling && hasWatchedVideo && currentFrame === stopFrame && isVisible;
-    // Secondary condition: play button state is already true
-    const secondaryCondition = showPlayButton;
-    const result = primaryCondition || secondaryCondition;
+    // Show CTA on frames 320-420 (duplicate zone) without requiring video watch
+    const showOnDuplicateZone = currentFrame >= 320 && currentFrame <= 420 && isVisible;
+    const result = showOnDuplicateZone;
     console.log('📱 shouldShowPlayButton calculation:', {
-      showPlayButton,
-      allowSmoothScrolling,
-      hasWatchedVideo,
       currentFrame,
-      stopFrame,
       isVisible,
-      primaryCondition,
-      secondaryCondition,
+      showOnDuplicateZone,
       result
     });
-
-    // If we should show but state is false, force update
-    if (result && !showPlayButton) {
-      console.log('📱 shouldShowPlayButton: Forcing showPlayButton to true');
-      setShowPlayButton(true);
-    }
     return result;
   };
 
-  // Simple check for Continue CTA visibility - always show at stop frame after video watched
+  // Simple check for Continue CTA visibility - show on frames 320-420
   const isContinueCTAVisible = () => {
-    const visible = hasWatchedVideo && allowSmoothScrolling && currentFrame === stopFrame && isVisible;
+    const visible = currentFrame >= 320 && currentFrame <= 420 && isVisible;
     console.log('📱 Continue CTA Visibility Check:', {
-      hasWatchedVideo,
-      allowSmoothScrolling,
       currentFrame,
-      stopFrame,
       isVisible,
       visible
     });
@@ -244,30 +340,11 @@ const WebPSequence = ({
     }
   };
 
-  // Timeline management
-  useEffect(() => {
-    if (showTimeline && !showPlayButton) {
-      const startTime = Date.now();
-      const timelineInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / timelineDuration, 1);
-        setTimelineProgress(progress);
-        if (progress >= 1) {
-          clearInterval(timelineInterval);
-          setShowTimeline(false);
-          setShowPlayButton(true);
-          if (onTimelineComplete) {
-            onTimelineComplete();
-          }
-        }
-      }, 16); // ~60fps updates
-      return () => clearInterval(timelineInterval);
-    }
-  }, [showTimeline, showPlayButton, timelineDuration, onTimelineComplete]);
+  // Timeline management removed - no longer needed
 
-  // Handle play button click
+  // Handle play button click - simplified for frames 320-420
   const handlePlayButtonClick = () => {
-    setShowPlayButton(false);
+    console.log('📱 CTA clicked on frame:', currentFrame);
     if (showVideoPopup && videoSrc) {
       // Check if video is preloaded before showing popup
       if (isVideoPreloaded) {
@@ -277,9 +354,6 @@ const WebPSequence = ({
         console.log('📱 Video not yet preloaded - showing popup anyway (will load on demand)');
         setShowVideoModal(true);
       }
-    } else {
-      // Resume scroll immediately if no video popup
-      resumeScroll();
     }
     if (onPlayButtonClick) {
       onPlayButtonClick();
@@ -319,11 +393,13 @@ const WebPSequence = ({
     return null;
   }
 
-  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
-  
+  // Get the actual frame to display (with duplication logic)
+  const displayFrame = getDisplayFrame(currentFrame);
+  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(displayFrame)}${frameSuffix}`;
+
   // Use preloaded image if available, otherwise fall back to src
   const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
-  
+
   return (
     <div className="webp-sequence-container">
       <img
@@ -338,34 +414,10 @@ const WebPSequence = ({
           willChange: preloadedImg ? 'auto' : 'transform',
         }}
       />
-      
-      {/* Timeline Overlay */}
-      {showTimeline && (
-        <div
-          className="timeline-overlay"
-          style={{
-            position: 'absolute',
-            top: timelinePosition.top,
-            left: timelinePosition.left,
-            transform: 'translate(-50%, -50%)',
-            zIndex: 20
-          }}
-        >
-          <div className="timeline-container">
-            <div className="timeline-track">
-              <div
-                className="timeline-progress"
-                style={{ width: `${timelineProgress * 100}%` }}
-              />
-            </div>
-            {/* <div className="timeline-text">
-              {Math.ceil((1 - timelineProgress) * (timelineDuration / 1000))}s
-            </div> */}
-          </div>
-        </div>
-      )}
 
-{(shouldShowPlayButton() || isContinueCTAVisible()) && (
+      {/* Timeline Overlay removed - no longer needed */}
+
+      {(shouldShowPlayButton() || isContinueCTAVisible()) && (
         <div
           className="text-overlay-bottom-mobile"
           style={{
@@ -378,11 +430,11 @@ const WebPSequence = ({
             onClick={handlePlayButtonClick}
             aria-label="Continue scrolling"
           >
-           Click To Enter Ticket No. 1535
+            Click To Enter Ticket No. 1535
           </button>
         </div>
       )}
-      
+
       {/* Play Button Overlay */}
       {(shouldShowPlayButton() || isContinueCTAVisible()) && (
         <div
@@ -400,25 +452,25 @@ const WebPSequence = ({
             onClick={handlePlayButtonClick}
             aria-label="Continue scrolling"
           >
-              <svg
-                className="play-circle-icon"
-                viewBox="0 0 47 47"
-                width="47"
-                height="47"
-                fill="none"
-              >
-                <circle
-                  cx="23.5"
-                  cy="23.5"
-                  r="23"
-                  fill="white"
-                  stroke="none"
-                />
-                <path
-                  d="M18 14l14 9.5L18 33V14z"
-                  fill="black"
-                />
-              </svg>
+            <svg
+              className="play-circle-icon"
+              viewBox="0 0 47 47"
+              width="47"
+              height="47"
+              fill="none"
+            >
+              <circle
+                cx="23.5"
+                cy="23.5"
+                r="23"
+                fill="white"
+                stroke="none"
+              />
+              <path
+                d="M18 14l14 9.5L18 33V14z"
+                fill="black"
+              />
+            </svg>
           </button>
         </div>
       )}
@@ -431,7 +483,7 @@ const WebPSequence = ({
           </div>
         </div>
       )}
-      
+
       {/* Video Modal Popup */}
       {showVideoModal && (
         <div className="video-modal-overlay" onClick={handleVideoModalClose}>
@@ -471,44 +523,108 @@ const WebPSequence = ({
           </div>
         </div>
       )}
-      
-      {/* Debug info - remove in production */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div className="webp-sequence-debug">
-          <div>📱 WebP Sequence</div>
-          <div>Section: {activeSection}</div>
-          <div>Progress: {(sectionProgress * 100).toFixed(1)}%</div>
-          <div>Frame: {currentFrame}/{totalFrames}</div>
-          <div>Start Section: {startSection}</div>
-          <div>Stop Frame: {stopFrame}</div>
-          <div>Scroll Stopped: {isScrollStopped ? 'Yes' : 'No'}</div>
-          <div>Show Timeline: {showTimeline ? 'Yes' : 'No'}</div>
+
+      {/* Enhanced Debug info - shows frame sequence details */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="webp-sequence-debug" style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          zIndex: 1000,
+          maxWidth: '300px',
+          lineHeight: '1.4'
+        }}>
+          <div style={{ fontWeight: 'bold', color: '#00ff00', marginBottom: '5px' }}>
+            🖥️ DESKTOP WEBP SEQUENCE DEBUG
+          </div>
+          <div>📁 Folder: {folderPath}</div>
+          <div>🏷️ Prefix: {framePrefix}</div>
+          <div>🏷️ Suffix: {frameSuffix}</div>
+          <div>📊 Section: {activeSection} (Start: {startSection})</div>
+          <div>📈 Progress: {(sectionProgress * 100).toFixed(1)}%</div>
+          <div style={{
+            color: currentFrame >= 320 && currentFrame <= 420 ? '#ffff00' : '#00ff00',
+            fontWeight: 'bold'
+          }}>
+            🎬 Frame: {currentFrame}/{totalFrames}
+            {currentFrame >= 320 && currentFrame <= 420 && (
+              <span style={{ color: '#ffff00' }}> (CTA ZONE)</span>
+            )}
+          </div>
+          <div>🛑 Stop Frame: {stopFrame} (Not Used)</div>
+          <div>⏸️ Scroll Stopped: No (Continuous Scroll)</div>
+          <div>⏱️ Show Timeline: No (Removed)</div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            🐌 Scroll Multiplier: {scrollDistanceMultiplier}x
+          </div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            📦 Frame Compression: {(frameRangeCompression * 100).toFixed(0)}%
+          </div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            ⚡ Animation Speed: {(animationSpeed * 100).toFixed(0)}%
+          </div>
+          <div style={{ color: '#ffaa00', fontSize: '11px' }}>
+            🔄 Frame Update: {debugInfo.frameHasChanged ? 'Changed' : debugInfo.shouldUpdateFrame ? 'Time' : 'Waiting'}
+          </div>
+          <div style={{ color: '#ffaa00', fontSize: '11px' }}>
+            ⏱️ Time Since Update: {debugInfo.timeSinceLastUpdate}ms
+          </div>
           <div style={{ color: showPlayButton ? 'green' : 'red', fontWeight: 'bold' }}>
-            Show Play Button: {showPlayButton ? 'Yes' : 'No'}
+            ▶️ Show Play Button: {showPlayButton ? 'Yes' : 'No'}
           </div>
           <div style={{ color: hasWatchedVideo ? 'green' : 'red' }}>
-            Has Watched Video: {hasWatchedVideo ? 'Yes' : 'No'}
+            🎥 Has Watched Video: {hasWatchedVideo ? 'Yes' : 'No'}
           </div>
           <div style={{ color: allowSmoothScrolling ? 'green' : 'red' }}>
-            Allow Smooth Scrolling: {allowSmoothScrolling ? 'Yes' : 'No'}
+            🚀 Allow Smooth Scrolling: {allowSmoothScrolling ? 'Yes' : 'No'}
           </div>
           <div style={{ color: isVisible ? 'green' : 'red' }}>
-            Is Visible: {isVisible ? 'Yes' : 'No'}
+            👁️ Is Visible: {isVisible ? 'Yes' : 'No'}
           </div>
           <div style={{ color: shouldShowPlayButton() ? 'green' : 'red', fontWeight: 'bold', fontSize: '14px' }}>
-            SHOULD SHOW: {shouldShowPlayButton() ? 'YES' : 'NO'}
+            ✅ SHOULD SHOW: {shouldShowPlayButton() ? 'YES' : 'NO'}
           </div>
           <div style={{ color: isContinueCTAVisible() ? 'green' : 'red', fontWeight: 'bold', fontSize: '14px' }}>
-            CTA VISIBLE: {isContinueCTAVisible() ? 'YES' : 'NO'}
+            🎯 CTA VISIBLE: {isContinueCTAVisible() ? 'YES' : 'NO'}
           </div>
           <div style={{ color: isVideoPreloaded ? 'green' : 'orange', fontWeight: 'bold', fontSize: '14px' }}>
-            VIDEO PRELOADED: {isVideoPreloaded ? 'YES' : 'NO'}
+            📹 VIDEO PRELOADED: {isVideoPreloaded ? 'YES' : 'NO'}
           </div>
           <div style={{ color: 'cyan', fontSize: '12px' }}>
-            Video Progress: {videoPreloadProgress.toFixed(1)}%
+            📊 Video Progress: {videoPreloadProgress.toFixed(1)}%
+          </div>
+          <div style={{
+            marginTop: '5px',
+            padding: '3px',
+            background: currentFrame >= 320 && currentFrame <= 420 ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
+            borderRadius: '3px',
+            fontSize: '11px'
+          }}>
+            {currentFrame >= 320 && currentFrame <= 420 ?
+              `🎯 CTA ZONE (320-420): Frame ${currentFrame} - CTA button visible` :
+              `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
+            }
+          </div>
+          <div style={{
+            marginTop: '3px',
+            fontSize: '10px',
+            color: '#888',
+            borderTop: '1px solid #333',
+            paddingTop: '3px'
+          }}>
+            Frame Range Info:<br />
+            • 1-319: Original frames<br />
+            • 320-420: CTA Zone (Duplicates + Button)<br />
+            • 421-536: Original frames (shifted)
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };

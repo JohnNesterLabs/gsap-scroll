@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
-import PNGSequence from "../PNGSequence/PNGSequence";
 import WebPSequence from "../WebPSequence/WebPSequence";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 
@@ -78,11 +77,22 @@ export default function Demo() {
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
   const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // PNG sequence starts from section 4 and completes all 328 frames
-    totalFrames: 328,
+    startSection: 4, // PNG sequence starts from section 4 and completes all 378 frames
+    totalFrames: 378,
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
+  };
+
+  // Desktop WebP Sequence Configuration
+  // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
+  // Using WebP format for better performance on desktop devices
+  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
+    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
+    totalFrames: 428,
+    framePrefix: "frame_",
+    frameSuffix: ".webp",
+    folderPath: "/frames-desktop-webp/",
   };
 
   // Scroll Stop Configuration
@@ -90,7 +100,7 @@ export default function Demo() {
   // You can change these values to position the timeline and play button anywhere on screen
   const getScrollStopConfig = () => {
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
       // Mobile Configuration
       return {
@@ -119,8 +129,8 @@ export default function Demo() {
         },
         // Play button position - desktop optimized
         playButtonPosition: {
-          top: "30%", // '60%' = below timeline, '40%' = above timeline
-          left: "43%", // '50%' = center, '20%' = left, '80%' = right
+          top: "29%", // '60%' = below timeline, '40%' = above timeline
+          left: "48%", // '50%' = center, '20%' = left, '80%' = right
         },
       };
     }
@@ -608,7 +618,12 @@ export default function Demo() {
 
       // Calculate which section we're in and interpolate
       const totalSections = 7;
-      const sectionIndex = scrollProgress * (totalSections - 1);
+      // Apply easing to scroll progress to slow down section transitions
+      const easeInOutQuad = (t) => {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      };
+      const easedScrollProgress = easeInOutQuad(scrollProgress);
+      const sectionIndex = easedScrollProgress * (totalSections - 1);
       const currentSection = Math.floor(sectionIndex);
       const nextSection = Math.min(currentSection + 1, totalSections - 1);
       const sectionProgress = sectionIndex - currentSection;
@@ -695,7 +710,7 @@ export default function Demo() {
           ticking = true;
         }
       };
-      
+
       scrollContainer.addEventListener("scroll", throttledHandleScroll, {
         passive: true,
       });
@@ -932,16 +947,21 @@ export default function Demo() {
           }
         /> */}
 
-        {/* Responsive Animation - PNG Sequence for Desktop, WebP Sequence for Mobile */}
+        {/* Responsive Animation - WebP Sequence for both Desktop and Mobile */}
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={436} // Updated to match 30fps WebP frames extracted
+            totalFrames={536} // Updated to match 30fps WebP frames + 100 duplicate frames (436 + 100)
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
+            // Animation speed controls - much slower for better user experience
+            animationSpeed={0.2} // 20% of normal speed for mobile
+            frameHoldDuration={10} // Minimal hold duration to prevent sticking
+            scrollDistanceMultiplier={4.0} // 4x more scrolling needed for mobile
+            frameRangeCompression={0.5} // Use only 50% of frames for mobile
             // Scroll stop functionality - using configuration
             stopFrame={320} // Adjusted for mobile sequence (320 out of 436 frames - similar to desktop)
             timelineDuration={scrollStopConfig.timelineDuration}
@@ -960,14 +980,19 @@ export default function Demo() {
             }}
           />
         ) : (
-          <PNGSequence
-            startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={PNG_SEQUENCE_CONFIG.totalFrames}
-            framePrefix={PNG_SEQUENCE_CONFIG.framePrefix}
-            frameSuffix={PNG_SEQUENCE_CONFIG.frameSuffix}
-            folderPath={PNG_SEQUENCE_CONFIG.folderPath}
+          <WebPSequence
+            startSection={DESKTOP_WEBP_SEQUENCE_CONFIG.startSection}
+            totalFrames={DESKTOP_WEBP_SEQUENCE_CONFIG.totalFrames}
+            framePrefix={DESKTOP_WEBP_SEQUENCE_CONFIG.framePrefix}
+            frameSuffix={DESKTOP_WEBP_SEQUENCE_CONFIG.frameSuffix}
+            folderPath={DESKTOP_WEBP_SEQUENCE_CONFIG.folderPath}
             activeSection={activeSection}
             sectionProgress={sectionProgress}
+            // Animation speed controls - much slower for better user experience
+            animationSpeed={0.3} // 30% of normal speed for desktop
+            frameHoldDuration={15} // Minimal hold duration to prevent sticking
+            scrollDistanceMultiplier={3.5} // 3.5x more scrolling needed for desktop
+            frameRangeCompression={0.6} // Use only 60% of frames for desktop
             // Scroll stop functionality - using configuration
             stopFrame={scrollStopConfig.stopFrame}
             timelineDuration={scrollStopConfig.timelineDuration}
@@ -979,10 +1004,10 @@ export default function Demo() {
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
             onTimelineComplete={() => {
-              console.log("Desktop PNG sequence timeline completed - showing play button");
+              console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
             onPlayButtonClick={() => {
-              console.log("Desktop PNG sequence play button clicked - resuming scroll");
+              console.log("Desktop WebP sequence play button clicked - resuming scroll");
             }}
           />
         )}
