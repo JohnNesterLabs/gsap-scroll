@@ -112,7 +112,13 @@
   /* backdrop-filter: blur(10px); */
   /* border: 1px solid rgba(255, 255, 255, 0.1); */
 }
-.text-overlay-bottom-mobile{
+.text-overlay-bottom-mobile {
+  font-family: "IBM Plex Mono", monospace;
+  bottom: 40px;
+  color: gray;
+}
+
+.text-overlay-bottom-mobile button {
   font-family: "IBM Plex Mono", monospace;
   bottom: 40px;
   color: gray;
@@ -167,6 +173,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  background: transparent;
   /* background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%); */
   border: none;
   border-radius: 50px;

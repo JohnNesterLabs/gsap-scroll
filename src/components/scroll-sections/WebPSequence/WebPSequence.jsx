@@ -463,7 +463,7 @@ const WebPSequence = ({
       )}
 
       {/* Enhanced Debug info - shows frame sequence details */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="webp-sequence-debug" style={{
           position: 'absolute',
           top: '10px',
@@ -566,7 +566,7 @@ const WebPSequence = ({
             )}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

@@ -129,8 +129,8 @@ export default function Demo() {
         },
         // Play button position - desktop optimized
         playButtonPosition: {
-          top: "30%", // '60%' = below timeline, '40%' = above timeline
-          left: "43%", // '50%' = center, '20%' = left, '80%' = right
+          top: "29%", // '60%' = below timeline, '40%' = above timeline
+          left: "47%", // '50%' = center, '20%' = left, '80%' = right
         },
       };
     }
