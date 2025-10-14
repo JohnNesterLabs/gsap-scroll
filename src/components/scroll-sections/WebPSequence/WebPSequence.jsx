@@ -196,6 +196,22 @@ const WebPSequence = ({
       return `${folderPath}${framePrefix}0320${frameSuffix}`;
     }
 
+    // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
+    if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
+      // Calculate which original frame this corresponds to
+      // Frames 421-1367 map to original frames 420-587, each duplicated 5 times
+      const originalFrameStart = 420; // Start of the range to duplicate
+      const originalFrameEnd = 587;   // End of the range to duplicate
+      const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
+      // Calculate which original frame this virtual frame corresponds to
+      const virtualFrameIndex = frameNum - 420; // 0-based index from frame 421
+      const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
+      const originalFrame = originalFrameStart + originalFrameIndex;
+      // Ensure we don't go beyond the original frame range
+      const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
+      return `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
+    }
+
     // For all other frames, use the actual frame number
     return `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
   };

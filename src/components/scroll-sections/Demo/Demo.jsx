@@ -946,7 +946,7 @@ export default function Demo() {
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={536} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
+            totalFrames={1367} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"

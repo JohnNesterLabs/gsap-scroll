@@ -14,14 +14,31 @@ const generatePNGFramePaths = (totalFrames = 378, folderPath = '/frames-journey/
 };
 
 // Generate WebP mobile frame paths
-const generateWebPMobileFramePaths = (totalFrames = 536, folderPath = '/frames-mobile-30fps/') => {
+const generateWebPMobileFramePaths = (totalFrames = 1367, folderPath = '/frames-mobile-30fps/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');
         // For frames 321-420, use mobile_frame_0320.webp (duplicate frame 320)
         if (i >= 321 && i <= 420) {
             frames.push(`${folderPath}mobile_frame_0320.webp`);
-        } else {
+        }
+        // For frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
+        else if (i >= 421) {
+            // Calculate which original frame this corresponds to
+            const originalFrameStart = 420; // Start of the range to duplicate
+            const originalFrameEnd = 587;   // End of the range to duplicate
+            const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
+            // Calculate which original frame this virtual frame corresponds to
+            const virtualFrameIndex = i - 420; // 0-based index from frame 421
+            const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
+            const originalFrame = originalFrameStart + originalFrameIndex;
+            // Ensure we don't go beyond the original frame range
+            const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
+            const originalFrameNumber = clampedOriginalFrame.toString().padStart(4, '0');
+            frames.push(`${folderPath}mobile_frame_${originalFrameNumber}.webp`);
+        }
+        // For all other frames (1-320), use the actual frame number
+        else {
             frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
         }
     }
@@ -58,8 +75,8 @@ const ASSETS_TO_PRELOAD = [
     // WebP Desktop Sequence frames (all 428 frames for desktop)
     ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/'),
 
-    // WebP Mobile Sequence frames (all 536 frames for mobile - 436 original + 100 duplicates of frame 320)
-    ...generateWebPMobileFramePaths(536, '/frames-mobile-30fps/'),
+    // WebP Mobile Sequence frames (all 1367 frames for mobile - 420 original + 100 duplicates of frame 320 + 840 duplicates of frames 420-587)
+    ...generateWebPMobileFramePaths(1367, '/frames-mobile-30fps/'),
 ];
 
 export const useAssetPreloader = () => {

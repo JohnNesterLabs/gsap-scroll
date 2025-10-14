@@ -24,7 +24,7 @@ const Loader = ({ onComplete, progress = 0, fadeOut = false, loadedCount = 0, to
         if (progress < 5) {
             setLoadingText('Initializing Kahuna AI...');
         } else if (progress < 30) {
-            setLoadingText('Loading demo video...');
+            setLoadingText('Loading video...');
         } else if (progress < 70) {
             setLoadingText('Loading assets...');
         } else if (progress < 95) {
