@@ -942,7 +942,7 @@ export default function Demo() {
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={324} // Mobile stop frame
+            stopFrame={320} // Mobile stop frame
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}

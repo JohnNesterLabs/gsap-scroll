@@ -427,13 +427,21 @@ const WebPSequence = ({
        {(() => {
          const isMobile = framePrefix === 'mobile_frame_';
          const shouldShow = isMobile 
-           ? (currentFrame >= 4 && currentFrame <= 320)  // Mobile: frames 4-320
+           ? (currentFrame >= 4 && currentFrame <= 318)  // Mobile: frames 4-320
            : (currentFrame >= 4 && currentFrame <= 233); // Desktop: frames 4-233
          
          return shouldShow && (
            <div className="troubleshooting-text-overlay">
              <div className="troubleshooting-text">
-               AI that automatically builds and nurtures your Troubleshooting Map
+               {isMobile ? (
+                 <>
+                   AI that automatically builds<br />
+                   and nurtures your<br />
+                   Troubleshooting Map
+                 </>
+               ) : (
+                 "AI that automatically builds and nurtures your Troubleshooting Map"
+               )}
              </div>
            </div>
          );
