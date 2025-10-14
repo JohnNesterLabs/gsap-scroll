@@ -487,7 +487,8 @@
   line-height: 1.1;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
   max-width: 90%;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
   animation: fadeInText 1.2s ease-out;
 }
 
@@ -521,6 +522,9 @@
     font-size: 1.5rem;
     max-width: 90%;
     line-height: 1.3;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -529,6 +533,9 @@
     font-size: 1.2rem;
     max-width: 95%;
     line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -536,6 +543,9 @@
   .troubleshooting-text {
     font-size: 1rem;
     max-width: 98%;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 

@@ -413,8 +413,11 @@ const WebPSequence = ({
         </div>
       )}
 
-      {/* Troubleshooting Map Text Overlay - Visible from frame 4 to frame 50 */}
-      {currentFrame >= 4 && currentFrame <= 100 && (
+      {/* Troubleshooting Map Text Overlay - Customized for mobile and desktop */}
+      {(framePrefix === 'mobile_frame_' 
+        ? (currentFrame >= 4 && currentFrame <= 300)  // Mobile: frames 4-100
+        : (currentFrame >= 4 && currentFrame <= 220)  // Desktop: frames 4-230
+      ) && (
         <div className="troubleshooting-text-overlay">
           <div className="troubleshooting-text">
             AI that automatically builds and nurtures your Troubleshooting Map
