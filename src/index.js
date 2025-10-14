@@ -4,7 +4,6 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { loadProdigySansFonts } from './fonts';
-import ZoomInSection from './components/scroll-sections/ZoomInSection/ZoomInSection';
 
 // Load fonts before rendering
 loadProdigySansFonts();

@@ -6,6 +6,19 @@
   overflow: hidden;
 }
 
+/* Background Layer - Lowest z-index for consistent background */
+.demo-background-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Lowest layer - behind everything */
+  background: #000000; /* Consistent black background */
+  /* Optional: Add a subtle gradient for depth */
+  background: linear-gradient(135deg, #0a0a0a 0%, #000000 50%, #0a0a0a 100%);
+}
+
 /* Header Styles - Matching ScrollSyncModel */
 .demo-header {
   position: fixed;
@@ -19,7 +32,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  z-index: 10;
+  z-index: 15; /* Ensure header is above scroll container */
   transition: opacity 0.3s ease;
 }
 
@@ -57,11 +70,11 @@
   text-transform: none;
   border: none;
   outline: none;
-}
-
-.demo-header-button a {
   text-decoration: none;
-  color: white;
+  display: inline-block;
+  /* Ensure button is clickable */
+  pointer-events: auto;
+  z-index: 11; /* Ensure it's above everything */
 }
 
 .demo-header-button:hover {
@@ -69,15 +82,11 @@
   color: black;
 }
 
-.demo-header-button:hover a {
-  color: black;
-}
-
 .demo-fixed-video {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 5;
+  z-index: 2; /* Video layer - above background, below content for iOS scroll compatibility */
   pointer-events: none;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -106,6 +115,15 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  /* Ensure scroll container is on top to receive touch events (iOS compatibility) */
+  position: relative;
+  z-index: 10; /* Top layer - higher z-index for iOS scroll compatibility */
+  /* Enhanced iOS touch handling */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Custom scrollbar for demo */
@@ -244,13 +262,15 @@
   }
 }
 
-/* Demo Section Styles - Matching ScrollSyncModel */
+/* Demo Section Styles - Transparent to show video behind */
 .demo-section {
   width: 100%;
   height: 100vh;
   position: relative;
-  background: #000000;
+  background: transparent; /* Make transparent to show video behind */
   color: #ffffff;
+  /* Ensure sections don't block video visibility */
+  pointer-events: auto; /* Allow touch events to pass through to scroll */
 }
 
 .demo-footer {
