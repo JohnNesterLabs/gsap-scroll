@@ -818,7 +818,7 @@ export default function Demo() {
     <div className="demo-container">
       {/* Background Layer - Lowest z-index for consistent background */}
       <div className="demo-background-layer" />
-      
+
       {/* Fixed Video - Only show after initialization to prevent glitch */}
       {isInitialized && (
         <video
@@ -946,14 +946,14 @@ export default function Demo() {
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={436} // Updated to match 30fps WebP frames extracted
+            totalFrames={536} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={320} // Adjusted for mobile sequence (320 out of 436 frames - similar to desktop)
+            stopFrame={320} // CTA zone starts at frame 320
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}
@@ -1013,7 +1013,7 @@ export default function Demo() {
         {isMobileDevice() ? (
           <div className="demo-section last-frame-section">
             <img
-              src="/frames-mobile-30fps/mobile_frame_0436.webp"
+              src="/frames-mobile-30fps/mobile_frame_0536.webp"
               alt="Mobile Journey Final Frame"
               className="last-frame-image"
             />

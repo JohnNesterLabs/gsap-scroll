@@ -14,11 +14,16 @@ const generatePNGFramePaths = (totalFrames = 378, folderPath = '/frames-journey/
 };
 
 // Generate WebP mobile frame paths
-const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-mobile-30fps/') => {
+const generateWebPMobileFramePaths = (totalFrames = 536, folderPath = '/frames-mobile-30fps/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');
-        frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
+        // For frames 321-420, use mobile_frame_0320.webp (duplicate frame 320)
+        if (i >= 321 && i <= 420) {
+            frames.push(`${folderPath}mobile_frame_0320.webp`);
+        } else {
+            frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
+        }
     }
     return frames;
 };
@@ -53,8 +58,8 @@ const ASSETS_TO_PRELOAD = [
     // WebP Desktop Sequence frames (all 428 frames for desktop)
     ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/'),
 
-    // WebP Mobile Sequence frames (all 436 frames for mobile)
-    ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
+    // WebP Mobile Sequence frames (all 536 frames for mobile - 436 original + 100 duplicates of frame 320)
+    ...generateWebPMobileFramePaths(536, '/frames-mobile-30fps/'),
 ];
 
 export const useAssetPreloader = () => {
