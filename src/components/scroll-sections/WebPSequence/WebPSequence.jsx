@@ -20,7 +20,9 @@ const WebPSequence = ({
   videoSrc = '/Final-Ticket-1-(WIP).mp4', // Default video source for popup
   showVideoPopup = true, // Whether to show video popup on continue
   isVideoPreloaded = false, // Whether the video has been preloaded
-  videoPreloadProgress = 0 // Video preload progress percentage
+  videoPreloadProgress = 0, // Video preload progress percentage
+  // Scroll sensitivity control
+  scrollSensitivity = 0.3 // Scroll sensitivity (0.1 = very slow, 1.0 = normal, 0.3 = slower)
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -34,6 +36,12 @@ const WebPSequence = ({
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
+
+  // Frame rate limiting and smooth scrolling
+  const lastFrameUpdateRef = useRef(0);
+  const targetFrameRef = useRef(1);
+  const frameUpdateRate = 16; // ~60fps (16ms between frames)
+  const maxFrameJump = 3; // Maximum frames to jump in one update
 
   // Debug logging for all state changes
   useEffect(() => {
@@ -51,93 +59,142 @@ const WebPSequence = ({
     });
   }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
 
-  // Optimized frame calculation with throttling and performance improvements
+  // Smooth frame calculation with throttling and frame rate limiting
   useEffect(() => {
-    // Use requestAnimationFrame to throttle frame updates for smooth performance
-    const updateFrame = () => {
-      if (activeSection >= startSection) {
-        // Calculate frame based on section progress
-        const sectionOffset = activeSection - startSection;
-        const progressInSection = sectionProgress;
-        // Total progress across all sections from start section
-        const totalProgress = sectionOffset + progressInSection;
-        // Map progress to frame range (0 to totalFrames-1)
-        const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-        let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+    if (activeSection >= startSection) {
+      // Calculate target frame based on section progress
+      const sectionOffset = activeSection - startSection;
+      const progressInSection = sectionProgress;
+      // Total progress across all sections from start section
+      const totalProgress = sectionOffset + progressInSection;
 
-        // Hide WebP sequence after completing all frames
-        if (clampedFrame >= totalFrames) {
-          setIsVisible(false);
-          // Reset all WebP sequence states when completed
-          setIsScrollStopped(false);
-          setShowTimeline(false);
-          setShowPlayButton(false);
-          setTimelineProgress(0);
-          resumeScroll();
-          return;
-        } else {
-          setIsVisible(true);
-        }
+      // Apply scroll sensitivity reduction for smoother scrolling
+      const adjustedProgress = totalProgress * scrollSensitivity;
 
-        // No scroll stopping - allow continuous scrolling through all frames
-        // CTA will be shown on frames 234-334 without stopping scroll
+      // Map progress to frame range (0 to totalFrames-1)
+      const targetFrameIndex = Math.floor(adjustedProgress * (totalFrames - 1));
+      const targetFrame = Math.max(1, Math.min(totalFrames, targetFrameIndex + 1));
 
-        setCurrentFrame(clampedFrame);
+      // Store target frame for smooth interpolation
+      targetFrameRef.current = targetFrame;
 
-        // Enhanced console debugging for frame sequence
-        if (process.env.NODE_ENV === 'development') {
-          const isMobile = framePrefix === 'mobile_frame_';
-          const ctaStart = isMobile ? 320 : 234;
-          const ctaEnd = isMobile ? 420 : 334;
-          const isCTAZone = clampedFrame >= ctaStart && clampedFrame <= ctaEnd;
-
-          const frameInfo = {
-            currentFrame: clampedFrame,
-            totalFrames: totalFrames,
-            framePrefix: framePrefix,
-            isMobile: isMobile,
-            isCTAZone: isCTAZone,
-            frameType: isCTAZone ? 'CTA_ZONE' : 'ORIGINAL',
-            originalFrame: isCTAZone ? (isMobile ? 320 : 234) : (clampedFrame > ctaEnd ? clampedFrame - (ctaEnd - ctaStart + 1) : clampedFrame),
-            actualImageFrame: isMobile && clampedFrame >= 321 && clampedFrame <= 420 ? 320 : clampedFrame,
-            sectionInfo: {
-              activeSection,
-              startSection,
-              sectionProgress: (sectionProgress * 100).toFixed(1) + '%',
-              totalProgress: ((sectionOffset + progressInSection) * 100).toFixed(1) + '%'
-            },
-            scrollState: {
-              isScrollStopped,
-              allowSmoothScrolling,
-              showTimeline,
-              showPlayButton,
-              hasWatchedVideo
-            }
-          };
-
-          console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
-
-          // Special logging for CTA zone
-          if (isCTAZone) {
-            console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (${isMobile ? 'mobile' : 'desktop'} duplicate zone)`);
-          }
-        }
-      } else {
-        // User scrolled back to before start section - hide WebP sequence
+      // Hide WebP sequence after completing all frames
+      if (targetFrame >= totalFrames) {
         setIsVisible(false);
-        setCurrentFrame(1);
+        // Reset all WebP sequence states when completed
         setIsScrollStopped(false);
         setShowTimeline(false);
-        if (!allowSmoothScrolling) {
-          setShowPlayButton(false);
-        }
+        setShowPlayButton(false);
         setTimelineProgress(0);
         resumeScroll();
+        return;
+      } else {
+        setIsVisible(true);
+      }
+    } else {
+      // User scrolled back to before start section - hide WebP sequence
+      setIsVisible(false);
+      setCurrentFrame(1);
+      targetFrameRef.current = 1;
+      setIsScrollStopped(false);
+      setShowTimeline(false);
+      if (!allowSmoothScrolling) {
+        setShowPlayButton(false);
+      }
+      setTimelineProgress(0);
+      resumeScroll();
+    }
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
+
+  // Smooth frame interpolation with frame rate limiting
+  useEffect(() => {
+    let animationId;
+
+    const updateFrame = () => {
+      const now = Date.now();
+
+      // Throttle frame updates to prevent skipping
+      if (now - lastFrameUpdateRef.current < frameUpdateRate) {
+        animationId = requestAnimationFrame(updateFrame);
+        return;
+      }
+
+      const targetFrame = targetFrameRef.current;
+      const currentDisplayFrame = currentFrame;
+
+      // Limit maximum frame jump to prevent skipping
+      const frameDifference = Math.abs(targetFrame - currentDisplayFrame);
+      if (frameDifference > maxFrameJump) {
+        // Smooth interpolation to target frame
+        const direction = currentDisplayFrame < targetFrame ? 1 : -1;
+        const newFrame = currentDisplayFrame + (direction * maxFrameJump);
+        setCurrentFrame(newFrame);
+      } else {
+        setCurrentFrame(targetFrame);
+      }
+
+      lastFrameUpdateRef.current = now;
+
+      // Continue animation loop
+      if (isVisible) {
+        animationId = requestAnimationFrame(updateFrame);
       }
     };
 
-    requestAnimationFrame(updateFrame);
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
+    if (isVisible) {
+      updateFrame();
+    }
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [isVisible, currentFrame, maxFrameJump, frameUpdateRate]);
+
+  // Enhanced console debugging for frame sequence
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && isVisible) {
+      const isMobile = framePrefix === 'mobile_frame_';
+      const ctaStart = isMobile ? 320 : 234;
+      const ctaEnd = isMobile ? 420 : 334;
+      const isCTAZone = currentFrame >= ctaStart && currentFrame <= ctaEnd;
+
+      const frameInfo = {
+        currentFrame: currentFrame,
+        targetFrame: targetFrameRef.current,
+        totalFrames: totalFrames,
+        framePrefix: framePrefix,
+        isMobile: isMobile,
+        isCTAZone: isCTAZone,
+        frameType: isCTAZone ? 'CTA_ZONE' : 'SMOOTH_SCROLL',
+        scrollSettings: {
+          scrollSensitivity: scrollSensitivity,
+          maxFrameJump: maxFrameJump,
+          frameUpdateRate: frameUpdateRate + 'ms'
+        },
+        sectionInfo: {
+          activeSection,
+          startSection,
+          sectionProgress: (sectionProgress * 100).toFixed(1) + '%'
+        },
+        scrollState: {
+          isScrollStopped,
+          allowSmoothScrolling,
+          showTimeline,
+          showPlayButton,
+          hasWatchedVideo
+        }
+      };
+
+      console.log('🎬 SMOOTH FRAME SEQUENCE DEBUG:', frameInfo);
+
+      // Special logging for CTA zone
+      if (isCTAZone) {
+        console.log(`🎯 CTA ZONE: Frame ${currentFrame} - CTA button visible (${isMobile ? 'mobile' : 'desktop'} duplicate zone)`);
+      }
+    }
+  }, [currentFrame, isVisible, activeSection, sectionProgress, startSection, totalFrames, framePrefix, isScrollStopped, allowSmoothScrolling, showTimeline, showPlayButton, hasWatchedVideo]);
 
   // Handle showing Continue CTA again when user reaches stop frame after watching video once
   useEffect(() => {
@@ -194,6 +251,25 @@ const WebPSequence = ({
     // For mobile frames 321-420, use frame 320 image (duplicate zone)
     if (framePrefix === 'mobile_frame_' && frameNum >= 321 && frameNum <= 420) {
       return `${folderPath}${framePrefix}0320${frameSuffix}`;
+    }
+
+    // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
+    if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
+      // Calculate which original frame this corresponds to
+      // Frames 421-1367 map to original frames 420-587, each duplicated 5 times
+      const originalFrameStart = 420; // Start of the range to duplicate
+      const originalFrameEnd = 587;   // End of the range to duplicate
+      const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
+
+      // Calculate which original frame this virtual frame corresponds to
+      const virtualFrameIndex = frameNum - 420; // 0-based index from frame 421
+      const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
+      const originalFrame = originalFrameStart + originalFrameIndex;
+
+      // Ensure we don't go beyond the original frame range
+      const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
+
+      return `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
     }
 
     // For all other frames, use the actual frame number
@@ -501,6 +577,15 @@ const WebPSequence = ({
           <div>🛑 Stop Frame: {stopFrame} (Not Used)</div>
           <div>⏸️ Scroll Stopped: No (Continuous Scroll)</div>
           <div>⏱️ Show Timeline: No (Removed)</div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            🎛️ Scroll Sensitivity: {scrollSensitivity} (Lower = Slower)
+          </div>
+          <div style={{ color: '#00ffff' }}>
+            🚀 Max Frame Jump: {maxFrameJump} frames
+          </div>
+          <div style={{ color: '#00ffff' }}>
+            ⏱️ Frame Rate: {frameUpdateRate}ms (~{Math.round(1000 / frameUpdateRate)}fps)
+          </div>
           <div style={{ color: showPlayButton ? 'green' : 'red', fontWeight: 'bold' }}>
             ▶️ Show Play Button: {showPlayButton ? 'Yes' : 'No'}
           </div>
@@ -528,14 +613,19 @@ const WebPSequence = ({
           <div style={{
             marginTop: '5px',
             padding: '3px',
-            background: (framePrefix === 'mobile_frame_' ? (currentFrame >= 320 && currentFrame <= 420) : (currentFrame >= 234 && currentFrame <= 334)) ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
+            background: (framePrefix === 'mobile_frame_' ?
+              (currentFrame >= 320 && currentFrame <= 420) ? 'rgba(255, 255, 0, 0.2)' :
+                (currentFrame >= 421) ? 'rgba(0, 255, 255, 0.2)' : 'rgba(0, 255, 0, 0.2)' :
+              (currentFrame >= 234 && currentFrame <= 334) ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)'),
             borderRadius: '3px',
             fontSize: '11px'
           }}>
             {framePrefix === 'mobile_frame_' ? (
               currentFrame >= 320 && currentFrame <= 420 ?
                 `🎯 CTA ZONE (320-420): Frame ${currentFrame} - CTA button visible` :
-                `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
+                currentFrame >= 421 ?
+                  `🔄 SMOOTH SCROLL ZONE (421-1367): Frame ${currentFrame} - Duplicated for smooth scrolling` :
+                  `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
             ) : (
               currentFrame >= 234 && currentFrame <= 334 ?
                 `🎯 CTA ZONE (234-334): Frame ${currentFrame} - CTA button visible` :
@@ -554,7 +644,7 @@ const WebPSequence = ({
                 Mobile Frame Range Info:<br />
                 • 1-319: Original frames<br />
                 • 320-420: CTA Zone (Frame 320 + Button)<br />
-                • 421-536: Original frames (shifted)
+                • 421-1367: Smooth Scroll Zone (Frames 420-587, each duplicated 5x)
               </>
             ) : (
               <>

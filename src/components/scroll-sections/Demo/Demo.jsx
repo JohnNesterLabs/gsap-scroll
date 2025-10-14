@@ -946,7 +946,7 @@ export default function Demo() {
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={536} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
+            totalFrames={1367} // Updated to 1367 frames (420 original + 100 duplicates of frame 320 + 840 duplicates of frames 420-587)
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"
@@ -962,6 +962,8 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
+            // Scroll sensitivity control - slower scrolling for smoother experience
+            scrollSensitivity={0.2} // Reduced from 0.3 to 0.2 for even slower, smoother scrolling
             onTimelineComplete={() => {
               console.log("Mobile WebP sequence timeline completed - showing play button");
             }}
@@ -988,6 +990,8 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
+            // Scroll sensitivity control - slower scrolling for smoother experience
+            scrollSensitivity={0.3} // Desktop can be slightly faster than mobile
             onTimelineComplete={() => {
               console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
