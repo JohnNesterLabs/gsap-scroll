@@ -3,16 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 // Global image cache for preloaded images
 window.preloadedImages = window.preloadedImages || new Map();
 
-// Generate PNG frame paths
-const generatePNGFramePaths = (totalFrames = 378, folderPath = '/frames-journey/') => {
-    const frames = [];
-    for (let i = 1; i <= totalFrames; i++) {
-        const frameNumber = i.toString().padStart(4, '0');
-        frames.push(`${folderPath}frame_${frameNumber}.png`);
-    }
-    return frames;
-};
-
 // Generate WebP mobile frame paths
 const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-mobile-30fps/') => {
     const frames = [];
@@ -46,9 +36,6 @@ const ASSETS_TO_PRELOAD = [
     '/kahuna-logo-3.svg',
     '/final-logo.svg',
     '/LinkedIn-Icon.png',
-
-    // PNG Sequence frames (all 378 frames for desktop)
-    ...generatePNGFramePaths(378, '/frames-journey/'),
 
     // WebP Desktop Sequence frames (all 428 frames for desktop)
     ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/'),
