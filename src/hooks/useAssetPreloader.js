@@ -3,6 +3,20 @@ import { useState, useEffect, useCallback } from 'react';
 // Global image cache for preloaded images
 window.preloadedImages = window.preloadedImages || new Map();
 
+// Device detection utility
+const isMobileDevice = () => {
+    // Check user agent for mobile devices
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Check screen width (mobile breakpoint)
+    const isMobileScreen = window.innerWidth <= 768;
+    
+    // Check for touch capability
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    return isMobileUA || (isMobileScreen && isTouchDevice);
+};
+
 // Generate WebP mobile frame paths
 const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-mobile-30fps/') => {
     const frames = [];
@@ -23,26 +37,41 @@ const generateWebPDesktopFramePaths = (totalFrames = 428, folderPath = '/frames-
     return frames;
 };
 
-// Define all assets that need to be preloaded
-const ASSETS_TO_PRELOAD = [
-    // Main demo video
-    '/hero4.mp4',
-    '/demo1.mp4',
-    '/Ticket1.mp4', // Video popup (legacy)
-    '/Ticket1_web.mp4', // Video popup (new)
+// Generate device-specific assets to preload
+const getAssetsToPreload = () => {
+    const isMobile = isMobileDevice();
+    
+    const baseAssets = [
+        // Main demo video
+        '/hero4.mp4',
+        '/demo1.mp4',
+        '/Ticket1.mp4', // Video popup (legacy)
+        '/Ticket1_web.mp4', // Video popup (new)
 
-    // Logo assets
-    '/Logo-color.svg',
-    '/kahuna-logo-3.svg',
-    '/final-logo.svg',
-    '/LinkedIn-Icon.png',
+        // Logo assets
+        '/Logo-color.svg',
+        '/kahuna-logo-3.svg',
+        '/final-logo.svg',
+        '/LinkedIn-Icon.png',
+    ];
 
-    // WebP Desktop Sequence frames (all 428 frames for desktop)
-    ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/'),
-
-    // WebP Mobile Sequence frames (all 436 frames for mobile)
-    ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
-];
+    // Add device-specific frame sequences
+    if (isMobile) {
+        console.log('📱 Mobile device detected - loading mobile frames only');
+        return [
+            ...baseAssets,
+            // WebP Mobile Sequence frames (all 436 frames for mobile)
+            ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
+        ];
+    } else {
+        console.log('🖥️ Desktop device detected - loading desktop frames only');
+        return [
+            ...baseAssets,
+            // WebP Desktop Sequence frames (all 428 frames for desktop)
+            ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/'),
+        ];
+    }
+};
 
 export const useAssetPreloader = () => {
     const [progress, setProgress] = useState(0);
@@ -116,6 +145,8 @@ export const useAssetPreloader = () => {
         setError(null);
         setLoadedAssets(new Set());
 
+        // Get device-specific assets
+        const ASSETS_TO_PRELOAD = getAssetsToPreload();
         const totalAssets = ASSETS_TO_PRELOAD.length;
         let loadedCount = 0;
 
@@ -214,7 +245,7 @@ export const useAssetPreloader = () => {
         loadedAssets,
         error,
         retry: preloadAssets,
-        totalAssets: ASSETS_TO_PRELOAD.length,
+        totalAssets: getAssetsToPreload().length,
         loadedCount: loadedAssets.size
     };
 };
