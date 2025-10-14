@@ -9,6 +9,11 @@ const WebPSequence = ({
   folderPath = '/frames-mobile/', // New folder for mobile WebP frames
   activeSection,
   sectionProgress,
+  // Animation speed controls
+  animationSpeed = .3, // 1.0 = normal, 0.5 = half speed, 2.0 = double speed
+  frameHoldDuration = 15, // Minimum milliseconds between frame updates (minimal to prevent sticking)
+  scrollDistanceMultiplier = 3.0, // How much more scrolling is needed (3x = 3 times more scroll)
+  frameRangeCompression = 0.6, // Use only 60% of total frames for slower progression
   // Scroll stop functionality
   stopFrame = 200, // Frame to stop at (equivalent to frame 234 in desktop)
   timelineDuration = 5000, // 5 seconds in milliseconds
@@ -31,6 +36,17 @@ const WebPSequence = ({
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false);
+  const [lastFrameUpdateTime, setLastFrameUpdateTime] = useState(0);
+  const [lastFrameNumber, setLastFrameNumber] = useState(1);
+  // Debug state for display
+  const [debugInfo, setDebugInfo] = useState({
+    shouldUpdateFrame: false,
+    significantProgress: false,
+    forceUpdate: false,
+    frameHasChanged: false,
+    frameDifference: 0,
+    timeSinceLastUpdate: 0
+  });
   const imgRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
@@ -61,12 +77,62 @@ const WebPSequence = ({
         const progressInSection = sectionProgress;
         // Total progress across all sections from start section
         const totalProgress = sectionOffset + progressInSection;
-        // Map progress to frame range (0 to totalFrames-1)
-        const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-        let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
 
-        // Hide WebP sequence after completing all frames
-        if (clampedFrame >= totalFrames) {
+        // DRAMATIC SLOWDOWN: Apply scroll distance multiplier
+        // This makes users need to scroll much more to complete the sequence
+        const scrollAdjustedProgress = totalProgress / scrollDistanceMultiplier;
+
+        // Apply easing function to slow down the animation
+        // Ease-in-out function: starts slow, speeds up in middle, slows down at end
+        const easeInOutCubic = (t) => {
+          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        };
+
+        // Apply easing to scroll-adjusted progress
+        const easedProgress = easeInOutCubic(scrollAdjustedProgress);
+
+        // Apply animation speed multiplier (lower = slower animation)
+        const speedAdjustedProgress = easedProgress * animationSpeed;
+
+        // FRAME RANGE COMPRESSION: Use only a portion of total frames
+        // This makes the animation use fewer frames, requiring more scroll per frame
+        const compressedFrameRange = Math.floor(totalFrames * frameRangeCompression);
+
+        // Map speed-adjusted progress to compressed frame range
+        const frameIndex = Math.floor(speedAdjustedProgress * (compressedFrameRange - 1));
+        let clampedFrame = Math.max(1, Math.min(compressedFrameRange, frameIndex + 1));
+
+        // SOLID SOLUTION: Always allow frame progression - no blocking returns
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = currentTime - lastFrameUpdateTime;
+
+        // Check if frame number has actually changed from last update
+        const frameHasChanged = clampedFrame !== lastFrameNumber;
+
+        // Determine if we should update the displayed frame
+        const shouldUpdateNow = frameHasChanged || timeSinceLastUpdate >= frameHoldDuration;
+
+        // Update debug info for display
+        setDebugInfo({
+          shouldUpdateFrame: timeSinceLastUpdate >= frameHoldDuration,
+          significantProgress: frameHasChanged,
+          forceUpdate: timeSinceLastUpdate >= 200,
+          frameHasChanged,
+          frameDifference: Math.abs(clampedFrame - lastFrameNumber),
+          timeSinceLastUpdate
+        });
+
+        // ALWAYS update the frame if it has changed or enough time has passed
+        // NO RETURN STATEMENTS - this ensures smooth progression
+        if (shouldUpdateNow) {
+          setLastFrameUpdateTime(currentTime);
+          setLastFrameNumber(clampedFrame);
+          // Update the displayed frame immediately when conditions are met
+          setCurrentFrame(clampedFrame);
+        }
+
+        // Hide WebP sequence after completing compressed frame range
+        if (clampedFrame >= compressedFrameRange) {
           setIsVisible(false);
           // Reset all WebP sequence states when completed
           setIsScrollStopped(false);
@@ -82,13 +148,24 @@ const WebPSequence = ({
         // No scroll stopping - allow continuous scrolling through all frames
         // CTA will be shown on frames 320-420 without stopping scroll
 
-        setCurrentFrame(clampedFrame);
-
         // Enhanced console debugging for frame sequence
         if (process.env.NODE_ENV === 'development') {
           const frameInfo = {
             currentFrame: clampedFrame,
             totalFrames: totalFrames,
+            compressedFrameRange: compressedFrameRange,
+            scrollDistanceMultiplier: scrollDistanceMultiplier,
+            frameRangeCompression: frameRangeCompression,
+            scrollAdjustedProgress: (scrollAdjustedProgress * 100).toFixed(1) + '%',
+            frameUpdateInfo: {
+              shouldUpdateFrame: debugInfo.shouldUpdateFrame,
+              significantProgress: debugInfo.significantProgress,
+              forceUpdate: debugInfo.forceUpdate,
+              frameHasChanged: debugInfo.frameHasChanged,
+              frameDifference: debugInfo.frameDifference,
+              timeSinceLastUpdate: debugInfo.timeSinceLastUpdate,
+              lastFrameNumber
+            },
             isCTAZone: clampedFrame >= 320 && clampedFrame <= 420,
             frameType: clampedFrame >= 320 && clampedFrame <= 420 ? 'CTA_ZONE' : 'ORIGINAL',
             displayFrame: clampedFrame >= 320 && clampedFrame <= 420 ? 320 : clampedFrame > 420 ? clampedFrame - 100 : clampedFrame,
@@ -108,6 +185,11 @@ const WebPSequence = ({
           };
 
           console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
+
+          // Warning if frame seems stuck
+          if (debugInfo.frameDifference === 0 && debugInfo.timeSinceLastUpdate > 100) {
+            console.warn(`⚠️ FRAME STUCK WARNING: Frame ${clampedFrame} hasn't changed for ${debugInfo.timeSinceLastUpdate}ms`);
+          }
 
           // Special logging for CTA zone
           if (clampedFrame >= 320 && clampedFrame <= 420) {
@@ -478,6 +560,21 @@ const WebPSequence = ({
           <div>🛑 Stop Frame: {stopFrame} (Not Used)</div>
           <div>⏸️ Scroll Stopped: No (Continuous Scroll)</div>
           <div>⏱️ Show Timeline: No (Removed)</div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            🐌 Scroll Multiplier: {scrollDistanceMultiplier}x
+          </div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            📦 Frame Compression: {(frameRangeCompression * 100).toFixed(0)}%
+          </div>
+          <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
+            ⚡ Animation Speed: {(animationSpeed * 100).toFixed(0)}%
+          </div>
+          <div style={{ color: '#ffaa00', fontSize: '11px' }}>
+            🔄 Frame Update: {debugInfo.frameHasChanged ? 'Changed' : debugInfo.shouldUpdateFrame ? 'Time' : 'Waiting'}
+          </div>
+          <div style={{ color: '#ffaa00', fontSize: '11px' }}>
+            ⏱️ Time Since Update: {debugInfo.timeSinceLastUpdate}ms
+          </div>
           <div style={{ color: showPlayButton ? 'green' : 'red', fontWeight: 'bold' }}>
             ▶️ Show Play Button: {showPlayButton ? 'Yes' : 'No'}
           </div>

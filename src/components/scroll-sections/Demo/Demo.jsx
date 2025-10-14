@@ -618,7 +618,12 @@ export default function Demo() {
 
       // Calculate which section we're in and interpolate
       const totalSections = 7;
-      const sectionIndex = scrollProgress * (totalSections - 1);
+      // Apply easing to scroll progress to slow down section transitions
+      const easeInOutQuad = (t) => {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      };
+      const easedScrollProgress = easeInOutQuad(scrollProgress);
+      const sectionIndex = easedScrollProgress * (totalSections - 1);
       const currentSection = Math.floor(sectionIndex);
       const nextSection = Math.min(currentSection + 1, totalSections - 1);
       const sectionProgress = sectionIndex - currentSection;
@@ -945,6 +950,11 @@ export default function Demo() {
             folderPath="/frames-mobile-30fps/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
+            // Animation speed controls - much slower for better user experience
+            animationSpeed={0.2} // 20% of normal speed for mobile
+            frameHoldDuration={10} // Minimal hold duration to prevent sticking
+            scrollDistanceMultiplier={4.0} // 4x more scrolling needed for mobile
+            frameRangeCompression={0.5} // Use only 50% of frames for mobile
             // Scroll stop functionality - using configuration
             stopFrame={320} // Adjusted for mobile sequence (320 out of 436 frames - similar to desktop)
             timelineDuration={scrollStopConfig.timelineDuration}
@@ -971,6 +981,11 @@ export default function Demo() {
             folderPath={DESKTOP_WEBP_SEQUENCE_CONFIG.folderPath}
             activeSection={activeSection}
             sectionProgress={sectionProgress}
+            // Animation speed controls - much slower for better user experience
+            animationSpeed={0.3} // 30% of normal speed for desktop
+            frameHoldDuration={15} // Minimal hold duration to prevent sticking
+            scrollDistanceMultiplier={3.5} // 3.5x more scrolling needed for desktop
+            frameRangeCompression={0.6} // Use only 60% of frames for desktop
             // Scroll stop functionality - using configuration
             stopFrame={scrollStopConfig.stopFrame}
             timelineDuration={scrollStopConfig.timelineDuration}
