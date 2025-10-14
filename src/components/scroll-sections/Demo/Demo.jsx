@@ -89,7 +89,7 @@ export default function Demo() {
   // Using WebP format for better performance on desktop devices
   const DESKTOP_WEBP_SEQUENCE_CONFIG = {
     startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
-    totalFrames: 428,
+    totalFrames: 728,
     framePrefix: "frame_",
     frameSuffix: ".webp",
     folderPath: "/frames-desktop-webp/",
