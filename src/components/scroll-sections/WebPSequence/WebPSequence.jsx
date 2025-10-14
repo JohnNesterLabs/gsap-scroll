@@ -109,9 +109,12 @@ const WebPSequence = ({
 
           console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
 
-          // Special logging for CTA zone
+          // Special logging for CTA zone and transition zone
           if (clampedFrame >= 320 && clampedFrame <= 420) {
             console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (duplicate of frame_0320)`);
+          } else if (clampedFrame > 420 && clampedFrame <= 450) {
+            const displayFrame = getDisplayFrame(clampedFrame);
+            console.log(`🔄 TRANSITION ZONE: Frame ${clampedFrame} - Smooth transition to frame ${displayFrame}`);
           }
         }
       } else {
@@ -182,13 +185,24 @@ const WebPSequence = ({
   };
 
   // Calculate which frame to actually display (duplicate frame 320 for frames 320-420)
+  // FIXED: Added smooth transition zone (421-450) to prevent sudden scroll speed changes after frame 420
   const getDisplayFrame = (frameNum) => {
     // For frames 320-420, always show frame 320 (mobile_frame_0320.webp)
     if (frameNum >= 320 && frameNum <= 420) {
       return 320;
     }
-    // For frames after 420, adjust the frame number to account for the 100 duplicate frames
+    // For frames after 420, create a smooth transition by gradually moving away from frame 320
+    // This prevents the sudden jump that was causing fast scrolling
     else if (frameNum > 420) {
+      // Create a smooth transition zone from frame 420 to 450
+      if (frameNum <= 450) {
+        // Gradually transition from frame 320 to the adjusted frame
+        const transitionProgress = (frameNum - 420) / 30; // 0 to 1 over 30 frames
+        const targetFrame = (frameNum - 100); // The target frame after adjustment
+        // Interpolate between 320 and the target frame for smooth transition
+        return Math.round(320 + (targetFrame - 320) * transitionProgress);
+      }
+      // After the transition zone, use the normal adjustment
       return frameNum - 100;
     }
     // For frames before 320, show the original frame
@@ -505,13 +519,16 @@ const WebPSequence = ({
           <div style={{
             marginTop: '5px',
             padding: '3px',
-            background: currentFrame >= 320 && currentFrame <= 420 ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
+            background: currentFrame >= 320 && currentFrame <= 420 ? 'rgba(255, 255, 0, 0.2)' :
+              currentFrame > 420 && currentFrame <= 450 ? 'rgba(255, 165, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
             borderRadius: '3px',
             fontSize: '11px'
           }}>
             {currentFrame >= 320 && currentFrame <= 420 ?
               `🎯 CTA ZONE (320-420): Frame ${currentFrame} - CTA button visible` :
-              `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
+              currentFrame > 420 && currentFrame <= 450 ?
+                `🔄 TRANSITION ZONE (421-450): Frame ${currentFrame} - Smooth transition` :
+                `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
             }
           </div>
           <div style={{
@@ -524,7 +541,8 @@ const WebPSequence = ({
             Frame Range Info:<br />
             • 1-319: Original frames<br />
             • 320-420: CTA Zone (Duplicates + Button)<br />
-            • 421-536: Original frames (shifted)
+            • 421-450: Transition Zone (Smooth interpolation)<br />
+            • 451-536: Original frames (shifted)
           </div>
         </div>
       )}
