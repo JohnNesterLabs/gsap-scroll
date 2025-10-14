@@ -80,7 +80,7 @@ const WebPSequence = ({
         }
 
         // No scroll stopping - allow continuous scrolling through all frames
-        // CTA will be shown on frames 234-334 without stopping scroll
+        // CTA will be shown on frames 320-420 without stopping scroll
 
         setCurrentFrame(clampedFrame);
 
@@ -89,9 +89,9 @@ const WebPSequence = ({
           const frameInfo = {
             currentFrame: clampedFrame,
             totalFrames: totalFrames,
-            isCTAZone: clampedFrame >= 234 && clampedFrame <= 334,
-            frameType: clampedFrame >= 234 && clampedFrame <= 334 ? 'CTA_ZONE' : 'ORIGINAL',
-            originalFrame: clampedFrame >= 234 && clampedFrame <= 334 ? 234 : clampedFrame > 334 ? clampedFrame - 100 : clampedFrame,
+            isCTAZone: clampedFrame >= 320 && clampedFrame <= 420,
+            frameType: clampedFrame >= 320 && clampedFrame <= 420 ? 'CTA_ZONE' : 'ORIGINAL',
+            displayFrame: clampedFrame >= 320 && clampedFrame <= 420 ? 320 : clampedFrame > 420 ? clampedFrame - 100 : clampedFrame,
             sectionInfo: {
               activeSection,
               startSection,
@@ -110,8 +110,8 @@ const WebPSequence = ({
           console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
 
           // Special logging for CTA zone
-          if (clampedFrame >= 234 && clampedFrame <= 334) {
-            console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (duplicate of frame_0234)`);
+          if (clampedFrame >= 320 && clampedFrame <= 420) {
+            console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (duplicate of frame_0320)`);
           }
         }
       } else {
@@ -181,10 +181,26 @@ const WebPSequence = ({
     return frameNum.toString().padStart(4, '0');
   };
 
-  // Calculate if play button should be shown - now shows on frames 234-334
+  // Calculate which frame to actually display (duplicate frame 320 for frames 320-420)
+  const getDisplayFrame = (frameNum) => {
+    // For frames 320-420, always show frame 320 (mobile_frame_0320.webp)
+    if (frameNum >= 320 && frameNum <= 420) {
+      return 320;
+    }
+    // For frames after 420, adjust the frame number to account for the 100 duplicate frames
+    else if (frameNum > 420) {
+      return frameNum - 100;
+    }
+    // For frames before 320, show the original frame
+    else {
+      return frameNum;
+    }
+  };
+
+  // Calculate if play button should be shown - now shows on frames 320-420
   const shouldShowPlayButton = () => {
-    // Show CTA on frames 234-334 (duplicate zone) without requiring video watch
-    const showOnDuplicateZone = currentFrame >= 234 && currentFrame <= 334 && isVisible;
+    // Show CTA on frames 320-420 (duplicate zone) without requiring video watch
+    const showOnDuplicateZone = currentFrame >= 320 && currentFrame <= 420 && isVisible;
     const result = showOnDuplicateZone;
     console.log('📱 shouldShowPlayButton calculation:', {
       currentFrame,
@@ -195,9 +211,9 @@ const WebPSequence = ({
     return result;
   };
 
-  // Simple check for Continue CTA visibility - show on frames 234-334
+  // Simple check for Continue CTA visibility - show on frames 320-420
   const isContinueCTAVisible = () => {
-    const visible = currentFrame >= 234 && currentFrame <= 334 && isVisible;
+    const visible = currentFrame >= 320 && currentFrame <= 420 && isVisible;
     console.log('📱 Continue CTA Visibility Check:', {
       currentFrame,
       isVisible,
@@ -244,7 +260,7 @@ const WebPSequence = ({
 
   // Timeline management removed - no longer needed
 
-  // Handle play button click - simplified for frames 234-334
+  // Handle play button click - simplified for frames 320-420
   const handlePlayButtonClick = () => {
     console.log('📱 CTA clicked on frame:', currentFrame);
     if (showVideoPopup && videoSrc) {
@@ -295,7 +311,9 @@ const WebPSequence = ({
     return null;
   }
 
-  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(currentFrame)}${frameSuffix}`;
+  // Get the actual frame to display (with duplication logic)
+  const displayFrame = getDisplayFrame(currentFrame);
+  const imageSrc = `${folderPath}${framePrefix}${formatFrameNumber(displayFrame)}${frameSuffix}`;
 
   // Use preloaded image if available, otherwise fall back to src
   const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
@@ -449,11 +467,11 @@ const WebPSequence = ({
           <div>📊 Section: {activeSection} (Start: {startSection})</div>
           <div>📈 Progress: {(sectionProgress * 100).toFixed(1)}%</div>
           <div style={{
-            color: currentFrame >= 234 && currentFrame <= 334 ? '#ffff00' : '#00ff00',
+            color: currentFrame >= 320 && currentFrame <= 420 ? '#ffff00' : '#00ff00',
             fontWeight: 'bold'
           }}>
             🎬 Frame: {currentFrame}/{totalFrames}
-            {currentFrame >= 234 && currentFrame <= 334 && (
+            {currentFrame >= 320 && currentFrame <= 420 && (
               <span style={{ color: '#ffff00' }}> (CTA ZONE)</span>
             )}
           </div>
@@ -487,12 +505,12 @@ const WebPSequence = ({
           <div style={{
             marginTop: '5px',
             padding: '3px',
-            background: currentFrame >= 234 && currentFrame <= 334 ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
+            background: currentFrame >= 320 && currentFrame <= 420 ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
             borderRadius: '3px',
             fontSize: '11px'
           }}>
-            {currentFrame >= 234 && currentFrame <= 334 ?
-              `🎯 CTA ZONE (234-334): Frame ${currentFrame} - CTA button visible` :
+            {currentFrame >= 320 && currentFrame <= 420 ?
+              `🎯 CTA ZONE (320-420): Frame ${currentFrame} - CTA button visible` :
               `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
             }
           </div>
@@ -504,9 +522,9 @@ const WebPSequence = ({
             paddingTop: '3px'
           }}>
             Frame Range Info:<br />
-            • 1-233: Original frames<br />
-            • 234-334: CTA Zone (Duplicates + Button)<br />
-            • 335-428: Original frames (shifted)
+            • 1-319: Original frames<br />
+            • 320-420: CTA Zone (Duplicates + Button)<br />
+            • 421-536: Original frames (shifted)
           </div>
         </div>
       )}

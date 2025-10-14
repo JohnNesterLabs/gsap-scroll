@@ -939,7 +939,7 @@ export default function Demo() {
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={436} // Updated to match 30fps WebP frames extracted
+            totalFrames={536} // Updated to match 30fps WebP frames + 100 duplicate frames (436 + 100)
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"
