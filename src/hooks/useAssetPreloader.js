@@ -3,12 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 // Global image cache for preloaded images
 window.preloadedImages = window.preloadedImages || new Map();
 
-// Generate PNG frame paths
-const generatePNGFramePaths = (totalFrames = 328, folderPath = '/frames-journey/') => {
+// Generate WebP desktop frame paths
+const generateWebPDesktopFramePaths = (totalFrames = 328, folderPath = '/frames-desktop-webp/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');
-        frames.push(`${folderPath}frame_${frameNumber}.png`);
+        frames.push(`${folderPath}frame_${frameNumber}.webp`);
     }
     return frames;
 };
@@ -23,26 +23,42 @@ const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-m
     return frames;
 };
 
-// Define all assets that need to be preloaded
-const ASSETS_TO_PRELOAD = [
-    // Main demo video
-    '/hero4.mp4',
-    '/demo1.mp4',
-    '/Ticket1.mp4', // Video popup (legacy)
-    '/Ticket1_web.mp4', // Video popup (new)
+// Check if device is mobile
+const isMobileDevice = () => {
+    const width = window.innerWidth;
+    return width <= 768; // Use mobile assets for tablets and below
+};
 
-    // Logo assets
-    '/Logo-color.svg',
-    '/kahuna-logo-3.svg',
-    '/final-logo.svg',
-    '/LinkedIn-Icon.png',
-    
-    // PNG Sequence frames (all 328 frames for desktop)
-    ...generatePNGFramePaths(328, '/frames-journey/'),
-    
-    // WebP Mobile Sequence frames (all 436 frames for mobile)
-    ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
-];
+// Define device-specific assets to be preloaded
+const getAssetsToPreload = () => {
+    const commonAssets = [
+        // Main demo video
+        '/hero4.mp4',
+        '/demo1.mp4',
+        '/Ticket1.mp4', // Video popup (legacy)
+        '/Ticket1_web.mp4', // Video popup (new)
+
+        // Logo assets
+        '/Logo-color.svg',
+        '/kahuna-logo-3.svg',
+        '/final-logo.svg',
+        '/LinkedIn-Icon.png',
+    ];
+
+    if (isMobileDevice()) {
+        // Mobile: Only load mobile WebP frames
+        return [
+            ...commonAssets,
+            ...generateWebPMobileFramePaths(436, '/frames-mobile-30fps/'),
+        ];
+    } else {
+        // Desktop: Only load desktop WebP frames
+        return [
+            ...commonAssets,
+            ...generateWebPDesktopFramePaths(328, '/frames-desktop-webp/'),
+        ];
+    }
+};
 
 export const useAssetPreloader = () => {
     const [progress, setProgress] = useState(0);
@@ -55,8 +71,8 @@ export const useAssetPreloader = () => {
             // Determine asset type
             const isVideo = src.includes('.mp4');
             const isImage = src.includes('.jpg') || src.includes('.png') || src.includes('.gif') || src.includes('.svg') || src.includes('.webp');
-            const isPNGFrame = src.includes('/frames-journey/frame_');
-            const isWebPFrame = src.includes('/frames-mobile-30fps/mobile_frame_');
+            const isDesktopWebPFrame = src.includes('/frames-desktop-webp/frame_');
+            const isMobileWebPFrame = src.includes('/frames-mobile-30fps/mobile_frame_');
 
             if (isVideo) {
                 const video = document.createElement('video');
@@ -76,9 +92,9 @@ export const useAssetPreloader = () => {
                     // Store the loaded image in global cache
                     window.preloadedImages.set(src, img);
                     
-                    if (isPNGFrame) {
-                        console.log(`✓ PNG frame loaded: ${src}`);
-                    } else if (isWebPFrame) {
+                    if (isDesktopWebPFrame) {
+                        console.log(`✓ WebP desktop frame loaded: ${src}`);
+                    } else if (isMobileWebPFrame) {
                         console.log(`✓ WebP mobile frame loaded: ${src}`);
                     } else {
                         console.log(`✓ Image loaded: ${src}`);
@@ -116,15 +132,16 @@ export const useAssetPreloader = () => {
         setError(null);
         setLoadedAssets(new Set());
 
-        const totalAssets = ASSETS_TO_PRELOAD.length;
+        const assetsToPreload = getAssetsToPreload();
+        const totalAssets = assetsToPreload.length;
         let loadedCount = 0;
 
         try {
             console.log('🎬 Loading Demo assets...');
             
             // Separate critical assets from frame sequences
-            const criticalAssets = ASSETS_TO_PRELOAD.slice(0, 7); // First 7 are critical (videos + logos)
-            const frameAssets = ASSETS_TO_PRELOAD.slice(7); // Rest are frame sequences (PNG + WebP)
+            const criticalAssets = assetsToPreload.slice(0, 7); // First 7 are critical (videos + logos)
+            const frameAssets = assetsToPreload.slice(7); // Rest are frame sequences (WebP only)
             
             // Load critical assets first
             console.log('📦 Loading critical assets...');
@@ -214,7 +231,7 @@ export const useAssetPreloader = () => {
         loadedAssets,
         error,
         retry: preloadAssets,
-        totalAssets: ASSETS_TO_PRELOAD.length,
+        totalAssets: getAssetsToPreload().length,
         loadedCount: loadedAssets.size
     };
 };

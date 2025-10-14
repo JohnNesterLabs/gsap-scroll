@@ -423,14 +423,21 @@ const WebPSequence = ({
         </div>
       )}
 
-      {/* Troubleshooting Map Text Overlay - Visible from frame 4 to frame 50 */}
-      {currentFrame >= 4 && currentFrame <= 100 && (
-        <div className="troubleshooting-text-overlay">
-          <div className="troubleshooting-text">
-            AI that automatically builds and nurtures your Troubleshooting Map
-          </div>
-        </div>
-      )}
+       {/* Troubleshooting Map Text Overlay - Different ranges for desktop and mobile */}
+       {(() => {
+         const isMobile = framePrefix === 'mobile_frame_';
+         const shouldShow = isMobile 
+           ? (currentFrame >= 4 && currentFrame <= 320)  // Mobile: frames 4-320
+           : (currentFrame >= 4 && currentFrame <= 233); // Desktop: frames 4-233
+         
+         return shouldShow && (
+           <div className="troubleshooting-text-overlay">
+             <div className="troubleshooting-text">
+               AI that automatically builds and nurtures your Troubleshooting Map
+             </div>
+           </div>
+         );
+       })()}
       
       {/* Video Modal Popup */}
       {showVideoModal && (

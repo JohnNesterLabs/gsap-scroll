@@ -113,9 +113,14 @@
   /* border: 1px solid rgba(255, 255, 255, 0.1); */
 }
 .text-overlay-bottom-mobile{
+  background: transparent;
   font-family: "IBM Plex Mono", monospace;
   bottom: 40px;
   color: gray;
+}
+.text-overlay-bottom-mobile button{
+background: transparent;
+color: gray;
 }
 
 .timeline-track {
@@ -164,6 +169,7 @@
 }
 
 .play-button {
+  background: transparent;
   display: flex;
   align-items: center;
   gap: 20px;
