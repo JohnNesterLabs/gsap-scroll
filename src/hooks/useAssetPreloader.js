@@ -10,15 +10,36 @@ const generateWebPDesktopFramePaths = (totalFrames = 328, folderPath = '/frames-
         const frameNumber = i.toString().padStart(4, '0');
         frames.push(`${folderPath}frame_${frameNumber}.webp`);
     }
-    return frames;
 };
 
 // Generate WebP mobile frame paths
-const generateWebPMobileFramePaths = (totalFrames = 436, folderPath = '/frames-mobile-30fps/') => {
+const generateWebPMobileFramePaths = (totalFrames = 1367, folderPath = '/frames-mobile-30fps/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');
-        frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
+        // For frames 321-420, use mobile_frame_0320.webp (duplicate frame 320)
+        if (i >= 321 && i <= 420) {
+            frames.push(`${folderPath}mobile_frame_0320.webp`);
+        }
+        // For frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
+        else if (i >= 421) {
+            // Calculate which original frame this corresponds to
+            const originalFrameStart = 420; // Start of the range to duplicate
+            const originalFrameEnd = 587;   // End of the range to duplicate
+            const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
+            // Calculate which original frame this virtual frame corresponds to
+            const virtualFrameIndex = i - 420; // 0-based index from frame 421
+            const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
+            const originalFrame = originalFrameStart + originalFrameIndex;
+            // Ensure we don't go beyond the original frame range
+            const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
+            const originalFrameNumber = clampedOriginalFrame.toString().padStart(4, '0');
+            frames.push(`${folderPath}mobile_frame_${originalFrameNumber}.webp`);
+        }
+        // For all other frames (1-320), use the actual frame number
+        else {
+            frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
+        }
     }
     return frames;
 };
@@ -138,7 +159,8 @@ export const useAssetPreloader = () => {
 
         try {
             console.log('🎬 Loading Demo assets...');
-            
+            console.log(`📊 Total assets to load: ${totalAssets}`);
+
             // Separate critical assets from frame sequences
             const criticalAssets = assetsToPreload.slice(0, 7); // First 7 are critical (videos + logos)
             const frameAssets = assetsToPreload.slice(7); // Rest are frame sequences (WebP only)
@@ -158,17 +180,17 @@ export const useAssetPreloader = () => {
                 }
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
+
             // Load frame sequences in batches for better performance
             console.log('🖼️ Loading frame sequences in batches...');
             const batchSize = 20; // Load 20 frames at a time
             const totalBatches = Math.ceil(frameAssets.length / batchSize);
-            
+
             for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
                 const startIndex = batchIndex * batchSize;
                 const endIndex = Math.min(startIndex + batchSize, frameAssets.length);
                 const batch = frameAssets.slice(startIndex, endIndex);
-                
+
                 // Load batch in parallel
                 const batchPromises = batch.map(async (asset) => {
                     try {
@@ -179,26 +201,26 @@ export const useAssetPreloader = () => {
                         return { success: false, asset, error };
                     }
                 });
-                
+
                 // Wait for all promises in batch to complete
                 const batchResults = await Promise.allSettled(batchPromises);
-                
+
                 // Update progress for each completed asset
                 let batchLoadedCount = 0;
                 const batchLoadedAssets = [];
-                
+
                 batchResults.forEach((result) => {
                     batchLoadedCount++;
                     if (result.status === 'fulfilled' && result.value.success) {
                         batchLoadedAssets.push(result.value.asset);
                     }
                 });
-                
+
                 // Update counters
                 loadedCount += batchLoadedCount;
                 setLoadedAssets(prev => new Set([...prev, ...batchLoadedAssets]));
                 setProgress(Math.round((loadedCount / totalAssets) * 100));
-                
+
                 // Small delay between batches to prevent overwhelming the network
                 if (batchIndex < totalBatches - 1) {
                     await new Promise(resolve => setTimeout(resolve, 50));

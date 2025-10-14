@@ -16,7 +16,7 @@ To change when the PNG sequence starts, modify the `PNG_SEQUENCE_CONFIG` in `Dem
 ```javascript
 const PNG_SEQUENCE_CONFIG = {
   startSection: 4, // Change this to 4 or 5
-  totalFrames: 328,
+  totalFrames: 378,
   framePrefix: 'frame_',
   frameSuffix: '.png',
   folderPath: '/frames-journey/'
@@ -31,8 +31,8 @@ const PNG_SEQUENCE_CONFIG = {
 
 The component expects PNG files in the following format:
 - **Location**: `/public/frames-journey/`
-- **Naming**: `frame_0001.png` to `frame_0328.png`
-- **Total Frames**: 328 frames
+- **Naming**: `frame_0001.png` to `frame_0378.png`
+- **Total Frames**: 378 frames
 - **Format**: PNG files with consistent dimensions
 
 ## Integration
