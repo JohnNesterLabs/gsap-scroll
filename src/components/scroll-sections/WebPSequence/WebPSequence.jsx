@@ -21,27 +21,22 @@ const WebPSequence = ({
   showVideoPopup = true, // Whether to show video popup on continue
   isVideoPreloaded = false, // Whether the video has been preloaded
   videoPreloadProgress = 0, // Video preload progress percentage
-  // Scroll sensitivity control
-  scrollSensitivity = 0.3 // Scroll sensitivity (0.1 = very slow, 1.0 = normal, 0.3 = slower)
+  // Scroll sensitivity control - UNLIMITED
+  scrollSensitivity = 1.0 // Full speed - no limiting whatsoever
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
-  const [isScrollStopped, setIsScrollStopped] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
   const [showPlayButton, setShowPlayButton] = useState(false);
-  const [timelineProgress, setTimelineProgress] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
-  const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false);
+  const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(true); // Always allow smooth scrolling
   const imgRef = useRef(null);
-  const scrollContainerRef = useRef(null);
-  const scrollPreventionHandlerRef = useRef(null);
 
   // Frame rate limiting and smooth scrolling
   const lastFrameUpdateRef = useRef(0);
   const targetFrameRef = useRef(1);
   const frameUpdateRate = 16; // ~60fps (16ms between frames)
-  const maxFrameJump = 3; // Maximum frames to jump in one update
+  const maxFrameJump = 999; // UNLIMITED frame jumps - no restrictions
 
   // Debug logging for all state changes
   useEffect(() => {
@@ -51,13 +46,11 @@ const WebPSequence = ({
       hasWatchedVideo,
       allowSmoothScrolling,
       showPlayButton,
-      isScrollStopped,
-      showTimeline,
       isVisible,
       activeSection,
       sectionProgress
     });
-  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
+  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isVisible, activeSection, sectionProgress]);
 
   // Smooth frame calculation with throttling and frame rate limiting
   useEffect(() => {
@@ -68,12 +61,15 @@ const WebPSequence = ({
       // Total progress across all sections from start section
       const totalProgress = sectionOffset + progressInSection;
 
-      // Apply scroll sensitivity reduction for smoother scrolling
-      const adjustedProgress = totalProgress * scrollSensitivity;
+      // COMPLETELY UNLIMITED SCROLL - NO FRAME LIMITING WHATSOEVER
+      // Map totalProgress directly to frame range with NO restrictions
+      const targetFrameIndex = Math.floor(totalProgress * (totalFrames - 1));
+      let targetFrame = Math.max(1, Math.min(totalFrames, targetFrameIndex + 1));
 
-      // Map progress to frame range (0 to totalFrames-1)
-      const targetFrameIndex = Math.floor(adjustedProgress * (totalFrames - 1));
-      const targetFrame = Math.max(1, Math.min(totalFrames, targetFrameIndex + 1));
+      // DISABLED: Scroll stop logic - allow continuous scrolling through all frames
+      // The WebP sequence should not stop scrolling at any frame
+      // CTA buttons will be shown on appropriate frames without stopping scroll
+      console.log('🚀 WebP: Continuous scrolling enabled - no scroll stopping');
 
       // Store target frame for smooth interpolation
       targetFrameRef.current = targetFrame;
@@ -82,11 +78,7 @@ const WebPSequence = ({
       if (targetFrame >= totalFrames) {
         setIsVisible(false);
         // Reset all WebP sequence states when completed
-        setIsScrollStopped(false);
-        setShowTimeline(false);
         setShowPlayButton(false);
-        setTimelineProgress(0);
-        resumeScroll();
         return;
       } else {
         setIsVisible(true);
@@ -96,15 +88,9 @@ const WebPSequence = ({
       setIsVisible(false);
       setCurrentFrame(1);
       targetFrameRef.current = 1;
-      setIsScrollStopped(false);
-      setShowTimeline(false);
-      if (!allowSmoothScrolling) {
-        setShowPlayButton(false);
-      }
-      setTimelineProgress(0);
-      resumeScroll();
+      setShowPlayButton(false);
     }
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
 
   // Smooth frame interpolation with frame rate limiting
   useEffect(() => {
@@ -179,9 +165,7 @@ const WebPSequence = ({
           sectionProgress: (sectionProgress * 100).toFixed(1) + '%'
         },
         scrollState: {
-          isScrollStopped,
           allowSmoothScrolling,
-          showTimeline,
           showPlayButton,
           hasWatchedVideo
         }
@@ -194,52 +178,12 @@ const WebPSequence = ({
         console.log(`🎯 CTA ZONE: Frame ${currentFrame} - CTA button visible (${isMobile ? 'mobile' : 'desktop'} duplicate zone)`);
       }
     }
-  }, [currentFrame, isVisible, activeSection, sectionProgress, startSection, totalFrames, framePrefix, isScrollStopped, allowSmoothScrolling, showTimeline, showPlayButton, hasWatchedVideo]);
+  }, [currentFrame, isVisible, activeSection, sectionProgress, startSection, totalFrames, framePrefix, allowSmoothScrolling, showPlayButton, hasWatchedVideo]);
 
-  // Handle showing Continue CTA again when user reaches stop frame after watching video once
-  useEffect(() => {
-    console.log('📱 WebP Play button useEffect triggered:', {
-      allowSmoothScrolling,
-      hasWatchedVideo,
-      currentFrame,
-      stopFrame,
-      showPlayButton,
-      isVisible
-    });
-    // Only manage play button visibility when component is visible and smooth scrolling is enabled and video has been watched
-    if (isVisible && allowSmoothScrolling && hasWatchedVideo) {
-      if (currentFrame === stopFrame) {
-        // User has reached stop frame again after watching video - show Continue CTA for rewatching
-        console.log('📱 User reached stop frame again - showing Continue CTA for video rewatching');
-        setShowPlayButton(true);
-      } else if (currentFrame !== stopFrame) {
-        // Hide Continue CTA when not at stop frame during smooth scrolling
-        console.log('📱 User not at stop frame - hiding Continue CTA');
-        setShowPlayButton(false);
-      }
-    } else {
-      console.log('📱 Conditions not met for play button management:', {
-        isVisible,
-        allowSmoothScrolling,
-        hasWatchedVideo
-      });
-    }
-  }, [currentFrame, stopFrame, allowSmoothScrolling, hasWatchedVideo, isVisible, showPlayButton]);
+  // DISABLED: Play button logic for scroll stopping - continuous scroll is enabled
+  // CTA buttons will be shown based on frame ranges without stopping scroll
 
-  // Force play button to show when at stop frame after video watched
-  useEffect(() => {
-    if (allowSmoothScrolling && hasWatchedVideo && currentFrame === stopFrame && isVisible) {
-      console.log('📱 FORCE SHOWING PLAY BUTTON - All conditions met!');
-      setShowPlayButton(true);
-    }
-  }, [currentFrame, allowSmoothScrolling, hasWatchedVideo, stopFrame, isVisible]);
-
-  // Cleanup scroll prevention on unmount
-  useEffect(() => {
-    return () => {
-      resumeScroll();
-    };
-  }, []);
+  // REMOVED: Scroll prevention cleanup - not needed for continuous scrolling
 
   // Format frame number with leading zeros
   const formatFrameNumber = (frameNum) => {
@@ -320,41 +264,22 @@ const WebPSequence = ({
     return visible;
   };
 
-  // Stop forward scroll functionality (but allow backward scrolling)
-  const stopForwardScroll = () => {
+  // REMOVED: Scroll prevention functions - not needed for continuous scrolling
+  // The WebP sequence now allows unlimited scrolling through all frames
+
+  // Ensure no scroll prevention handlers are active
+  useEffect(() => {
     const scrollContainer = document.querySelector('.demo-scroll-container');
     if (scrollContainer) {
-      scrollContainerRef.current = scrollContainer;
-      // Store the current scroll position as the maximum allowed
-      const currentScrollTop = scrollContainer.scrollTop;
-      scrollContainer.dataset.maxScrollTop = currentScrollTop;
-      // Create scroll prevention handler
-      const handleScrollPrevention = (e) => {
-        if (scrollContainer.scrollTop > currentScrollTop) {
-          e.preventDefault();
-          scrollContainer.scrollTop = currentScrollTop;
-        }
-      };
-      // Store the handler reference for cleanup
-      scrollPreventionHandlerRef.current = handleScrollPrevention;
-      // Add scroll event listener to prevent forward scrolling
-      scrollContainer.addEventListener('scroll', handleScrollPrevention, { passive: false });
-      scrollContainer.dataset.scrollHandler = 'true';
+      // Remove any existing scroll prevention handlers
+      if (scrollContainer.dataset.scrollHandler === 'true') {
+        console.log('🧹 Removing existing scroll prevention handler');
+        delete scrollContainer.dataset.maxScrollTop;
+        delete scrollContainer.dataset.scrollHandler;
+      }
+      console.log('🧹 WebP sequence initialized with continuous scroll enabled');
     }
-  };
-
-  // Resume scroll functionality
-  const resumeScroll = () => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer && scrollPreventionHandlerRef.current) {
-      // Remove the scroll prevention
-      delete scrollContainer.dataset.maxScrollTop;
-      delete scrollContainer.dataset.scrollHandler;
-      // Remove the scroll prevention event listener
-      scrollContainer.removeEventListener('scroll', scrollPreventionHandlerRef.current);
-      scrollPreventionHandlerRef.current = null;
-    }
-  };
+  }, []);
 
   // Timeline management removed - no longer needed
 
@@ -374,6 +299,7 @@ const WebPSequence = ({
     if (onPlayButtonClick) {
       onPlayButtonClick();
     }
+    // Note: No scroll stopping - continuous scroll is enabled
   };
 
   // Handle video popup close
@@ -382,17 +308,8 @@ const WebPSequence = ({
     setShowVideoModal(false);
     // Mark that user has watched the video once
     setHasWatchedVideo(true);
-    setAllowSmoothScrolling(true);
-    // Small delay to ensure state update before resuming scroll
-    setTimeout(() => {
-      resumeScroll(); // Resume scroll after closing video
-      console.log('📱 Scroll resumed after video close - smooth scrolling enabled');
-      // Check if we're at stop frame and show play button if so
-      if (currentFrame === stopFrame) {
-        console.log('📱 At stop frame after video close - showing play button');
-        setShowPlayButton(true);
-      }
-    }, 100);
+    // Note: Continuous scroll is always enabled
+    console.log('📱 Video closed - continuous scrolling remains enabled');
   };
 
   // Handle image loading errors
@@ -574,9 +491,8 @@ const WebPSequence = ({
               <span style={{ color: '#ff8800' }}> (DUPLICATE)</span>
             )}
           </div>
-          <div>🛑 Stop Frame: {stopFrame} (Not Used)</div>
-          <div>⏸️ Scroll Stopped: No (Continuous Scroll)</div>
-          <div>⏱️ Show Timeline: No (Removed)</div>
+          <div>🛑 Stop Frame: {stopFrame} (DISABLED - Continuous Scroll)</div>
+          <div>⏸️ Scroll Stopped: No (Continuous Scroll Enabled)</div>
           <div style={{ color: '#00ffff', fontWeight: 'bold' }}>
             🎛️ Scroll Sensitivity: {scrollSensitivity} (Lower = Slower)
           </div>

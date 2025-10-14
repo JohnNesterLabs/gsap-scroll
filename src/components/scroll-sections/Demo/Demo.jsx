@@ -953,7 +953,7 @@ export default function Demo() {
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={320} // CTA zone starts at frame 320
+            stopFrame={557} // Mobile stops at frame 557 (CTA zone)
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}
@@ -962,8 +962,8 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
-            // Scroll sensitivity control - slower scrolling for smoother experience
-            scrollSensitivity={0.2} // Reduced from 0.3 to 0.2 for even slower, smoother scrolling
+            // Scroll sensitivity control - UNLIMITED scrolling
+            scrollSensitivity={1.0} // Full speed - no limiting
             onTimelineComplete={() => {
               console.log("Mobile WebP sequence timeline completed - showing play button");
             }}
@@ -981,7 +981,7 @@ export default function Demo() {
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={scrollStopConfig.stopFrame}
+            stopFrame={234} // Desktop stops at frame 234 (CTA zone)
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}
@@ -990,8 +990,8 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
-            // Scroll sensitivity control - slower scrolling for smoother experience
-            scrollSensitivity={0.3} // Desktop can be slightly faster than mobile
+            // Scroll sensitivity control - UNLIMITED scrolling
+            scrollSensitivity={1.0} // Full speed - no limiting
             onTimelineComplete={() => {
               console.log("Desktop WebP sequence timeline completed - showing play button");
             }}
