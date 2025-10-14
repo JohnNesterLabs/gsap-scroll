@@ -806,6 +806,9 @@ export default function Demo() {
 
   return (
     <div className="demo-container">
+      {/* Background Layer - Lowest z-index for consistent background */}
+      <div className="demo-background-layer" />
+      
       {/* Fixed Video - Only show after initialization to prevent glitch */}
       {isInitialized && (
         <video
@@ -823,7 +826,7 @@ export default function Demo() {
           controls={false}
           style={{
             position: "fixed",
-            zIndex: 5,
+            zIndex: 2, // Video layer - above background, below content for iOS scroll compatibility
             pointerEvents: "none",
             left: `${videoPosition.x}%`,
             top: `${videoPosition.y}%`,
@@ -854,15 +857,16 @@ export default function Demo() {
           </div>
 
           {/* Right Let's Talk Button */}
-          <button
+          <a
+            href="mailto:info@kahunalabs.ai"
             onClick={() => {
               console.log("Let's Talk button clicked!");
               // Add your contact/navigation logic here
             }}
             className="demo-header-button"
           >
-            <a href="mailto:info@kahunalabs.ai">Let's Talk</a>
-          </button>
+            Let's Talk
+          </a>
         </div>
       )}
 
@@ -874,6 +878,9 @@ export default function Demo() {
           height: "100vh",
           overflowY: "auto",
           overflowX: "hidden",
+          // Ensure scroll container is on top to receive touch events (iOS compatibility)
+          position: "relative",
+          zIndex: 10, // Higher z-index - top layer for iOS scroll compatibility
         }}
       >
         <AnimatedSection
