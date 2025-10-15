@@ -63,25 +63,16 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  /* Hide scrollbar for all browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-/* Custom scrollbar for demo */
+/* Hide scrollbar for Chrome, Safari, and Opera */
 .home-scroll-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.home-scroll-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-
-.home-scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-.home-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Responsive adjustments */

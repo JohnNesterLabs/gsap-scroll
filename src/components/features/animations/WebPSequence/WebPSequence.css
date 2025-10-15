@@ -357,6 +357,16 @@
   }
 }
 
+@keyframes fadeOutModal {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes scaleInModal {
   from {
     opacity: 0;
@@ -367,6 +377,27 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+@keyframes scaleOutModal {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Classes for closing animations */
+.video-modal-overlay.closing {
+  animation: fadeOutModal 0.25s ease-out forwards;
+}
+
+.video-modal-content.closing {
+  animation: scaleOutModal 0.25s ease-out forwards;
 }
 
 /* Responsive Timeline Styles */
