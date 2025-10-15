@@ -1,185 +1,416 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import './WebPSequence.css';
+import { AUTOPLAY_CONFIG } from '../../../../utils/constants';
 
 const WebPSequence = ({
-  startSection = 4, // Configurable start section (4 or 5)
-  totalFrames = 300, // Adjust based on converted WebP frames
+  startSection = 4,
+  totalFrames = 300,
   framePrefix = 'mobile_frame_',
   frameSuffix = '.webp',
-  folderPath = '/frames-mobile/', // New folder for mobile WebP frames
+  folderPath = '/frames-mobile/',
   activeSection,
   sectionProgress,
-  // Scroll stop functionality
-  stopFrame = 200, // Frame to stop at (equivalent to frame 234 in desktop)
-  timelineDuration = 5000, // 5 seconds in milliseconds
-  timelinePosition = { top: '50%', left: '50%' }, // Customizable timeline position
-  playButtonPosition = { top: '60%', left: '50%' }, // Customizable play button position
-  onTimelineComplete, // Callback when timeline completes
-  onPlayButtonClick, // Callback when play button is clicked
-  // Video popup props
-  videoSrc = '/Final-Ticket-1-(WIP).mp4', // Default video source for popup
-  showVideoPopup = true, // Whether to show video popup on continue
-  isVideoPreloaded = false, // Whether the video has been preloaded
-  videoPreloadProgress = 0 // Video preload progress percentage
+  stopFrame = 200,
+  timelineDuration = 5000,
+  timelinePosition = { top: '50%', left: '50%' },
+  playButtonPosition = { top: '60%', left: '50%' },
+  onTimelineComplete,
+  onPlayButtonClick,
+  videoSrc = '/Ticket1_web.mp4',
+  showVideoPopup = true,
+  isVideoPreloaded = false,
+  videoPreloadProgress = 0
 }) => {
+  // Basic display states
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
-  const [isScrollStopped, setIsScrollStopped] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
-  const [showPlayButton, setShowPlayButton] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [isClosingModal, setIsClosingModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
-  const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false);
+  
+  // Auto-play control states
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [playDirection, setPlayDirection] = useState('forward'); // 'forward' or 'backward'
+  const [isInCTABuffer, setIsInCTABuffer] = useState(false);
+  const [hasCompletedSequence, setHasCompletedSequence] = useState(false);
+  
+  // Refs for animation control
+  const autoPlayFrameId = useRef(null);
+  const currentFrameRef = useRef(1);
+  const scrollAccumulator = useRef(0);
+  const lastScrollTime = useRef(Date.now());
   const imgRef = useRef(null);
+  const hasInitialized = useRef(false);
   const scrollContainerRef = useRef(null);
-  const scrollPreventionHandlerRef = useRef(null);
+  const preventScrollHandler = useRef(null);
+  const previousSectionRef = useRef(activeSection);
+  
+  // Configuration constants
+  const isMobile = framePrefix === 'mobile_frame_';
+  const ctaStartFrame = isMobile ? 320 : 234;
+  const ctaEndFrame = isMobile ? 420 : 334;
+  const framesPerSecond = AUTOPLAY_CONFIG.framesPerSecond;
+  const frameInterval = 1000 / framesPerSecond;
+  const scrollThreshold = AUTOPLAY_CONFIG.scrollThreshold;
 
-  // Debug logging for all state changes
-  useEffect(() => {
-    console.log('📱 WEBP SEQUENCE STATE CHANGE:', {
+  // Detect if we're in CTA zone
+  const isInCTAZone = currentFrame >= ctaStartFrame && currentFrame <= ctaEndFrame;
+
+  console.log('🎬 AUTO-PLAY STATE:', {
       currentFrame,
-      stopFrame,
-      hasWatchedVideo,
-      allowSmoothScrolling,
-      showPlayButton,
-      isScrollStopped,
-      showTimeline,
+    isAutoPlaying,
+    playDirection,
+    isInCTABuffer,
+    isInCTAZone,
+    hasCompletedSequence,
       isVisible,
       activeSection,
-      sectionProgress
-    });
-  }, [currentFrame, stopFrame, hasWatchedVideo, allowSmoothScrolling, showPlayButton, isScrollStopped, showTimeline, isVisible, activeSection, sectionProgress]);
+    ctaStartFrame,
+    ctaEndFrame,
+    isMobile,
+    inDuplicateZone: isMobile && currentFrame > 420
+  });
 
-  // Optimized frame calculation with throttling and performance improvements
+  // Get scroll container reference
   useEffect(() => {
-    // Use requestAnimationFrame to throttle frame updates for smooth performance
-    const updateFrame = () => {
-      if (activeSection >= startSection) {
-        // Calculate frame based on section progress
-        const sectionOffset = activeSection - startSection;
-        const progressInSection = sectionProgress;
-        // Total progress across all sections from start section
-        const totalProgress = sectionOffset + progressInSection;
-        // Map progress to frame range (0 to totalFrames-1)
-        const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-        let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+    const scrollContainer = document.querySelector('.home-scroll-container');
+    if (scrollContainer) {
+      scrollContainerRef.current = scrollContainer;
+      console.log('✅ Scroll container reference acquired');
+    }
+  }, []);
 
-        // Hide WebP sequence after completing all frames
-        if (clampedFrame >= totalFrames) {
-          setIsVisible(false);
-          // Reset all WebP sequence states when completed
-          setIsScrollStopped(false);
-          setShowTimeline(false);
-          setShowPlayButton(false);
-          resumeScroll();
-          return;
-        } else {
-          setIsVisible(true);
-        }
 
-        // No scroll stopping - allow continuous scrolling through all frames
-        // CTA will be shown on frames 234-334 without stopping scroll
+  // Helper function to scroll to a specific section position
+  const scrollToSection = useCallback((targetSection, instant = false) => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
 
-        setCurrentFrame(clampedFrame);
-
-        // Enhanced console debugging for frame sequence
-        if (process.env.NODE_ENV === 'development') {
-          const isMobile = framePrefix === 'mobile_frame_';
-          const ctaStart = isMobile ? 320 : 234;
-          const ctaEnd = isMobile ? 420 : 334;
-          const isCTAZone = clampedFrame >= ctaStart && clampedFrame <= ctaEnd;
-
-          const frameInfo = {
-            currentFrame: clampedFrame,
-            totalFrames: totalFrames,
-            framePrefix: framePrefix,
-            isMobile: isMobile,
-            isCTAZone: isCTAZone,
-            frameType: isCTAZone ? 'CTA_ZONE' : 'ORIGINAL',
-            originalFrame: isCTAZone ? (isMobile ? 320 : 234) : (clampedFrame > ctaEnd ? clampedFrame - (ctaEnd - ctaStart + 1) : clampedFrame),
-            actualImageFrame: isMobile && clampedFrame >= 321 && clampedFrame <= 420 ? 320 : clampedFrame,
-            sectionInfo: {
-              activeSection,
-              startSection,
-              sectionProgress: (sectionProgress * 100).toFixed(1) + '%',
-              totalProgress: ((sectionOffset + progressInSection) * 100).toFixed(1) + '%'
-            },
-            scrollState: {
-              isScrollStopped,
-              allowSmoothScrolling,
-              showTimeline,
-              showPlayButton,
-              hasWatchedVideo
-            }
-          };
-
-          console.log('🎬 FRAME SEQUENCE DEBUG:', frameInfo);
-
-          // Special logging for CTA zone
-          if (isCTAZone) {
-            console.log(`🎯 CTA ZONE: Frame ${clampedFrame} - CTA button visible (${isMobile ? 'mobile' : 'desktop'} duplicate zone)`);
-          }
-        }
-      } else {
-        // User scrolled back to before start section - hide WebP sequence
-        setIsVisible(false);
-        setCurrentFrame(1);
-        setIsScrollStopped(false);
-        setShowTimeline(false);
-        if (!allowSmoothScrolling) {
-          setShowPlayButton(false);
-        }
-        resumeScroll();
-      }
-    };
-
-    requestAnimationFrame(updateFrame);
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, framePrefix, showTimeline]);
-
-  // Handle showing Continue CTA again when user reaches stop frame after watching video once
-  useEffect(() => {
-    console.log('📱 WebP Play button useEffect triggered:', {
-      allowSmoothScrolling,
-      hasWatchedVideo,
-      currentFrame,
-      stopFrame,
-      showPlayButton,
-      isVisible
-    });
-    // Only manage play button visibility when component is visible and smooth scrolling is enabled and video has been watched
-    if (isVisible && allowSmoothScrolling && hasWatchedVideo) {
-      if (currentFrame === stopFrame) {
-        // User has reached stop frame again after watching video - show Continue CTA for rewatching
-        console.log('📱 User reached stop frame again - showing Continue CTA for video rewatching');
-        setShowPlayButton(true);
-      } else if (currentFrame !== stopFrame) {
-        // Hide Continue CTA when not at stop frame during smooth scrolling
-        console.log('📱 User not at stop frame - hiding Continue CTA');
-        setShowPlayButton(false);
-      }
+    const totalSections = 7; // Total sections in the app
+    const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+    
+    // Calculate scroll position for the target section
+    // targetSection should be between 0 and 6 (totalSections - 1)
+    const targetScrollProgress = targetSection / (totalSections - 1);
+    const targetScrollTop = targetScrollProgress * maxScroll;
+    
+    // Scroll to position (instant or smooth)
+    if (instant) {
+      // Temporarily disable smooth scrolling CSS for instant scroll
+      const originalScrollBehavior = scrollContainer.style.scrollBehavior;
+      scrollContainer.style.scrollBehavior = 'auto';
+      
+      // Set scroll position instantly
+      scrollContainer.scrollTop = targetScrollTop;
+      
+      // Restore original scroll behavior on next frame
+      requestAnimationFrame(() => {
+        scrollContainer.style.scrollBehavior = originalScrollBehavior;
+      });
     } else {
-      console.log('📱 Conditions not met for play button management:', {
-        isVisible,
-        allowSmoothScrolling,
-        hasWatchedVideo
+      scrollContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
       });
     }
-  }, [currentFrame, stopFrame, allowSmoothScrolling, hasWatchedVideo, isVisible, showPlayButton]);
+  }, []);
 
-  // Force play button to show when at stop frame after video watched
+  // Prevent/restore scroll based on auto-play state
+  const preventScroll = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || preventScrollHandler.current) return;
+
+    const currentScrollTop = scrollContainer.scrollTop;
+    
+    preventScrollHandler.current = (e) => {
+      // Lock scroll position
+      scrollContainer.scrollTop = currentScrollTop;
+    };
+
+    scrollContainer.addEventListener('scroll', preventScrollHandler.current, { passive: false });
+    console.log('🔒 SCROLL PREVENTED at position:', currentScrollTop);
+  }, []);
+
+  const restoreScroll = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || !preventScrollHandler.current) return;
+
+    scrollContainer.removeEventListener('scroll', preventScrollHandler.current);
+    preventScrollHandler.current = null;
+    console.log('🔓 SCROLL RESTORED');
+  }, []);
+
+  // Initialize auto-play when section becomes active
   useEffect(() => {
-    if (allowSmoothScrolling && hasWatchedVideo && currentFrame === stopFrame && isVisible) {
-      console.log('📱 FORCE SHOWING PLAY BUTTON - All conditions met!');
-      setShowPlayButton(true);
+    const previousSection = previousSectionRef.current;
+    const comingFromAbove = previousSection > activeSection && previousSection > startSection;
+    
+    // Case 1: First time reaching section (scrolling down/forward)
+    if (activeSection >= startSection && !hasInitialized.current && !hasCompletedSequence) {
+      console.log('🎬 INITIALIZING AUTO-PLAY - Section became active (forward)');
+      setIsVisible(true);
+      setIsAutoPlaying(true);
+      setPlayDirection('forward');
+      hasInitialized.current = true;
+      currentFrameRef.current = 1;
+      setCurrentFrame(1);
+      preventScroll();
+    } 
+    // Case 2: Scrolling back into section from above (after completion)
+    else if (activeSection >= startSection && hasCompletedSequence && comingFromAbove) {
+      console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from above (backward)');
+      setIsVisible(true);
+      setIsAutoPlaying(true);
+      setPlayDirection('backward');
+      hasInitialized.current = true;
+      setHasCompletedSequence(false); // Reset completion flag for this backward pass
+      currentFrameRef.current = totalFrames;
+      setCurrentFrame(totalFrames);
+      preventScroll();
     }
-  }, [currentFrame, allowSmoothScrolling, hasWatchedVideo, stopFrame, isVisible]);
+    // Case 3: Reset if user scrolls back before the section
+    else if (activeSection < startSection) {
+      console.log('🎬 RESETTING - User scrolled before start section');
+      setIsVisible(false);
+      setIsAutoPlaying(false);
+      setIsInCTABuffer(false);
+      setHasCompletedSequence(false);
+      hasInitialized.current = false;
+      currentFrameRef.current = 1;
+      setCurrentFrame(1);
+      restoreScroll();
+      if (autoPlayFrameId.current) {
+        cancelAnimationFrame(autoPlayFrameId.current);
+        autoPlayFrameId.current = null;
+      }
+    }
+    
+    // Update previous section for next comparison
+    previousSectionRef.current = activeSection;
+  }, [activeSection, startSection, hasCompletedSequence, totalFrames, preventScroll, restoreScroll]);
 
-  // Cleanup scroll prevention on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      resumeScroll();
+      restoreScroll();
+      if (autoPlayFrameId.current) {
+        cancelAnimationFrame(autoPlayFrameId.current);
+      }
     };
-  }, []);
+  }, [restoreScroll]);
+
+  // Auto-play animation loop
+  useEffect(() => {
+    if (!isAutoPlaying || !isVisible) {
+      return;
+    }
+
+    let lastFrameTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - lastFrameTime;
+
+      if (elapsed >= frameInterval) {
+        lastFrameTime = now - (elapsed % frameInterval);
+
+        let nextFrame = currentFrameRef.current;
+
+        if (playDirection === 'forward') {
+          // For mobile, skip duplicate frames in the post-CTA zone
+          // Frames 421-1367 have 5x duplication, so advance by 5 to show unique frames
+          if (isMobile && nextFrame >= 420) {
+            const oldFrame = nextFrame;
+            nextFrame += 5;
+            if (oldFrame === 420) {
+              console.log('📱 MOBILE: Entering duplicate zone, advancing by 5 frames per tick');
+            }
+          } else {
+            nextFrame += 1;
+          }
+          
+          // Check if we've reached CTA zone
+          if (nextFrame >= ctaStartFrame && nextFrame <= ctaEndFrame && !isInCTABuffer) {
+            // Reached CTA zone - pause auto-play and enter buffer mode
+            console.log('🎯 REACHED CTA ZONE - Entering buffer mode');
+            setIsInCTABuffer(true);
+            setIsAutoPlaying(false);
+            scrollAccumulator.current = 0;
+            currentFrameRef.current = ctaStartFrame;
+            setCurrentFrame(ctaStartFrame);
+            return;
+          }
+          
+          // Check if we've completed the sequence
+          if (nextFrame > totalFrames) {
+            console.log('✅ SEQUENCE COMPLETE - Handing back scroll control');
+            nextFrame = totalFrames;
+            setIsAutoPlaying(false);
+            setHasCompletedSequence(true);
+            // Don't hide yet - keep last frame visible during scroll transition
+            currentFrameRef.current = nextFrame;
+            setCurrentFrame(nextFrame);
+            restoreScroll();
+            
+            // Scroll user forward to the last-frame-section (around section 5)
+            setTimeout(() => {
+              scrollToSection(5);
+            }, 100);
+            
+            // Hide the WebPSequence after scroll animation completes (smooth scroll takes ~500-800ms)
+            setTimeout(() => {
+              setIsVisible(false);
+              console.log('🎬 WebPSequence hidden after transition');
+            }, 900);
+            
+            return;
+          }
+        } else {
+          // Backward
+          // For mobile, skip duplicate frames in the post-CTA zone
+          // Frames 421-1367 have 5x duplication, so advance by 5 to show unique frames
+          if (isMobile && nextFrame > 420) {
+            nextFrame -= 5;
+          } else {
+            nextFrame -= 1;
+          }
+          
+          // Check if we've reached the start
+          if (nextFrame < 1) {
+            console.log('⏮️ REACHED START - Resetting and restoring scroll control');
+            nextFrame = 1;
+            setIsAutoPlaying(false);
+            setHasCompletedSequence(false);
+            hasInitialized.current = false;
+            currentFrameRef.current = nextFrame;
+            setCurrentFrame(nextFrame);
+            restoreScroll();
+            
+            // Hide the WebPSequence FIRST before scrolling
+            setIsVisible(false);
+            
+            // Use requestAnimationFrame to ensure scroll lock is fully removed before scrolling
+            requestAnimationFrame(() => {
+              scrollToSection(3.8, true); // true = instant scroll
+            });
+            
+            return;
+          }
+        }
+
+        currentFrameRef.current = nextFrame;
+        setCurrentFrame(nextFrame);
+      }
+
+      autoPlayFrameId.current = requestAnimationFrame(animate);
+    };
+
+    autoPlayFrameId.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (autoPlayFrameId.current) {
+        cancelAnimationFrame(autoPlayFrameId.current);
+        autoPlayFrameId.current = null;
+      }
+    };
+  }, [isAutoPlaying, playDirection, isVisible, totalFrames, ctaStartFrame, ctaEndFrame, frameInterval, isInCTABuffer, restoreScroll, scrollToSection]);
+
+  // Handle scroll events for direction control and CTA buffer
+  const handleWheel = useCallback((e) => {
+    if (!isVisible) return;
+
+    const scrollDelta = e.deltaY;
+    const now = Date.now();
+    
+    console.log('🖱️ WHEEL EVENT:', { scrollDelta, isInCTABuffer, isAutoPlaying, showVideoModal });
+
+    // CTA Buffer Zone Logic
+    if (isInCTABuffer) {
+      // If video modal is open, close it first with animation
+      if (showVideoModal && !isClosingModal) {
+        console.log('❌ VIDEO MODAL OPEN - Closing with animation before handling scroll');
+        setIsClosingModal(true);
+        // Reset scroll accumulator when closing modal
+        scrollAccumulator.current = 0;
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+          setShowVideoModal(false);
+          setIsClosingModal(false);
+          setHasWatchedVideo(true);
+          console.log('✅ VIDEO MODAL CLOSED - Ready for scroll handling');
+        }, 250);
+        return;
+      }
+      
+      // If modal is currently closing, don't handle scroll yet
+      if (isClosingModal) {
+        return;
+      }
+
+      // Accumulate scroll to detect intent to move past CTA
+      if (scrollDelta > 0) {
+        // Scrolling down - trying to move forward
+        scrollAccumulator.current += scrollDelta;
+        console.log('📊 BUFFER SCROLL DOWN:', scrollAccumulator.current, 'threshold:', scrollThreshold);
+        
+        if (scrollAccumulator.current >= scrollThreshold) {
+          // User wants to move past CTA
+          console.log('🚀 EXITING CTA BUFFER - Resuming auto-play forward');
+          setIsInCTABuffer(false);
+          setIsAutoPlaying(true);
+          setPlayDirection('forward');
+          scrollAccumulator.current = 0;
+          currentFrameRef.current = ctaEndFrame + 1;
+          setCurrentFrame(ctaEndFrame + 1);
+        }
+      } else if (scrollDelta < 0) {
+        // Scrolling up - trying to go back
+        scrollAccumulator.current += scrollDelta; // Will be negative
+        console.log('📊 BUFFER SCROLL UP:', scrollAccumulator.current, 'threshold:', -scrollThreshold);
+        
+        if (scrollAccumulator.current <= -scrollThreshold) {
+          // User wants to go back
+          console.log('⏪ EXITING CTA BUFFER - Resuming auto-play backward');
+          setIsInCTABuffer(false);
+          setIsAutoPlaying(true);
+          setPlayDirection('backward');
+          scrollAccumulator.current = 0;
+          currentFrameRef.current = ctaStartFrame - 1;
+          setCurrentFrame(ctaStartFrame - 1);
+        }
+      }
+      return;
+    }
+
+    // Direction change during auto-play
+    if (isAutoPlaying) {
+      if (scrollDelta < 0 && playDirection === 'forward') {
+        // Scrolling up during forward play - reverse
+        console.log('⏪ REVERSING - User scrolled up during forward play');
+        setPlayDirection('backward');
+      } else if (scrollDelta > 0 && playDirection === 'backward') {
+        // Scrolling down during backward play - go forward
+        console.log('⏩ FORWARD - User scrolled down during backward play');
+        setPlayDirection('forward');
+      }
+    }
+    
+    lastScrollTime.current = now;
+  }, [isVisible, isInCTABuffer, isAutoPlaying, playDirection, scrollThreshold, ctaStartFrame, ctaEndFrame, showVideoModal, isClosingModal]);
+
+  // Attach scroll listeners
+  useEffect(() => {
+    if (!isVisible) return;
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchmove', handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchmove', handleWheel);
+    };
+  }, [isVisible, handleWheel]);
 
   // Memoize frame number formatting for performance
   const formatFrameNumber = useMemo(() => {
@@ -205,7 +436,6 @@ const WebPSequence = ({
         }
         // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
         else if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
-          // Calculate which original frame this corresponds to
           const originalFrameStart = 420;
           const originalFrameEnd = 587;
           const duplicatesPerFrame = 5;
@@ -225,120 +455,50 @@ const WebPSequence = ({
     };
   }, [framePrefix, folderPath, frameSuffix, formatFrameNumber]);
 
-  // Calculate if play button should be shown - mobile shows on frames 320-420, desktop on 234-334
-  const shouldShowPlayButton = () => {
-    let showOnDuplicateZone = false;
+  // Check if CTA button should be shown
+  const shouldShowCTA = isInCTAZone && isVisible;
 
-    if (framePrefix === 'mobile_frame_') {
-      // Mobile: Show CTA on frames 320-420 (duplicate zone)
-      showOnDuplicateZone = currentFrame >= 320 && currentFrame <= 420 && isVisible;
-    } else {
-      // Desktop: Show CTA on frames 234-334 (duplicate zone)
-      showOnDuplicateZone = currentFrame >= 234 && currentFrame <= 334 && isVisible;
-    }
-
-    const result = showOnDuplicateZone;
-    console.log('📱 shouldShowPlayButton calculation:', {
-      currentFrame,
-      isVisible,
-      framePrefix,
-      showOnDuplicateZone,
-      result
-    });
-    return result;
-  };
-
-  // Simple check for Continue CTA visibility - mobile shows on frames 320-420, desktop on 234-334
-  const isContinueCTAVisible = () => {
-    let visible = false;
-
-    if (framePrefix === 'mobile_frame_') {
-      // Mobile: Show CTA on frames 320-420
-      visible = currentFrame >= 320 && currentFrame <= 420 && isVisible;
-    } else {
-      // Desktop: Show CTA on frames 234-334
-      visible = currentFrame >= 234 && currentFrame <= 334 && isVisible;
-    }
-
-    console.log('📱 Continue CTA Visibility Check:', {
-      currentFrame,
-      isVisible,
-      framePrefix,
-      visible
-    });
-    return visible;
-  };
-
-
-  // Resume scroll functionality
-  const resumeScroll = () => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer && scrollPreventionHandlerRef.current) {
-      // Remove the scroll prevention
-      delete scrollContainer.dataset.maxScrollTop;
-      delete scrollContainer.dataset.scrollHandler;
-      // Remove the scroll prevention event listener
-      scrollContainer.removeEventListener('scroll', scrollPreventionHandlerRef.current);
-      scrollPreventionHandlerRef.current = null;
-    }
-  };
-
-  // Timeline management removed - no longer needed
-
-  // Handle play button click - simplified for frames 234-334
-  const handlePlayButtonClick = () => {
-    console.log('📱 CTA clicked on frame:', currentFrame);
+  // Handle play button click
+  const handlePlayButtonClick = useCallback(() => {
+    console.log('🎬 CTA CLICKED - Opening video modal');
     if (showVideoPopup && videoSrc) {
-      // Check if video is preloaded before showing popup
       if (isVideoPreloaded) {
-        console.log('📱 Video is preloaded - showing popup immediately');
+        console.log('✅ Video is preloaded');
         setShowVideoModal(true);
       } else {
-        console.log('📱 Video not yet preloaded - showing popup anyway (will load on demand)');
+        console.log('⚠️ Video not yet preloaded - loading on demand');
         setShowVideoModal(true);
       }
     }
     if (onPlayButtonClick) {
       onPlayButtonClick();
     }
-  };
+  }, [showVideoPopup, videoSrc, isVideoPreloaded, onPlayButtonClick]);
 
-  // Handle video popup close
-  const handleVideoModalClose = () => {
-    console.log('📱 WebP Video modal close button clicked - closing video popup');
-    setShowVideoModal(false);
-    // Mark that user has watched the video once
-    setHasWatchedVideo(true);
-    setAllowSmoothScrolling(true);
-    // Small delay to ensure state update before resuming scroll
+  // Handle video modal close with animation
+  const handleVideoModalClose = useCallback(() => {
+    console.log('❌ VIDEO MODAL CLOSING - Starting animation');
+    setIsClosingModal(true);
+    
+    // Wait for animation to complete before hiding
     setTimeout(() => {
-      resumeScroll(); // Resume scroll after closing video
-      console.log('📱 Scroll resumed after video close - smooth scrolling enabled');
-      // Check if we're at stop frame and show play button if so
-      if (currentFrame === stopFrame) {
-        console.log('📱 At stop frame after video close - showing play button');
-        setShowPlayButton(true);
-      }
-    }, 100);
-  };
+      setShowVideoModal(false);
+      setIsClosingModal(false);
+      setHasWatchedVideo(true);
+      console.log('✅ VIDEO MODAL CLOSED - Animation complete');
+    }, 250); // Match the CSS animation duration
+  }, []);
 
-  // Handle image loading errors
-  const handleImageError = () => {
-    console.warn(`📱 Failed to load WebP frame ${currentFrame}`);
-  };
-
-  // Handle image load success
-  const handleImageLoad = () => {
-    // Image loaded successfully
-  };
+  // Handle image errors
+  const handleImageError = useCallback(() => {
+    console.warn(`⚠️ Failed to load frame ${currentFrame}`);
+  }, [currentFrame]);
 
   if (!isVisible) {
     return null;
   }
 
   const imageSrc = getFrameImageSrc(currentFrame);
-
-  // Use preloaded image if available, otherwise fall back to src
   const preloadedImg = window.preloadedImages && window.preloadedImages.get(imageSrc);
 
   return (
@@ -346,19 +506,16 @@ const WebPSequence = ({
       <img
         ref={imgRef}
         src={preloadedImg ? preloadedImg.src : imageSrc}
-        alt={`Mobile WebP Frame ${currentFrame}`}
+        alt={`Frame ${currentFrame}`}
         className="webp-sequence-frame"
         onError={handleImageError}
-        onLoad={handleImageLoad}
         style={{
-          // Optimize rendering for preloaded images
           willChange: preloadedImg ? 'auto' : 'transform',
         }}
       />
 
-      {/* Timeline Overlay removed - no longer needed */}
-
-      {(shouldShowPlayButton() || isContinueCTAVisible()) && (
+      {/* CTA Text Overlay */}
+      {shouldShowCTA && (
         <div
           className="text-overlay-bottom-mobile"
           style={{
@@ -369,15 +526,15 @@ const WebPSequence = ({
           <button
             className="play-button"
             onClick={handlePlayButtonClick}
-            aria-label="Continue scrolling"
+            aria-label="Watch demo video"
           >
             Click To Enter Ticket No. 1535
           </button>
         </div>
       )}
 
-      {/* Play Button Overlay */}
-      {(shouldShowPlayButton() || isContinueCTAVisible()) && (
+      {/* CTA Play Button Overlay */}
+      {shouldShowCTA && (
         <div
           className="play-button-overlay"
           style={{
@@ -391,7 +548,7 @@ const WebPSequence = ({
           <button
             className="play-button"
             onClick={handlePlayButtonClick}
-            aria-label="Continue scrolling"
+            aria-label="Watch demo video"
           >
             <svg
               className="play-circle-icon"
@@ -416,10 +573,10 @@ const WebPSequence = ({
         </div>
       )}
 
-      {/* Troubleshooting Map Text Overlay - Customized for mobile and desktop */}
+      {/* Troubleshooting Map Text Overlay */}
       {(framePrefix === 'mobile_frame_' 
-        ? (currentFrame >= 4 && currentFrame <= 300)  // Mobile: frames 4-100
-        : (currentFrame >= 4 && currentFrame <= 220)  // Desktop: frames 4-230
+        ? (currentFrame >= 4 && currentFrame <= 300)
+        : (currentFrame >= 4 && currentFrame <= 220)
       ) && (
         <div className="troubleshooting-text-overlay">
           <div className="troubleshooting-text">
@@ -430,14 +587,13 @@ const WebPSequence = ({
 
       {/* Video Modal Popup */}
       {showVideoModal && (
-        <div className="video-modal-overlay" onClick={handleVideoModalClose}>
-          <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className={`video-modal-overlay ${isClosingModal ? 'closing' : ''}`} onClick={handleVideoModalClose}>
+          <div className={`video-modal-content ${isClosingModal ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
             <button
               className="video-modal-close"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('📱 Close button clicked - calling handleVideoModalClose');
                 handleVideoModalClose();
               }}
               aria-label="Close video"
@@ -467,112 +623,6 @@ const WebPSequence = ({
           </div>
         </div>
       )}
-
-      {/* Enhanced Debug info - shows frame sequence details */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div className="webp-sequence-debug" style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: 'white',
-          padding: '10px',
-          borderRadius: '5px',
-          fontSize: '12px',
-          fontFamily: 'monospace',
-          zIndex: 1000,
-          maxWidth: '300px',
-          lineHeight: '1.4'
-        }}>
-          <div style={{ fontWeight: 'bold', color: '#00ff00', marginBottom: '5px' }}>
-            {framePrefix === 'mobile_frame_' ? '📱 MOBILE WEBP SEQUENCE DEBUG' : '🖥️ DESKTOP WEBP SEQUENCE DEBUG'}
-          </div>
-          <div>📁 Folder: {folderPath}</div>
-          <div>🏷️ Prefix: {framePrefix}</div>
-          <div>🏷️ Suffix: {frameSuffix}</div>
-          <div>📊 Section: {activeSection} (Start: {startSection})</div>
-          <div>📈 Progress: {(sectionProgress * 100).toFixed(1)}%</div>
-          <div style={{
-            color: (framePrefix === 'mobile_frame_' ? (currentFrame >= 320 && currentFrame <= 420) : (currentFrame >= 234 && currentFrame <= 334)) ? '#ffff00' : '#00ff00',
-            fontWeight: 'bold'
-          }}>
-            🎬 Frame: {currentFrame}/{totalFrames}
-            {(framePrefix === 'mobile_frame_' ? (currentFrame >= 320 && currentFrame <= 420) : (currentFrame >= 234 && currentFrame <= 334)) && (
-              <span style={{ color: '#ffff00' }}> (CTA ZONE)</span>
-            )}
-            {framePrefix === 'mobile_frame_' && currentFrame >= 321 && currentFrame <= 420 && (
-              <span style={{ color: '#ff8800' }}> (DUPLICATE)</span>
-            )}
-          </div>
-          <div>🛑 Stop Frame: {stopFrame} (Not Used)</div>
-          <div>⏸️ Scroll Stopped: No (Continuous Scroll)</div>
-          <div>⏱️ Show Timeline: No (Removed)</div>
-          <div style={{ color: showPlayButton ? 'green' : 'red', fontWeight: 'bold' }}>
-            ▶️ Show Play Button: {showPlayButton ? 'Yes' : 'No'}
-          </div>
-          <div style={{ color: hasWatchedVideo ? 'green' : 'red' }}>
-            🎥 Has Watched Video: {hasWatchedVideo ? 'Yes' : 'No'}
-          </div>
-          <div style={{ color: allowSmoothScrolling ? 'green' : 'red' }}>
-            🚀 Allow Smooth Scrolling: {allowSmoothScrolling ? 'Yes' : 'No'}
-          </div>
-          <div style={{ color: isVisible ? 'green' : 'red' }}>
-            👁️ Is Visible: {isVisible ? 'Yes' : 'No'}
-          </div>
-          <div style={{ color: shouldShowPlayButton() ? 'green' : 'red', fontWeight: 'bold', fontSize: '14px' }}>
-            ✅ SHOULD SHOW: {shouldShowPlayButton() ? 'YES' : 'NO'}
-          </div>
-          <div style={{ color: isContinueCTAVisible() ? 'green' : 'red', fontWeight: 'bold', fontSize: '14px' }}>
-            🎯 CTA VISIBLE: {isContinueCTAVisible() ? 'YES' : 'NO'}
-          </div>
-          <div style={{ color: isVideoPreloaded ? 'green' : 'orange', fontWeight: 'bold', fontSize: '14px' }}>
-            📹 VIDEO PRELOADED: {isVideoPreloaded ? 'YES' : 'NO'}
-          </div>
-          <div style={{ color: 'cyan', fontSize: '12px' }}>
-            📊 Video Progress: {videoPreloadProgress.toFixed(1)}%
-          </div>
-          <div style={{
-            marginTop: '5px',
-            padding: '3px',
-            background: (framePrefix === 'mobile_frame_' ? (currentFrame >= 320 && currentFrame <= 420) : (currentFrame >= 234 && currentFrame <= 334)) ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)',
-            borderRadius: '3px',
-            fontSize: '11px'
-          }}>
-            {framePrefix === 'mobile_frame_' ? (
-              currentFrame >= 320 && currentFrame <= 420 ?
-                `🎯 CTA ZONE (320-420): Frame ${currentFrame} - CTA button visible` :
-                `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
-            ) : (
-              currentFrame >= 234 && currentFrame <= 334 ?
-                `🎯 CTA ZONE (234-334): Frame ${currentFrame} - CTA button visible` :
-                `📍 NORMAL FRAME ZONE: Frame ${currentFrame} is original content`
-            )}
-          </div>
-          <div style={{
-            marginTop: '3px',
-            fontSize: '10px',
-            color: '#888',
-            borderTop: '1px solid #333',
-            paddingTop: '3px'
-          }}>
-            {framePrefix === 'mobile_frame_' ? (
-              <>
-                Mobile Frame Range Info:<br />
-                • 1-319: Original frames<br />
-                • 320-420: CTA Zone (Frame 320 + Button)<br />
-                • 421-536: Original frames (shifted)
-              </>
-            ) : (
-              <>
-                Desktop Frame Range Info:<br />
-                • 1-233: Original frames<br />
-                • 234-334: CTA Zone (Duplicates + Button)<br />
-                • 335-428: Original frames (shifted)
-              </>
-            )}
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

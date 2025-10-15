@@ -24,6 +24,39 @@ export const TOTAL_SECTIONS = 7;
 // Mobile device detection threshold
 export const MOBILE_THRESHOLD = 768;
 
+// Scroll smoothing and damping configuration
+export const SCROLL_SMOOTHING_CONFIG = {
+  // Damping factor controls the "friction" applied to scrolling
+  // Higher values (0.15-0.20) = more friction, faster deceleration, more responsive
+  // Lower values (0.05-0.10) = less friction, smoother momentum, more cinematic
+  // Recommended range: 0.08 - 0.15
+  dampingFactor: 0.2,
+  
+  // Frame sequence sensitivity - controls smoothness of frame transitions
+  // This acts as interpolation damping for frame changes (independent of scroll distance)
+  // Lower values (0.2-0.4) = smoother, slower frame transitions, more cinematic
+  // Higher values (0.6-0.9) = snappier, faster frame transitions, more responsive
+  // Note: All frames remain reachable regardless of this value
+  // Recommended range: 0.3 - 0.7
+  frameSequenceSensitivity: 0.1,
+};
+
+// Auto-play frame sequence configuration
+export const AUTOPLAY_CONFIG = {
+  // Frames per second for auto-play animation
+  // Higher values (40-60) = faster, more fluid animation
+  // Lower values (20-30) = slower, more deliberate animation
+  // Recommended: 30 for balanced performance and smoothness
+  framesPerSecond: 50,
+  
+  // Scroll threshold to exit CTA buffer zone
+  // Amount of scroll delta needed to move past the CTA zone
+  // Higher values (150-300) = requires more scrolling to exit
+  // Lower values (50-100) = exits quickly with light scrolling
+  // Recommended: 100 for balanced control
+  scrollThreshold: 100,
+};
+
 // PNG Sequence Configuration
 export const PNG_SEQUENCE_CONFIG = {
   startSection: 4, // PNG sequence starts from section 4 and completes all 378 frames

@@ -6,7 +6,7 @@ import WebPSequence from "../../features/animations/WebPSequence/WebPSequence";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
-import { PNG_SEQUENCE_CONFIG, DESKTOP_WEBP_SEQUENCE_CONFIG } from "../../../utils/constants";
+import { PNG_SEQUENCE_CONFIG, DESKTOP_WEBP_SEQUENCE_CONFIG, SCROLL_SMOOTHING_CONFIG } from "../../../utils/constants";
 import {
   getScrollStopConfig,
   getVideoSizeConfig,
@@ -57,6 +57,12 @@ export default function Home() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [, setScrollProgress] = useState(0);
+
+  // Scroll smoothing and damping refs
+  const targetScrollProgress = useRef(0);
+  const currentScrollProgress = useRef(0);
+  const animationFrameId = useRef(null);
+  const activeSectionRef = useRef(0);
 
   // Get initial config based on screen size
   const initialConfig = getInitialVideoConfig();
@@ -127,25 +133,26 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedVideoSizeConfig = useMemo(() => getVideoSizeConfig(), []);
 
-  // Optimized scroll handler with throttling and performance improvements
-  const handleScroll = useCallback(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer || !videoRef.current) {
-      return;
-    }
+  // Smooth scroll animation loop with damping - using refs to avoid stale closures
+  useEffect(() => {
+    const smoothScrollLoop = () => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer || !videoRef.current) {
+        animationFrameId.current = requestAnimationFrame(smoothScrollLoop);
+        return;
+      }
 
-    const scrollTop = scrollContainer.scrollTop;
-    const maxScroll =
-      scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      // Lerp (linear interpolation) with damping factor from config
+      const dampingFactor = SCROLL_SMOOTHING_CONFIG.dampingFactor;
+      
+      const diff = targetScrollProgress.current - currentScrollProgress.current;
+      
+      // Apply damping - this creates the "friction" effect
+      currentScrollProgress.current += diff * dampingFactor;
+      
+      // Use the smoothed scroll progress for all calculations
+      const scrollProgress = currentScrollProgress.current;
 
-    if (maxScroll <= 0) {
-      return;
-    }
-
-    const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
-
-    // Batch state updates to reduce re-renders
-    requestAnimationFrame(() => {
       setScrollProgress(scrollProgress);
 
       const positions = memoizedPositions;
@@ -157,26 +164,27 @@ export default function Home() {
       const sectionIndex = scrollProgress * (totalSections - 1);
       const currentSection = Math.floor(sectionIndex);
       const nextSection = Math.min(currentSection + 1, totalSections - 1);
-      const sectionProgress = sectionIndex - currentSection;
+      const sectionProgressValue = sectionIndex - currentSection;
 
-      // Only update active section if it changed
-      if (currentSection !== activeSection) {
+      // Update active section if it changed (using ref to avoid stale closure)
+      if (currentSection !== activeSectionRef.current) {
+        activeSectionRef.current = currentSection;
         setActiveSection(currentSection);
       }
-      setSectionProgress(sectionProgress);
+      setSectionProgress(sectionProgressValue);
 
       // Interpolate between current and next position
       const currentPos = positions[currentSection];
       const nextPos = positions[nextSection];
 
-      const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgress;
-      const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgress;
+      const newX = currentPos.x + (nextPos.x - currentPos.x) * sectionProgressValue;
+      const newY = currentPos.y + (nextPos.y - currentPos.y) * sectionProgressValue;
 
       // Interpolate between current and next rotation
       const currentRotation = rotations[currentSection];
       const nextRotation = rotations[nextSection];
       const newRotation =
-        currentRotation + (nextRotation - currentRotation) * sectionProgress;
+        currentRotation + (nextRotation - currentRotation) * sectionProgressValue;
 
       // Scale effect - set section 5 to 0.8 scale, hide video in section 6
       let scale = 1 + Math.sin(scrollProgress * Math.PI * 2) * 0.2;
@@ -200,19 +208,50 @@ export default function Home() {
       // Interpolate between current and next size
       const newWidth =
         currentSize.width +
-        (nextSize.width - currentSize.width) * sectionProgress;
+        (nextSize.width - currentSize.width) * sectionProgressValue;
 
       // Batch all state updates together
       setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       setVideoSize({ width: newWidth, height: "auto" });
-      // Header visibility now handled by Header component
-    });
-  }, [activeSection, memoizedPositions, memoizedRotations, memoizedVideoSizeConfig]);
 
-  // Setup scroll listener (matching ScrollSyncModel exactly)
+      // Continue animation loop
+      animationFrameId.current = requestAnimationFrame(smoothScrollLoop);
+    };
+
+    // Start the animation loop
+    animationFrameId.current = requestAnimationFrame(smoothScrollLoop);
+
+    // Cleanup
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [memoizedPositions, memoizedRotations, memoizedVideoSizeConfig]);
+
+  // Handle raw scroll events - just update target, don't calculate positions
+  const handleScroll = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) {
+      return;
+    }
+
+    const scrollTop = scrollContainer.scrollTop;
+    const maxScroll =
+      scrollContainer.scrollHeight - scrollContainer.clientHeight;
+
+    if (maxScroll <= 0) {
+      return;
+    }
+
+    // Update target scroll progress - the smooth loop will catch up to this
+    targetScrollProgress.current = Math.max(0, Math.min(1, scrollTop / maxScroll));
+  }, []);
+
+  // Setup scroll listener
   useEffect(() => {
     const setupScrollListener = async () => {
-      // Wait for scroll container to be available (like ScrollSyncModel)
+      // Wait for scroll container to be available
       let attempts = 0;
       while (!scrollContainerRef.current && attempts < 50) {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -225,35 +264,24 @@ export default function Home() {
         return;
       }
 
-      // Wait for container to have proper dimensions (like ScrollSyncModel)
+      // Wait for container to have proper dimensions
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      console.log("Setting up Demo scroll listener...");
+      console.log("Setting up smooth scroll listener with damping...");
 
-      // Use passive listener with throttling for better performance during scroll
-      let ticking = false;
-      const throttledHandleScroll = () => {
-        if (!ticking) {
-          requestAnimationFrame(() => {
-            handleScroll();
-            ticking = false;
-          });
-          ticking = true;
-        }
-      };
-
-      scrollContainer.addEventListener("scroll", throttledHandleScroll, {
+      // Use passive listener for better performance
+      scrollContainer.addEventListener("scroll", handleScroll, {
         passive: true,
       });
 
-      // Set initial position
+      // Initialize scroll values
       handleScroll();
+      currentScrollProgress.current = targetScrollProgress.current;
 
       // Small delay to ensure position is calculated before showing video
       setTimeout(() => {
-        // Mark as initialized to show video
         setIsInitialized(true);
-        console.log("Demo scroll listener attached successfully");
+        console.log("Smooth scroll listener attached successfully");
       }, 100);
     };
 
@@ -261,11 +289,12 @@ export default function Home() {
 
     // Cleanup
     return () => {
-      // Note: scrollContainer is captured in the async function scope
-      // The cleanup will be handled by the async function's scope
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        scrollContainer.removeEventListener("scroll", handleScroll);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleScroll]);
 
   // Video preloading - Start immediately on component mount
   useEffect(() => {
