@@ -82,7 +82,7 @@ export default function Demo() {
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
-    scrollSensitivity: 0.05, // Control frame progression speed (0.05 = very slow, 0.1 = slow, 1.0 = normal)
+    scrollSensitivity: 0.2, // Control frame progression speed (0.1 = slow, 0.2 = medium, 1.0 = normal)
     maxFrameJump: 1, // Maximum frames to jump at once (1 = very smooth, 2 = smooth, 5 = normal)
     frameUpdateRate: 50, // Frame update rate in ms (50 = 20fps, 33 = 30fps, 16 = 60fps)
   };
