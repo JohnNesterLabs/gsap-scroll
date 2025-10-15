@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './WebPSequence.css';
 
 const WebPSequence = ({
@@ -27,7 +27,6 @@ const WebPSequence = ({
   const [isScrollStopped, setIsScrollStopped] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showPlayButton, setShowPlayButton] = useState(false);
-  const [timelineProgress, setTimelineProgress] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(false);
@@ -72,7 +71,6 @@ const WebPSequence = ({
           setIsScrollStopped(false);
           setShowTimeline(false);
           setShowPlayButton(false);
-          setTimelineProgress(0);
           resumeScroll();
           return;
         } else {
@@ -131,13 +129,12 @@ const WebPSequence = ({
         if (!allowSmoothScrolling) {
           setShowPlayButton(false);
         }
-        setTimelineProgress(0);
         resumeScroll();
       }
     };
 
     requestAnimationFrame(updateFrame);
-  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton]);
+  }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, framePrefix, showTimeline]);
 
   // Handle showing Continue CTA again when user reaches stop frame after watching video once
   useEffect(() => {
@@ -184,37 +181,49 @@ const WebPSequence = ({
     };
   }, []);
 
-  // Format frame number with leading zeros
-  const formatFrameNumber = (frameNum) => {
-    return frameNum.toString().padStart(4, '0');
-  };
+  // Memoize frame number formatting for performance
+  const formatFrameNumber = useMemo(() => {
+    const cache = new Map();
+    return (frameNum) => {
+      if (!cache.has(frameNum)) {
+        cache.set(frameNum, frameNum.toString().padStart(4, '0'));
+      }
+      return cache.get(frameNum);
+    };
+  }, []);
 
-  // Get the actual frame image to display (handles frame duplication for mobile)
-  const getFrameImageSrc = (frameNum) => {
-    // For mobile frames 321-420, use frame 320 image (duplicate zone)
-    if (framePrefix === 'mobile_frame_' && frameNum >= 321 && frameNum <= 420) {
-      return `${folderPath}${framePrefix}0320${frameSuffix}`;
-    }
-
-    // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
-    if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
-      // Calculate which original frame this corresponds to
-      // Frames 421-1367 map to original frames 420-587, each duplicated 5 times
-      const originalFrameStart = 420; // Start of the range to duplicate
-      const originalFrameEnd = 587;   // End of the range to duplicate
-      const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
-      // Calculate which original frame this virtual frame corresponds to
-      const virtualFrameIndex = frameNum - 420; // 0-based index from frame 421
-      const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
-      const originalFrame = originalFrameStart + originalFrameIndex;
-      // Ensure we don't go beyond the original frame range
-      const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
-      return `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
-    }
-
-    // For all other frames, use the actual frame number
-    return `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
-  };
+  // Memoize frame image source calculation for performance
+  const getFrameImageSrc = useMemo(() => {
+    const cache = new Map();
+    return (frameNum) => {
+      const cacheKey = `${framePrefix}-${frameNum}-${folderPath}-${frameSuffix}`;
+      if (!cache.has(cacheKey)) {
+        let src;
+        // For mobile frames 321-420, use frame 320 image (duplicate zone)
+        if (framePrefix === 'mobile_frame_' && frameNum >= 321 && frameNum <= 420) {
+          src = `${folderPath}${framePrefix}0320${frameSuffix}`;
+        }
+        // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
+        else if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
+          // Calculate which original frame this corresponds to
+          const originalFrameStart = 420;
+          const originalFrameEnd = 587;
+          const duplicatesPerFrame = 5;
+          const virtualFrameIndex = frameNum - 420;
+          const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
+          const originalFrame = originalFrameStart + originalFrameIndex;
+          const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
+          src = `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
+        }
+        // For all other frames, use the actual frame number
+        else {
+          src = `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
+        }
+        cache.set(cacheKey, src);
+      }
+      return cache.get(cacheKey);
+    };
+  }, [framePrefix, folderPath, frameSuffix, formatFrameNumber]);
 
   // Calculate if play button should be shown - mobile shows on frames 320-420, desktop on 234-334
   const shouldShowPlayButton = () => {
@@ -260,28 +269,6 @@ const WebPSequence = ({
     return visible;
   };
 
-  // Stop forward scroll functionality (but allow backward scrolling)
-  const stopForwardScroll = () => {
-    const scrollContainer = document.querySelector('.demo-scroll-container');
-    if (scrollContainer) {
-      scrollContainerRef.current = scrollContainer;
-      // Store the current scroll position as the maximum allowed
-      const currentScrollTop = scrollContainer.scrollTop;
-      scrollContainer.dataset.maxScrollTop = currentScrollTop;
-      // Create scroll prevention handler
-      const handleScrollPrevention = (e) => {
-        if (scrollContainer.scrollTop > currentScrollTop) {
-          e.preventDefault();
-          scrollContainer.scrollTop = currentScrollTop;
-        }
-      };
-      // Store the handler reference for cleanup
-      scrollPreventionHandlerRef.current = handleScrollPrevention;
-      // Add scroll event listener to prevent forward scrolling
-      scrollContainer.addEventListener('scroll', handleScrollPrevention, { passive: false });
-      scrollContainer.dataset.scrollHandler = 'true';
-    }
-  };
 
   // Resume scroll functionality
   const resumeScroll = () => {

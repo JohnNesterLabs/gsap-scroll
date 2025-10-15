@@ -1,9 +1,23 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import WebPSequence from "../WebPSequence/WebPSequence";
+import Footer from "../../Footer/Footer";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
+import { PNG_SEQUENCE_CONFIG, DESKTOP_WEBP_SEQUENCE_CONFIG } from "../../../utils/constants";
+import {
+  getScrollStopConfig,
+  getVideoSizeConfig,
+  getVideoPositionConfig,
+  getVideoRotationConfig,
+  getTextPositionConfig,
+  getTextAlignConfig,
+  getFontSizeConfig,
+  getFontWeightConfig,
+  getSection1TextConfig,
+  isMobileDevice,
+} from "../../../utils/configUtils";
 
 // Get initial video position and size for section 1 based on screen size
 const getInitialVideoConfig = () => {
@@ -61,7 +75,7 @@ export default function Demo() {
   const [sectionProgress, setSectionProgress] = useState(0);
 
   // Use the asset preloader hook to preload all frames
-  const { progress: preloadProgress, isLoading: isPreloading, error: preloadError } = useAssetPreloader();
+  useAssetPreloader();
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Video preloading state
@@ -69,72 +83,9 @@ export default function Demo() {
   const [videoPreloadProgress, setVideoPreloadProgress] = useState(0);
   const preloadVideoRef = useRef(null);
 
-  // PNG Sequence Configuration
-  // CONFIGURATION: Change startSection to control when PNG sequence starts
-  // - startSection: 4 = PNG sequence starts from section 4 (after L657 section)
-  // - startSection: 5 = PNG sequence starts from section 5 (after section 4)
-  //
-  // TO CHANGE START SECTION: Simply modify the startSection value below
-  // Example: Change startSection: 4 to startSection: 5 to start from section 5
-  const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // PNG sequence starts from section 4 and completes all 378 frames
-    totalFrames: 378,
-    framePrefix: "frame_",
-    frameSuffix: ".png",
-    folderPath: "/frames-journey/",
-  };
+  // PNG and WebP Sequence Configurations are now imported from constants.js
 
-  // Desktop WebP Sequence Configuration
-  // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
-  // Using WebP format for better performance on desktop devices
-  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
-    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
-    totalFrames: 428,
-    framePrefix: "frame_",
-    frameSuffix: ".webp",
-    folderPath: "/frames-desktop-webp/",
-  };
-
-  // Scroll Stop Configuration
-  // CUSTOMIZE: Timeline and Play Button positions for different devices
-  // You can change these values to position the timeline and play button anywhere on screen
-  const getScrollStopConfig = () => {
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile) {
-      // Mobile Configuration
-      return {
-        stopFrame: 234, // Frame to stop at (frame_0234.png)
-        timelineDuration: 5000, // 5 seconds in milliseconds
-        // Timeline position - mobile optimized
-        timelinePosition: {
-          top: "92%", // Adjusted for mobile
-          left: "50%", // Centered on mobile
-        },
-        // Play button position - mobile optimized
-        playButtonPosition: {
-          top: "58%", // Higher on mobile for better touch access
-          left: "80%", // Centered on mobile
-        },
-      };
-    } else {
-      // Desktop Configuration
-      return {
-        stopFrame: 234, // Frame to stop at (frame_0234.png)
-        timelineDuration: 5000, // 5 seconds in milliseconds
-        // Timeline position - desktop optimized
-        timelinePosition: {
-          top: "80%", // '50%' = center, '30%' = upper, '70%' = lower
-          left: "77.5%", // '50%' = center, '20%' = left, '80%' = right
-        },
-        // Play button position - desktop optimized
-        playButtonPosition: {
-          top: "29%", // '60%' = below timeline, '40%' = above timeline
-          left: "47%", // '50%' = center, '20%' = left, '80%' = right
-        },
-      };
-    }
-  };
+  // Scroll Stop Configuration is now imported from configUtils.js
 
   // Initialize scroll stop config state
   const [scrollStopConfig, setScrollStopConfig] = useState(getScrollStopConfig);
@@ -149,447 +100,31 @@ export default function Demo() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Check if device is mobile
-  const isMobileDevice = () => {
-    const width = window.innerWidth;
-    return width <= 768; // Use mobile video for tablets and below
-  };
+  // Mobile device detection is now imported from configUtils.js
 
-  // Video size configuration for each section
-  const getVideoSizeConfig = useCallback(() => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
+  // Video size configuration is now imported from configUtils.js
 
-    const configs = {
-      "mobile-small": {
-        section1: { width: 1520, height: "auto" },
-        section2: { width: 1820, height: "auto" },
-        section3: { width: 2020, height: "auto" },
-        section4: { width: 800, height: "auto" },
-        section5: { width: 2100, height: "auto" },
-        section6: { width: 0, height: "auto" },
-        section7: { width: 0, height: "auto" }, // Footer
-      },
-      "mobile-large": {
-        section1: { width: 700, height: "auto" },
-        section2: { width: 400, height: "auto" },
-        section3: { width: 500, height: "auto" },
-        section4: { width: 380, height: "auto" },
-        section5: { width: 380, height: "auto" },
-        section6: { width: 0, height: "auto" },
-        section7: { width: 0, height: "auto" }, // Footer
-      },
-      tablet: {
-        section1: { width: 800, height: "auto" },
-        section2: { width: 800, height: "auto" },
-        section3: { width: 1000, height: "auto" },
-        section4: { width: 700, height: "auto" },
-        section5: { width: 700, height: "auto" },
-        section6: { width: 0, height: "auto" },
-        section7: { width: 0, height: "auto" }, // Footer
-      },
-      desktop: {
-        section1: { width: 1700, height: "auto" },
-        section2: { width: 1800, height: "auto" },
-        section3: { width: 2500, height: "auto" },
-        section4: { width: 1080, height: "auto" },
-        section5: { width: 2150, height: "auto" },
-        section6: { width: 0, height: "auto" },
-        section7: { width: 0, height: "auto" }, // Footer
-      },
-      "large-desktop": {
-        section1: { width: 2200, height: "auto" },
-        section2: { width: 2300, height: "auto" },
-        section3: { width: 3000, height: "auto" },
-        section4: { width: 2380, height: "auto" },
-        section5: { width: 3250, height: "auto" },
-        section6: { width: 0, height: "auto" },
-        section7: { width: 0, height: "auto" }, // Footer
-      },
-    };
-    return configs[viewport] || configs["desktop"];
-  }, []);
+  // Video position configuration is now imported from configUtils.js
 
-  // Video position configuration for each section
-  const getPositionConfig = useCallback(() => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
+  // Text position configuration is now imported from configUtils.js
 
-    const positionConfigs = {
-      "mobile-small": [
-        { x: 20, y: 90 }, // Section 1 - Center
-        { x: 110, y: 70 }, // Section 2 - Center
-        { x: 40, y: 50 }, // Section 3 - Center
-        { x: 38, y: 50 }, // Section 4 - Center
-        { x: 40, y: 50 }, // Section 5 - Center
-        { x: 50, y: 50 }, // Section 6 - Center
-        { x: 50, y: 50 }, // Section 7 - Footer
-      ],
-      "mobile-large": [
-        { x: 50, y: 50 }, // Section 1 - Center
-        { x: 50, y: 50 }, // Section 2 - Center
-        { x: 50, y: 50 }, // Section 3 - Center
-        { x: 50, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
-        { x: 50, y: 50 }, // Section 6 - Center
-        { x: 50, y: 50 }, // Section 7 - Footer
-      ],
-      tablet: [
-        { x: 50, y: 60 }, // Section 1 - Center
-        { x: 50, y: 50 }, // Section 2 - Center (aligned with text)
-        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
-        { x: 50, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
-        { x: 50, y: 50 }, // Section 6 - Center
-        { x: 50, y: 50 }, // Section 7 - Footer
-      ],
-      desktop: [
-        { x: 45, y: 110 }, // Section 1 - Center
-        { x: 90, y: 65 }, // Section 2 - Center (aligned with text)
-        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
-        { x: 45, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
-        { x: 50, y: 50 }, // Section 6 - Center
-        { x: 50, y: 50 }, // Section 7 - Footer
-      ],
-      "large-desktop": [
-        { x: 45, y: 110 }, // Section 1 - Center
-        { x: 90, y: 65 }, // Section 2 - Center (aligned with text)
-        { x: 50, y: 50 }, // Section 3 - Center (Meet Kahuna AI)
-        { x: 45, y: 50 }, // Section 4 - Center
-        { x: 50, y: 50 }, // Section 5 - Center
-        { x: 50, y: 50 }, // Section 6 - Center
-        { x: 50, y: 50 }, // Section 7 - Footer
-      ],
-    };
-    return positionConfigs[viewport] || positionConfigs["desktop"];
-  }, []);
+  // Text alignment configuration is now imported from configUtils.js
 
-  // Text position configuration for each section
-  const getTextPositionConfig = () => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
+  // Video rotation configuration is now imported from configUtils.js
 
-    const textPositionConfigs = {
-      "mobile-small": [
-        "top", // Section 1 - Text at center (mobile)
-        "top", // Section 2 - Text at center (mobile)
-        "center", // Section 3 - Text at center (mobile)
-        "center", // Section 4 - Text at center (mobile)
-        "center", // Section 5 - Text at center (mobile)
-        "center", // Section 6 - Text at center (mobile)
-      ],
-      "mobile-large": [
-        "center", // Section 1 - Text at center (mobile)
-        "center", // Section 2 - Text at center (mobile)
-        "center", // Section 3 - Text at center (mobile)
-        "center", // Section 4 - Text at center (mobile)
-        "center", // Section 5 - Text at center (mobile)
-        "center", // Section 6 - Text at center (mobile)
-      ],
-      tablet: [
-        "top", // Section 1 - Text at top
-        "left", // Section 2 - Text at left
-        "center", // Section 3 - Text at center
-        "right", // Section 4 - Text at right
-        "bottom", // Section 5 - Text at bottom
-        "top-left", // Section 6 - Text at top-left
-      ],
-      desktop: [
-        "top", // Section 1 - Text at top
-        "left", // Section 2 - Text at left
-        "center", // Section 3 - Text at center
-        "right", // Section 4 - Text at right
-        "bottom", // Section 5 - Text at bottom
-        "top-left", // Section 6 - Text at top-left
-      ],
-      "large-desktop": [
-        "top", // Section 1 - Text at top
-        "left", // Section 2 - Text at left
-        "center", // Section 3 - Text at center
-        "right", // Section 4 - Text at right
-        "bottom", // Section 5 - Text at bottom
-        "top-left", // Section 6 - Text at top-left
-      ],
-    };
-    return textPositionConfigs[viewport] || textPositionConfigs["desktop"];
-  };
+  // Font size configuration is now imported from configUtils.js
 
-  // Text alignment configuration for each section
-  const getTextAlignConfig = () => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
+  // Font weight configuration is now imported from configUtils.js
 
-    const textAlignConfigs = {
-      "mobile-small": [
-        "center", // Section 1 - Center aligned (mobile)
-        "left", // Section 2 - Center aligned (mobile)
-        "center", // Section 3 - Center aligned (mobile)
-        "center", // Section 4 - Center aligned (mobile)
-        "center", // Section 5 - Center aligned (mobile)
-        "center", // Section 6 - Center aligned (mobile)
-      ],
-      "mobile-large": [
-        "center", // Section 1 - Center aligned (mobile)
-        "center", // Section 2 - Center aligned (mobile)
-        "center", // Section 3 - Center aligned (mobile)
-        "center", // Section 4 - Center aligned (mobile)
-        "center", // Section 5 - Center aligned (mobile)
-        "center", // Section 6 - Center aligned (mobile)
-      ],
-      tablet: [
-        "center", // Section 1 - Center aligned
-        "left", // Section 2 - Left aligned
-        "center", // Section 3 - Center aligned
-        "right", // Section 4 - Right aligned
-        "center", // Section 5 - Center aligned
-        "left", // Section 6 - Left aligned
-      ],
-      desktop: [
-        "center", // Section 1 - Center aligned
-        "left", // Section 2 - Left aligned
-        "center", // Section 3 - Center aligned
-        "center", // Section 4 - Center aligned
-        "center", // Section 5 - Center aligned
-        "left", // Section 6 - Left aligned
-      ],
-      "large-desktop": [
-        "center", // Section 1 - Center aligned
-        "left", // Section 2 - Left aligned
-        "center", // Section 3 - Center aligned
-        "center", // Section 4 - Center aligned
-        "center", // Section 5 - Center aligned
-        "left", // Section 6 - Left aligned
-      ],
-    };
-    return textAlignConfigs[viewport] || textAlignConfigs["desktop"];
-  };
+  // Text content configuration for section 1 is now imported from configUtils.js
 
-  // Video rotation configuration for each section
-  const getRotationConfig = useCallback(() => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
-
-    const rotationConfigs = {
-      "mobile-small": [
-        0, // Section 1 - Normal
-        0, // Section 2 - Normal
-        0, // Section 3 - Normal
-        0, // Section 4 - Normal
-        0, // Section 5 - Normal
-        0, // Section 6 - Normal
-        0, // Section 7 - Footer
-      ],
-      "mobile-large": [
-        0, // Section 1 - Normal
-        0, // Section 2 - Normal
-        0, // Section 3 - Normal
-        0, // Section 4 - Normal
-        0, // Section 5 - Normal
-        0, // Section 6 - Normal
-        0, // Section 7 - Footer
-      ],
-      tablet: [
-        0, // Section 1 - Normal
-        0, // Section 2 - Normal
-        0, // Section 3 - Normal
-        0, // Section 4 - Normal
-        0, // Section 5 - Normal
-        0, // Section 6 - Normal
-        0, // Section 7 - Footer
-      ],
-      desktop: [
-        0, // Section 1 - Normal
-        0, // Section 2 - Normal
-        0, // Section 3 - Normal
-        0, // Section 4 - Normal
-        0, // Section 5 - Normal
-        0, // Section 6 - Normal
-        0, // Section 7 - Footer
-      ],
-      "large-desktop": [
-        0, // Section 1 - Normal
-        0, // Section 2 - Normal
-        0, // Section 3 - Normal
-        0, // Section 4 - Normal
-        0, // Section 5 - Normal
-        0, // Section 6 - Normal
-        0, // Section 7 - Footer
-      ],
-    };
-    return rotationConfigs[viewport] || rotationConfigs["desktop"];
-  }, []);
-
-  // Font size configuration for each section
-  const getFontSizeConfig = () => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
-
-    const fontSizeConfigs = {
-      "mobile-small": [
-        "26px", // Section 1
-        "26px", // Section 2
-        "36px", // Section 3
-        "24px", // Section 4
-        "24px", // Section 5
-        "26px", // Section 6
-      ],
-      "mobile-large": [
-        "32px", // Section 1
-        "28px", // Section 2
-        "36px", // Section 3
-        "30px", // Section 4
-        "32px", // Section 5
-        "30px", // Section 6
-      ],
-      tablet: [
-        "48px", // Section 1
-        "32px", // Section 2
-        "52px", // Section 3
-        "40px", // Section 4
-        "44px", // Section 5
-        "40px", // Section 6
-      ],
-      desktop: [
-        "60px", // Section 1
-        "36px", // Section 2
-        "60px", // Section 3
-        "36px", // Section 4
-        "36px", // Section 5
-        "36px", // Section 6
-      ],
-      "large-desktop": [
-        "72px", // Section 1
-        "42px", // Section 2
-        "76px", // Section 3
-        "56px", // Section 4
-        "60px", // Section 5
-        "56px", // Section 6
-      ],
-    };
-    return fontSizeConfigs[viewport] || fontSizeConfigs["desktop"];
-  };
-
-  // Font weight configuration for each section
-  const getFontWeightConfig = () => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
-
-    const fontWeightConfigs = {
-      "mobile-small": [
-        "500", // Section 1
-        "500", // Section 2
-        "500", // Section 3
-        "500", // Section 4
-        "500", // Section 5
-        "500", // Section 6
-      ],
-      "mobile-large": [
-        "500", // Section 1
-        "500", // Section 2
-        "600", // Section 3
-        "500", // Section 4
-        "500", // Section 5
-        "500", // Section 6
-      ],
-      tablet: [
-        "500", // Section 1
-        "500", // Section 2
-        "600", // Section 3
-        "500", // Section 4
-        "500", // Section 5
-        "500", // Section 6
-      ],
-      desktop: [
-        "500", // Section 1
-        "500", // Section 2
-        "600", // Section 3
-        "500", // Section 4
-        "500", // Section 5
-        "500", // Section 6
-      ],
-      "large-desktop": [
-        "500", // Section 1
-        "500", // Section 2
-        "600", // Section 3
-        "500", // Section 4
-        "500", // Section 5
-        "500", // Section 6
-      ],
-    };
-    return fontWeightConfigs[viewport] || fontWeightConfigs["desktop"];
-  };
-
-  // Text content configuration for section 1 - mobile vs desktop
-  const getSection1TextSets = () => {
-    const viewport = (() => {
-      const width = window.innerWidth;
-      if (width <= 480) return "mobile-small";
-      if (width <= 767) return "mobile-large";
-      if (width <= 1023) return "tablet";
-      if (width <= 1924) return "desktop";
-      return "large-desktop";
-    })();
-    // For mobile devices, combine the text into a single line without comma
-    if (viewport === "mobile-small" || viewport === "mobile-large") {
-      return {
-        firstSet: ["Vast and intricate products never stop evolving."],
-        secondSet: [
-          "Enterprise customers have an endless spectrum of realities."
-        ]
-      };
-    }
-    // For tablet, desktop, and large-desktop, use the original format
-    return {
-      firstSet: ["Vast and intricate,", "products never stop evolving."],
-      secondSet: [
-        "Enterprise customers have an",
-        "endless spectrum of realities.",
-      ]
-    };
-  };
+  // Memoize configuration functions to prevent recalculation on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedPositions = useMemo(() => getVideoPositionConfig(), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedRotations = useMemo(() => getVideoRotationConfig(), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedVideoSizeConfig = useMemo(() => getVideoSizeConfig(), []);
 
   // Optimized scroll handler with throttling and performance improvements
   const handleScroll = useCallback(() => {
@@ -612,9 +147,9 @@ export default function Demo() {
     requestAnimationFrame(() => {
       setScrollProgress(scrollProgress);
 
-      const positions = getPositionConfig();
-      const rotations = getRotationConfig();
-      const videoSizeConfig = getVideoSizeConfig();
+      const positions = memoizedPositions;
+      const rotations = memoizedRotations;
+      const videoSizeConfig = memoizedVideoSizeConfig;
 
       // Calculate which section we're in and interpolate
       const totalSections = 7;
@@ -671,7 +206,7 @@ export default function Demo() {
       setVideoSize({ width: newWidth, height: "auto" });
       setHeaderVisible(scrollProgress < 0.02);
     });
-  }, [activeSection, getPositionConfig, getRotationConfig, getVideoSizeConfig]);
+  }, [activeSection, memoizedPositions, memoizedRotations, memoizedVideoSizeConfig]);
 
   // Setup scroll listener (matching ScrollSyncModel exactly)
   useEffect(() => {
@@ -899,8 +434,8 @@ export default function Demo() {
           textAlign={getTextAlignConfig()[0]}
           fontSize={getFontSizeConfig()[0]}
           fontWeight={getFontWeightConfig()[0]}
-          firstSet={getSection1TextSets().firstSet}
-          secondSet={getSection1TextSets().secondSet}
+          firstSet={getSection1TextConfig().firstSet}
+          secondSet={getSection1TextConfig().secondSet}
         />
         <AnimatedSection
           sectionNumber={2}
@@ -929,18 +464,6 @@ export default function Demo() {
           sectionNumber={4}
           words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]}
         />
-        {/* <AnimatedSection
-          sectionNumber={5}
-          textPosition={getTextPositionConfig()[3]}
-          textAlign={getTextAlignConfig()[3]}
-          fontSize={getFontSizeConfig()[3]}
-          fontWeight={getFontWeightConfig()[3]}
-          firstSet={
-            [
-              // "AI that automatically builds and nurtures your Troubleshooting Map",
-            ]
-          }
-        /> */}
 
         {/* Responsive Animation - WebP Sequence for both Desktop and Mobile */}
         {isMobileDevice() ? (
@@ -1028,137 +551,8 @@ export default function Demo() {
           </div>
         )}
 
-        {/* <AnimatedSection
-          sectionNumber={6}
-          textPosition={getTextPositionConfig()[4]}
-          textAlign={getTextAlignConfig()[4]}
-          fontSize={getFontSizeConfig()[4]}
-          fontWeight={getFontWeightConfig()[4]}
-          firstSet={[
-            "",
-          ]}
-        /> */}
-        {/* <AnimatedSection
-          sectionNumber={7}
-          textPosition={getTextPositionConfig()[5]}
-          textAlign={getTextAlignConfig()[5]}
-          fontSize={getFontSizeConfig()[5]}
-          fontWeight={getFontWeightConfig()[5]}
-          firstSet={["Experience the future", "Innovation meets excellence"]}
-        /> */}
-        {/* <ZoomInSection sectionNumber={6} text="Welcome to the Future" /> */}
         {/* Footer Section */}
-        <div className="demo-section demo-footer">
-          <div className="footer-container">
-            {/* Main Tagline Section */}
-            <img
-              src="/final-logo.svg"
-              alt="Kahuna Labs"
-              className="footer-logo-bg"
-            />
-            <div className="footer-tagline">
-              <div className="footer-tagline-text">
-                <div className="footer-tagline-line">
-                  Secure. Private. Comprehensive. Enterprise Grade.
-                </div>
-                {/* <div className="footer-tagline-line">Enterprise Grade.</div> */}
-              </div>
-            </div>
-
-            {/* Footer Content */}
-            <div className="footer-content">
-              <div className="footer-links">
-                {/* Technology Column */}
-                <div className="footer-column">
-                  <h3 className="footer-column-title">TECHNOLOGY</h3>
-                  <ul className="footer-links-list">
-                    {/* <li>
-                      <a
-                        href="/technology/frontline-productivity"
-                        className="footer-link"
-                      >
-                        Frontline Productivity
-                      </a>
-                    </li> */}
-                    <li>
-                      <a
-                        href="https://form.jotform.com/251278392049160"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="footer-link"
-                      >
-                        How Complex is Your Support?
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Company Column */}
-                <div className="footer-column">
-                  <h3 className="footer-column-title">COMPANY</h3>
-                  <ul className="footer-links-list">
-                    <li>
-                      <a
-                        href="mailto:info@kahunalabs.ai"
-                        className="footer-link"
-                      >
-                        Contact us
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="mailto:careers@kahunalabs.ai"
-                        className="footer-link"
-                      >
-                        Careers
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="footer-column">
-                  <a
-                    href="https://linkedin.com/company/kahuna-labs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="footer-linkedin"
-                  >
-                    <img
-                      src="/LinkedIn-Icon.png"
-                      alt="LinkedIn"
-                      className="footer-linkedin-icon"
-                    />
-                    <span>LinkedIn</span>
-                  </a>
-                </div>
-              </div>
-
-              {/* Kahuna Labs Logo */}
-              <div className="footer-logo-section">
-                <div className="footer-logo-container">
-                  <img src="/kahuna-logo-3.svg" alt="Kahuna Labs" />
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Copyright Line */}
-            <div className="footer-copyright">
-              <div className="footer-copyright-text">
-                <div>
-                  <p>
-                    Kahuna AI and its components are trademarks of Kahuna Labs.
-                  </p>
-                  <p>
-                    The proprietary technology of Kahuna AI is protected by
-                    multiple issued and pending U.S. and international patents
-                    owned by Kahuna Labs.
-                  </p>
-                </div>
-                <p>All rights reserved.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Footer />
       </div>
     </div>
   );

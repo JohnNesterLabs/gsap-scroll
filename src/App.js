@@ -1,8 +1,6 @@
 import './App.css';
-import AnimatedSection from './components/AnimatedSection/AnimatedSection';
 import Loader from './components/Loader/Loader';
 import Demo from './components/scroll-sections/Demo/Demo';
-import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { useState, useEffect } from 'react';
 

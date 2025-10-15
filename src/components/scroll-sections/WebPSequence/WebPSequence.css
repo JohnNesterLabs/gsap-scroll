@@ -48,9 +48,17 @@
   /* Force hardware acceleration */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* Image optimization */
+  /* Image optimization for adaptive scrolling */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  /* Smooth frame interpolation during fast transitions */
+  image-rendering: auto;
+  /* Prevent frame flickering during rapid changes */
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 /* Responsive adjustments */
