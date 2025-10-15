@@ -1,5 +1,5 @@
-/* Demo Component Styles */
-.demo-container {
+/* Home Component Styles */
+.home-container {
   position: relative;
   width: 100%;
   height: 100vh;
@@ -7,7 +7,7 @@
 }
 
 /* Background Layer - Lowest z-index for consistent background */
-.demo-background-layer {
+.home-background-layer {
   position: fixed;
   top: 0;
   left: 0;
@@ -21,7 +21,7 @@
 
 /* Header styles have been moved to src/components/Header/Header.css */
 
-.demo-fixed-video {
+.home-fixed-video {
   position: fixed;
   top: 0;
   left: 0;
@@ -49,7 +49,7 @@
   user-select: none;
 }
 
-.demo-scroll-container {
+.home-scroll-container {
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -66,34 +66,34 @@
 }
 
 /* Custom scrollbar for demo */
-.demo-scroll-container::-webkit-scrollbar {
+.home-scroll-container::-webkit-scrollbar {
   width: 8px;
 }
 
-.demo-scroll-container::-webkit-scrollbar-track {
+.home-scroll-container::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
-.demo-scroll-container::-webkit-scrollbar-thumb {
+.home-scroll-container::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
 
-.demo-scroll-container::-webkit-scrollbar-thumb:hover {
+.home-scroll-container::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
 }
 
 /* Responsive adjustments */
 /* @media (max-width: 768px) {
-  .demo-fixed-video {
+  .home-fixed-video {
     max-width: 80vw;
     max-height: 40vh;
   }
 }
 
 @media (max-width: 480px) {
-  .demo-fixed-video {
+  .home-fixed-video {
     max-width: 90vw;
     max-height: 30vh;
   }
@@ -101,8 +101,8 @@
 
 /* Header responsive styles have been moved to src/components/Header/Header.css */
 
-/* Demo Section Styles - Transparent to show video behind */
-.demo-section {
+/* Home Section Styles - Transparent to show video behind */
+.home-section {
   width: 100%;
   height: 100vh;
   position: relative;

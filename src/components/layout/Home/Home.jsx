@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import AnimatedSection from "../../AnimatedSection/AnimatedSection";
-import "./Demo.css";
-import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
-import WebPSequence from "../WebPSequence/WebPSequence";
-import Header from "../../Header/Header";
-import Footer from "../../Footer/Footer";
+import AnimatedSection from "../../shared/AnimatedSection/AnimatedSection";
+import "./Home.css";
+import InfiniteWordLoop from "../../features/animations/InfiniteWordLoop/InfiniteWordLoop";
+import WebPSequence from "../../features/animations/WebPSequence/WebPSequence";
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 import { PNG_SEQUENCE_CONFIG, DESKTOP_WEBP_SEQUENCE_CONFIG } from "../../../utils/constants";
 import {
@@ -53,7 +53,7 @@ const getInitialVideoConfig = () => {
   };
 };
 
-export default function Demo() {
+export default function Home() {
   const videoRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [, setScrollProgress] = useState(0);
@@ -351,16 +351,16 @@ export default function Demo() {
   }, [isInitialized]);
 
   return (
-    <div className="demo-container">
+    <div className="home-container">
       {/* Background Layer - Lowest z-index for consistent background */}
-      <div className="demo-background-layer" />
+      <div className="home-background-layer" />
 
       {/* Fixed Video - Only show after initialization to prevent glitch */}
       {isInitialized && (
         <video
           ref={videoRef}
           src="/hero4.mp4"
-          className="demo-fixed-video"
+          className="home-fixed-video"
           autoPlay
           muted
           loop
@@ -396,7 +396,7 @@ export default function Demo() {
       {/* Scrollable Content */}
       <div
         ref={scrollContainerRef}
-        className="demo-scroll-container"
+        className="home-scroll-container"
         style={{
           height: "100vh",
           overflowY: "auto",
@@ -512,7 +512,7 @@ export default function Demo() {
 
         {/* Last Frame Display - Desktop PNG and Mobile WebP */}
         {isMobileDevice() ? (
-          <div className="demo-section last-frame-section">
+          <div className="home-section last-frame-section">
             <img
               src="/frames-mobile-30fps/mobile_frame_0536.webp"
               alt="Mobile Journey Final Frame"
@@ -520,7 +520,7 @@ export default function Demo() {
             />
           </div>
         ) : (
-          <div className="demo-section last-frame-section">
+          <div className="home-section last-frame-section">
             <img
               src="/frames-journey/frame_0328.png"
               alt="Desktop Journey Final Frame"

@@ -217,7 +217,7 @@ const AnimatedSection = ({
         }
       };
       // Add scroll listener to the main scroll container
-      const scrollContainer = document.querySelector('.demo-scroll-container') || window;
+      const scrollContainer = document.querySelector('.home-scroll-container') || window;
       scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
       return () => {
         scrollContainer.removeEventListener('scroll', handleScroll);

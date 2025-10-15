@@ -1,6 +1,6 @@
 import './App.css';
-import Loader from './components/Loader/Loader';
-import Demo from './components/scroll-sections/Demo/Demo';
+import Loader from './components/shared/Loader/Loader';
+import Home from './components/layout/Home/Home';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { useState, useEffect } from 'react';
 
@@ -51,7 +51,7 @@ function App() {
       )}
 
       {!showLoader && (
-        <Demo/>
+        <Home/>
       )}
     </div>
   );

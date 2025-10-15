@@ -3,7 +3,7 @@ import './Footer.css';
 
 const Footer = () => {
   return (
-    <div className="demo-section demo-footer">
+    <div className="home-section footer-section">
       <div className="footer-container">
         {/* Main Tagline Section */}
         <img
