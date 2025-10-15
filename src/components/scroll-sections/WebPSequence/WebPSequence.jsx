@@ -21,8 +21,10 @@ const WebPSequence = ({
   showVideoPopup = true, // Whether to show video popup on continue
   isVideoPreloaded = false, // Whether the video has been preloaded
   videoPreloadProgress = 0, // Video preload progress percentage
-  // Scroll sensitivity control - UNLIMITED
-  scrollSensitivity = 1.0 // Full speed - no limiting whatsoever
+  // Scroll sensitivity control - CONTROLLED
+  scrollSensitivity = 1.0, // Full speed - no limiting whatsoever
+  maxFrameJump = 2, // Maximum frames to jump at once
+  frameUpdateRate = 33 // Frame update rate in ms
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -35,8 +37,6 @@ const WebPSequence = ({
   // Frame rate limiting and smooth scrolling
   const lastFrameUpdateRef = useRef(0);
   const targetFrameRef = useRef(1);
-  const frameUpdateRate = 16; // ~60fps (16ms between frames)
-  const maxFrameJump = 999; // UNLIMITED frame jumps - no restrictions
 
   // Debug logging for all state changes
   useEffect(() => {
@@ -61,9 +61,12 @@ const WebPSequence = ({
       // Total progress across all sections from start section
       const totalProgress = sectionOffset + progressInSection;
 
-      // COMPLETELY UNLIMITED SCROLL - NO FRAME LIMITING WHATSOEVER
-      // Map totalProgress directly to frame range with NO restrictions
-      const targetFrameIndex = Math.floor(totalProgress * (totalFrames - 1));
+      // Apply scroll sensitivity to control frame progression speed
+      const adjustedProgress = totalProgress * scrollSensitivity;
+
+      // CONTROLLED SCROLL - Apply scroll sensitivity for smooth frame progression
+      // Map adjustedProgress to frame range with scroll sensitivity control
+      const targetFrameIndex = Math.floor(adjustedProgress * (totalFrames - 1));
       let targetFrame = Math.max(1, Math.min(totalFrames, targetFrameIndex + 1));
 
       // DISABLED: Scroll stop logic - allow continuous scrolling through all frames

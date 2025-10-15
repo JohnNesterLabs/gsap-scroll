@@ -82,6 +82,9 @@ export default function Demo() {
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
+    scrollSensitivity: 0.05, // Control frame progression speed (0.05 = very slow, 0.1 = slow, 1.0 = normal)
+    maxFrameJump: 1, // Maximum frames to jump at once (1 = very smooth, 2 = smooth, 5 = normal)
+    frameUpdateRate: 50, // Frame update rate in ms (50 = 20fps, 33 = 30fps, 16 = 60fps)
   };
 
   // Desktop WebP Sequence Configuration
@@ -962,8 +965,10 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
-            // Scroll sensitivity control - UNLIMITED scrolling
-            scrollSensitivity={1.0} // Full speed - no limiting
+            // Scroll sensitivity control - CONTROLLED scrolling
+            scrollSensitivity={PNG_SEQUENCE_CONFIG.scrollSensitivity} // Slower frame progression (0.1 = very slow, 1.0 = normal)
+            maxFrameJump={PNG_SEQUENCE_CONFIG.maxFrameJump} // Maximum frames to jump at once
+            frameUpdateRate={PNG_SEQUENCE_CONFIG.frameUpdateRate} // Frame update rate in ms
             onTimelineComplete={() => {
               console.log("Mobile WebP sequence timeline completed - showing play button");
             }}
@@ -990,8 +995,10 @@ export default function Demo() {
             showVideoPopup={true}
             isVideoPreloaded={isVideoPreloaded}
             videoPreloadProgress={videoPreloadProgress}
-            // Scroll sensitivity control - UNLIMITED scrolling
-            scrollSensitivity={1.0} // Full speed - no limiting
+            // Scroll sensitivity control - CONTROLLED scrolling
+            scrollSensitivity={PNG_SEQUENCE_CONFIG.scrollSensitivity} // Slower frame progression (0.1 = very slow, 1.0 = normal)
+            maxFrameJump={PNG_SEQUENCE_CONFIG.maxFrameJump} // Maximum frames to jump at once
+            frameUpdateRate={PNG_SEQUENCE_CONFIG.frameUpdateRate} // Frame update rate in ms
             onTimelineComplete={() => {
               console.log("Desktop WebP sequence timeline completed - showing play button");
             }}

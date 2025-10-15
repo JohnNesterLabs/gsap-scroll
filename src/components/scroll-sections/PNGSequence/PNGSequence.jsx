@@ -19,7 +19,9 @@ const PNGSequence = ({
   videoSrc = '/Final-Ticket-1-(WIP).mp4', // Default video source for popup
   showVideoPopup = true, // Whether to show video popup on continue
   isVideoPreloaded = false, // Whether the video has been preloaded
-  videoPreloadProgress = 0 // Video preload progress percentage
+  videoPreloadProgress = 0, // Video preload progress percentage
+  // Scroll sensitivity control
+  scrollSensitivity = 0.5 // Lower = slower frame progression (0.1 = very slow, 1.0 = normal)
 }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
@@ -35,6 +37,12 @@ const PNGSequence = ({
   const [hasGoneBelowStopFrame, setHasGoneBelowStopFrame] = useState(false); // Track if user has scrolled below stop frame to reset behavior
   const scrollContainerRef = useRef(null);
   const scrollPreventionHandlerRef = useRef(null);
+
+  // Frame rate limiting and smooth scrolling
+  const lastFrameUpdateRef = useRef(0);
+  const targetFrameRef = useRef(1);
+  const frameUpdateRate = 16; // ~60fps (16ms between frames)
+  const maxFrameJump = 5; // Limit maximum frame jump to prevent skipping
   // Debug logging for all state changes
   useEffect(() => {
     console.log(':magnifying_glass: STATE CHANGE:', {
@@ -67,12 +75,16 @@ const PNGSequence = ({
       const progressInSection = sectionProgress;
       // Total progress across all sections from start section
       const totalProgress = sectionOffset + progressInSection;
-      // Map progress to frame range (0 to totalFrames-1)
-      const frameIndex = Math.floor(totalProgress * (totalFrames - 1));
-      // const clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
-      let clampedFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+      // Apply scroll sensitivity to control frame progression speed
+      const adjustedProgress = totalProgress * scrollSensitivity;
+      // Map progress to frame range (0 to totalFrames-1) with smooth interpolation
+      const frameIndex = Math.floor(adjustedProgress * (totalFrames - 1));
+      let targetFrame = Math.max(1, Math.min(totalFrames, frameIndex + 1));
+
+      // Store target frame for smooth interpolation
+      targetFrameRef.current = targetFrame;
       // Hide PNG sequence after completing all frames (frame 328)
-      if (clampedFrame >= totalFrames) {
+      if (targetFrame >= totalFrames) {
         console.log('PNG sequence completed all frames - hiding sequence and allowing footer to show');
         setIsVisible(false);
         // Reset all PNG sequence states when completed
@@ -100,16 +112,17 @@ const PNGSequence = ({
         });
       }
       // Handle scroll stop logic
-      if (clampedFrame >= stopFrame && !isScrollStopped && !allowSmoothScrolling) {
+      if (targetFrame >= stopFrame && !isScrollStopped && !allowSmoothScrolling) {
         // First time reaching the stop frame - stop here (only if video hasn't been watched)
-        clampedFrame = stopFrame;
+        targetFrame = stopFrame;
+        targetFrameRef.current = stopFrame;
         setIsScrollStopped(true);
         setShowTimeline(true);
         console.log('Stopping at frame:', stopFrame, 'Original calculated frame:', frameIndex + 1);
         stopForwardScroll();
       } else if (isScrollStopped && !allowSmoothScrolling) {
         // We're in scroll stopped state (only if video hasn't been watched)
-        if (clampedFrame < stopFrame) {
+        if (targetFrame < stopFrame) {
           // User scrolled back below the stop frame - reset everything
           console.log('User scrolled back below stop frame, resetting scroll stop');
           setIsScrollStopped(false);
@@ -123,11 +136,12 @@ const PNGSequence = ({
           // Allow normal frame progression (user is scrolling back)
         } else {
           // User is at or past the stop frame - keep it at stop frame
-          clampedFrame = stopFrame;
+          targetFrame = stopFrame;
+          targetFrameRef.current = stopFrame;
         }
       } else if (allowSmoothScrolling) {
         // Check if user has gone below stop frame to reset behavior
-        if (clampedFrame < stopFrame && hasWatchedVideo) {
+        if (targetFrame < stopFrame && hasWatchedVideo) {
           console.log('User scrolled below stop frame after watching video - resetting behavior');
           setHasGoneBelowStopFrame(true);
           // Reset video watched state to allow fresh experience
@@ -137,9 +151,10 @@ const PNGSequence = ({
           setShouldReturnToStopFrame(false);
         }
         // If user reaches stop frame again after going below it, restart the sequence
-        if (clampedFrame >= stopFrame && hasGoneBelowStopFrame && !hasWatchedVideo) {
+        if (targetFrame >= stopFrame && hasGoneBelowStopFrame && !hasWatchedVideo) {
           console.log('User reached stop frame again after going below - restarting sequence');
-          clampedFrame = stopFrame;
+          targetFrame = stopFrame;
+          targetFrameRef.current = stopFrame;
           setIsScrollStopped(true);
           setShowTimeline(true);
           setHasGoneBelowStopFrame(false); // Reset the flag
@@ -147,21 +162,21 @@ const PNGSequence = ({
         } else if (allowSmoothScrolling && !hasGoneBelowStopFrame) {
           // After video has been watched once, allow smooth scrolling through all frames
           // BUT: If user cancelled video, keep them at stop frame until they scroll forward
-          if (shouldReturnToStopFrame && clampedFrame <= stopFrame) {
+          if (shouldReturnToStopFrame && targetFrame <= stopFrame) {
             // User cancelled video and is at or before stop frame - keep at stop frame
-            clampedFrame = stopFrame;
+            targetFrame = stopFrame;
+            targetFrameRef.current = stopFrame;
             console.log('Video was cancelled - keeping at stop frame:', stopFrame);
-          } else if (shouldReturnToStopFrame && clampedFrame > stopFrame) {
+          } else if (shouldReturnToStopFrame && targetFrame > stopFrame) {
             // User cancelled video but scrolled forward - allow normal progression
-            console.log('Video was cancelled but user scrolled forward - allowing progression to:', clampedFrame);
+            console.log('Video was cancelled but user scrolled forward - allowing progression to:', targetFrame);
             setShouldReturnToStopFrame(false); // Clear the flag since user is moving forward
           } else {
             // Normal smooth scrolling
-            console.log('Smooth scrolling enabled - allowing frame progression to:', clampedFrame);
+            console.log('Smooth scrolling enabled - allowing frame progression to:', targetFrame);
           }
         }
       }
-      setCurrentFrame(clampedFrame);
     } else {
       // User scrolled back to before start section - hide PNG sequence
       setIsVisible(false);
@@ -177,6 +192,52 @@ const PNGSequence = ({
       resumeScroll();
     }
   }, [activeSection, sectionProgress, startSection, totalFrames, stopFrame, isScrollStopped, allowSmoothScrolling, hasWatchedVideo, showPlayButton, shouldReturnToStopFrame, hasGoneBelowStopFrame]);
+
+  // Smooth frame interpolation with frame rate limiting
+  useEffect(() => {
+    let animationId;
+
+    const updateFrame = () => {
+      const now = Date.now();
+
+      // Throttle frame updates to prevent skipping
+      if (now - lastFrameUpdateRef.current < frameUpdateRate) {
+        animationId = requestAnimationFrame(updateFrame);
+        return;
+      }
+
+      const targetFrame = targetFrameRef.current;
+      const currentDisplayFrame = currentFrame;
+
+      // Limit maximum frame jump to prevent skipping
+      const frameDifference = Math.abs(targetFrame - currentDisplayFrame);
+      if (frameDifference > maxFrameJump) {
+        // Smooth interpolation to target frame
+        const direction = currentDisplayFrame < targetFrame ? 1 : -1;
+        const newFrame = currentDisplayFrame + (direction * maxFrameJump);
+        setCurrentFrame(newFrame);
+      } else {
+        setCurrentFrame(targetFrame);
+      }
+
+      lastFrameUpdateRef.current = now;
+
+      // Continue animation loop
+      if (isVisible) {
+        animationId = requestAnimationFrame(updateFrame);
+      }
+    };
+
+    if (isVisible) {
+      updateFrame();
+    }
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [isVisible, currentFrame, maxFrameJump, frameUpdateRate]);
   // Handle showing Continue CTA again when user reaches frame 234 after watching video once
   useEffect(() => {
     console.log(':dart: Play button useEffect triggered:', {
