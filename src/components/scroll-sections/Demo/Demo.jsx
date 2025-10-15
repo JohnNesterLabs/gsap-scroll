@@ -3,6 +3,7 @@ import AnimatedSection from "../../AnimatedSection/AnimatedSection";
 import "./Demo.css";
 import InfiniteWordLoop from "../InfiniteWordLoop/InfiniteWordLoop";
 import WebPSequence from "../WebPSequence/WebPSequence";
+import Header from "../../Header/Header";
 import Footer from "../../Footer/Footer";
 import { useAssetPreloader } from "../../../hooks/useAssetPreloader";
 import { PNG_SEQUENCE_CONFIG, DESKTOP_WEBP_SEQUENCE_CONFIG } from "../../../utils/constants";
@@ -71,7 +72,7 @@ export default function Demo() {
     height: initialConfig.size.height
   });
   const [activeSection, setActiveSection] = useState(0);
-  const [headerVisible, setHeaderVisible] = useState(true);
+  // headerVisible state moved to Header component
   const [sectionProgress, setSectionProgress] = useState(0);
 
   // Use the asset preloader hook to preload all frames
@@ -204,7 +205,7 @@ export default function Demo() {
       // Batch all state updates together
       setVideoPosition({ x: newX, y: newY, scale, rotation: newRotation });
       setVideoSize({ width: newWidth, height: "auto" });
-      setHeaderVisible(scrollProgress < 0.02);
+      // Header visibility now handled by Header component
     });
   }, [activeSection, memoizedPositions, memoizedRotations, memoizedVideoSizeConfig]);
 
@@ -389,31 +390,8 @@ export default function Demo() {
         />
       )}
 
-      {/* Header - Only visible on Section 1 and after initialization */}
-      {isInitialized && (
-        <div className={`demo-header ${headerVisible ? "visible" : "hidden"}`}>
-          {/* Left Logo */}
-          <div className="demo-header-left">
-            <img
-              src="/kahuna-logo-3.svg"
-              alt="Kahuna Logo"
-              className="demo-header-logo"
-            />
-          </div>
-
-          {/* Right Let's Talk Button */}
-          <a
-            href="mailto:info@kahunalabs.ai"
-            onClick={() => {
-              console.log("Let's Talk button clicked!");
-              // Add your contact/navigation logic here
-            }}
-            className="demo-header-button"
-          >
-            Let's Talk
-          </a>
-        </div>
-      )}
+      {/* Header Component */}
+      <Header isInitialized={isInitialized} />
 
       {/* Scrollable Content */}
       <div
