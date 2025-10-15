@@ -2,6 +2,7 @@ import './App.css';
 import AnimatedSection from './components/AnimatedSection/AnimatedSection';
 import Loader from './components/Loader/Loader';
 import Demo from './components/scroll-sections/Demo/Demo';
+import DemoTest from './components/scroll-sections/Demo/DemoTest';
 import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { useState, useEffect } from 'react';
@@ -53,7 +54,7 @@ function App() {
       )}
 
       {!showLoader && (
-        <Demo/>
+        <DemoTest />
       )}
     </div>
   );
