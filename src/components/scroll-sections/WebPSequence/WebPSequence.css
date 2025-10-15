@@ -530,7 +530,7 @@
 
 @media (max-width: 480px) {
   .troubleshooting-text {
-    font-size: 1.2rem;
+    font-size: 30px;
     max-width: 95%;
     line-height: 1.4;
     white-space: normal;

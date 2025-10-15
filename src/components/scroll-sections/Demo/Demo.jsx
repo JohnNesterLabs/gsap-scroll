@@ -575,18 +575,18 @@ export default function Demo() {
     // For mobile devices, combine the text into a single line without comma
     if (viewport === "mobile-small" || viewport === "mobile-large") {
       return {
-        firstSet: ["Vast and intricate products never stop evolving."],
+        firstSet: ["Vast and intricate products never stop evolving"],
         secondSet: [
-          "Enterprise customers have an endless spectrum of realities."
+          "Enterprise customers have an endless spectrum of realities"
         ]
       };
     }
     // For tablet, desktop, and large-desktop, use the original format
     return {
-      firstSet: ["Vast and intricate,", "products never stop evolving."],
+      firstSet: ["Vast and intricate,", "products never stop evolving"],
       secondSet: [
         "Enterprise customers have an",
-        "endless spectrum of realities.",
+        "endless spectrum of realities",
       ]
     };
   };
@@ -910,11 +910,11 @@ export default function Demo() {
           fontWeight={getFontWeightConfig()[1]}
           firstSet={["The support landscape is", "boundless and shifting"]}
           secondSet={[
-            "You're lost.",
+            "You're lost",
             "",
             "Outdated, laborious",
             "and fractional knowledge",
-            "cripple frontline actions.",
+            "cripples frontline actions",
           ]}
         />
         <AnimatedSection
@@ -1146,7 +1146,7 @@ export default function Demo() {
               <div className="footer-copyright-text">
                 <div>
                   <p>
-                    Kahuna AI and its components are trademarks of Kahuna Labs.
+                    Kahuna AI, Troubleshooting Map and its components are trademarks of Kahuna Labs 
                   </p>
                   <p>
                     The proprietary technology of Kahuna AI is protected by
