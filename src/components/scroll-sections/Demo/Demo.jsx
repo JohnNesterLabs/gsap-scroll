@@ -608,10 +608,11 @@ export default function Demo() {
 
     const scrollProgress = Math.max(0, Math.min(1, scrollTop / maxScroll));
 
-    // Batch state updates to reduce re-renders
+    // Batch state updates to reduce re-renders and improve smoothness
     requestAnimationFrame(() => {
       setScrollProgress(scrollProgress);
 
+      // Cache configs to avoid recalculation on every scroll
       const positions = getPositionConfig();
       const rotations = getRotationConfig();
       const videoSizeConfig = getVideoSizeConfig();
@@ -696,11 +697,15 @@ export default function Demo() {
 
       // Use passive listener with throttling for better performance during scroll
       let ticking = false;
+      let lastScrollTime = 0;
       const throttledHandleScroll = () => {
-        if (!ticking) {
+        const now = Date.now();
+        // Throttle to max 60fps to prevent excessive updates
+        if (!ticking && (now - lastScrollTime) >= 16) {
           requestAnimationFrame(() => {
             handleScroll();
             ticking = false;
+            lastScrollTime = now;
           });
           ticking = true;
         }
@@ -849,6 +854,10 @@ export default function Demo() {
             touchAction: 'pan-y',
             WebkitTouchCallout: 'none',
             WebkitUserSelect: 'none',
+            // Performance optimizations
+            willChange: 'transform, left, top',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
             // NO CSS transition for position/size - let JavaScript handle all animations for smoothness
           }}
         />
