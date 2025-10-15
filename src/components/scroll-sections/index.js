@@ -6,3 +6,4 @@ export { default as VideoDirectionScroll } from './VideoDirectionScroll';
 export { default as TestScroll } from './TestScroll';
 export { default as HeroScroll } from './HeroScroll';
 export { default as ScrollNavigation } from './ScrollNavigation';
+export { default as InertiaDemo } from './InertiaDemo';

@@ -2,6 +2,8 @@ import './App.css';
 import AnimatedSection from './components/AnimatedSection/AnimatedSection';
 import Loader from './components/Loader/Loader';
 import Demo from './components/scroll-sections/Demo/Demo';
+import HeroScroll from './components/scroll-sections/HeroScroll/HeroScroll';
+import InertiaDemo from './components/scroll-sections/InertiaDemo/InertiaDemo';
 import ScrollSyncModel from './components/scroll-sections/ScrollSyncModel/ScrollSyncModel';
 import { useAssetPreloader } from './hooks/useAssetPreloader';
 import { useState, useEffect } from 'react';
@@ -53,7 +55,7 @@ function App() {
       )}
 
       {!showLoader && (
-        <Demo/>
+        <HeroScroll />
       )}
     </div>
   );

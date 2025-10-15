@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { createInertiaScroll, createHeavyAnimation } from "../../../utils/animations";
 import "./HeroScroll.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -74,16 +75,14 @@ const HeroScroll = () => {
         }
       );
 
-      // Parallax effect for video
-      gsap.to(videoHero, {
-        y: -60,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sections[1],
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
+      // Heavy feel parallax effect for video with inertia
+      createInertiaScroll(videoHero, {
+        damping: 0.88,
+        stiffness: 0.12,
+        mass: 1.5,
+        property: 'y',
+        range: [0, -80],
+        trigger: sections[1]
       });
 
       // Video animation to combined section
@@ -122,23 +121,27 @@ const HeroScroll = () => {
           },
         });
 
-        // Smooth video movement animation from center to right side
-        gsap.to(videoHero, {
-          x: window.innerWidth * 0.5, // Move to right half of screen
-          y: -window.innerHeight * 0.5, // Move up to align with combined section
-          scale: 1, // Scale down to fit nicely on the right side
-          zIndex: 10000, // Ensure high z-index
+        // Heavy feel video movement animation from center to right side
+        createHeavyAnimation(videoHero, {
+          damping: 0.92,
+          stiffness: 0.06,
+          mass: 2.5,
+          properties: {
+            x: window.innerWidth * 0.5, // Move to right half of screen
+            y: -window.innerHeight * 0.5, // Move up to align with combined section
+            scale: 1 // Scale down to fit nicely on the right side
+          },
           duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: combinedSection,
-            start: "top center",
-            end: "bottom center",
-            scrub: 1,
-            onUpdate: () => {
-              // Continuously ensure high z-index
-              gsap.set(videoHero, { zIndex: 10000 });
-            },
+          trigger: combinedSection
+        });
+
+        // Ensure high z-index during animation
+        ScrollTrigger.create({
+          trigger: combinedSection,
+          start: "top center",
+          end: "bottom center",
+          onUpdate: () => {
+            gsap.set(videoHero, { zIndex: 10000 });
           },
         });
       }
@@ -222,14 +225,22 @@ const HeroScroll = () => {
                   videoHero.classList.remove("show-full-model");
                 }
 
-                gsap.to(videoHero, {
-                  x: 0, // Move to center horizontally
-                  y: videoY, // Adjusted vertical position
-                  scale: videoScale, // Smaller scale for sections 7 & 8
-                  zIndex: 10000,
+                // Heavy feel animation for video movement to center
+                createHeavyAnimation(videoHero, {
+                  damping: 0.9,
+                  stiffness: 0.08,
+                  mass: 2.2,
+                  properties: {
+                    x: 0, // Move to center horizontally
+                    y: videoY, // Adjusted vertical position
+                    scale: videoScale // Smaller scale for sections 7 & 8
+                  },
                   duration: 1,
-                  ease: "power2.out",
+                  trigger: section
                 });
+
+                // Ensure high z-index
+                gsap.set(videoHero, { zIndex: 10000 });
               }
             },
             onLeave: () => {
@@ -306,13 +317,18 @@ const HeroScroll = () => {
                   videoHero.classList.remove("show-full-model");
                 }
 
-                // Video goes back to right side when going back to combined section
-                gsap.to(videoHero, {
-                  x: window.innerWidth * 0.5, // Move back to right
-                  y: -window.innerHeight * 0.3,
-                  scale: 0.5, // Same scale
+                // Heavy feel animation for video movement back to right side
+                createHeavyAnimation(videoHero, {
+                  damping: 0.88,
+                  stiffness: 0.1,
+                  mass: 2.0,
+                  properties: {
+                    x: window.innerWidth * 0.5, // Move back to right
+                    y: -window.innerHeight * 0.3,
+                    scale: 0.5 // Same scale
+                  },
                   duration: 1,
-                  ease: "power2.out",
+                  trigger: section
                 });
               }
             },
@@ -533,9 +549,9 @@ const HeroScroll = () => {
       {/* Video Hero Section */}
       <section className="hero-section video-hero-section">
         <div className="video-hero">
-          <img 
-            className="hero-video" 
-            src="/new-model.png" 
+          <img
+            className="hero-video"
+            src="/new-model.png"
             alt="3D Model"
           />
           <div className="video-overlay"></div>
