@@ -33,6 +33,7 @@ const WebPSequence = ({
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [allowSmoothScrolling, setAllowSmoothScrolling] = useState(true); // Always allow smooth scrolling
   const imgRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   // Frame rate limiting and smooth scrolling
   const lastFrameUpdateRef = useRef(0);
@@ -270,17 +271,24 @@ const WebPSequence = ({
   // REMOVED: Scroll prevention functions - not needed for continuous scrolling
   // The WebP sequence now allows unlimited scrolling through all frames
 
-  // Ensure no scroll prevention handlers are active
+  // COMPLETELY DISABLE ALL SCROLL PREVENTION - SAFE APPROACH
   useEffect(() => {
     const scrollContainer = document.querySelector('.demo-scroll-container');
     if (scrollContainer) {
-      // Remove any existing scroll prevention handlers
-      if (scrollContainer.dataset.scrollHandler === 'true') {
-        console.log('🧹 Removing existing scroll prevention handler');
-        delete scrollContainer.dataset.maxScrollTop;
-        delete scrollContainer.dataset.scrollHandler;
+      console.log('🚫 SAFELY REMOVING ALL SCROLL PREVENTION HANDLERS');
+
+      // Remove all scroll prevention data attributes
+      delete scrollContainer.dataset.maxScrollTop;
+      delete scrollContainer.dataset.scrollHandler;
+
+      // Remove any existing scroll prevention event listeners safely
+      const existingHandler = scrollContainer.dataset.scrollPreventionHandler;
+      if (existingHandler) {
+        scrollContainer.removeEventListener('scroll', existingHandler);
+        delete scrollContainer.dataset.scrollPreventionHandler;
       }
-      console.log('🧹 WebP sequence initialized with continuous scroll enabled');
+
+      console.log('✅ ALL SCROLL PREVENTION SAFELY DISABLED - CONTINUOUS SCROLLING ENABLED');
     }
   }, []);
 

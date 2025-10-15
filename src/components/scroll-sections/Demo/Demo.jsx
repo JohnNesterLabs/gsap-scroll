@@ -82,7 +82,7 @@ export default function Demo() {
     framePrefix: "frame_",
     frameSuffix: ".png",
     folderPath: "/frames-journey/",
-    scrollSensitivity: 0.2, // Control frame progression speed (0.1 = slow, 0.2 = medium, 1.0 = normal)
+    scrollSensitivity: 0.5, // Control frame progression speed (0.1 = slow, 0.5 = medium, 1.0 = normal)
     maxFrameJump: 1, // Maximum frames to jump at once (1 = very smooth, 2 = smooth, 5 = normal)
     frameUpdateRate: 50, // Frame update rate in ms (50 = 20fps, 33 = 30fps, 16 = 60fps)
   };
@@ -675,6 +675,41 @@ export default function Demo() {
       setHeaderVisible(scrollProgress < 0.02);
     });
   }, [activeSection, getPositionConfig, getRotationConfig, getVideoSizeConfig]);
+
+  // COMPLETELY DISABLE ALL SCROLL PREVENTION - SAFE GLOBAL CLEANUP
+  useEffect(() => {
+    const cleanupScrollPrevention = () => {
+      const scrollContainer = document.querySelector('.demo-scroll-container');
+      if (scrollContainer) {
+        // Remove all scroll prevention data attributes safely
+        delete scrollContainer.dataset.maxScrollTop;
+        delete scrollContainer.dataset.scrollHandler;
+
+        // Override any scroll prevention by ensuring scroll is always allowed
+        scrollContainer.style.overflowY = 'auto';
+        scrollContainer.style.pointerEvents = 'auto';
+
+        // Remove any existing scroll prevention event listeners safely
+        const existingHandler = scrollContainer.dataset.scrollPreventionHandler;
+        if (existingHandler) {
+          scrollContainer.removeEventListener('scroll', existingHandler);
+          delete scrollContainer.dataset.scrollPreventionHandler;
+        }
+      }
+    };
+
+    // Run cleanup immediately
+    cleanupScrollPrevention();
+
+    // Run cleanup every 1000ms (less frequent) to ensure no scroll prevention is added
+    const interval = setInterval(cleanupScrollPrevention, 1000);
+
+    console.log('✅ GLOBAL: SAFE SCROLL PREVENTION CLEANUP ENABLED');
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   // Setup scroll listener (matching ScrollSyncModel exactly)
   useEffect(() => {
