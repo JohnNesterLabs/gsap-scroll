@@ -47,9 +47,9 @@ const WebPSequence = ({
   const previousSectionRef = useRef(activeSection);
   
   // Configuration constants
-  const isMobile = framePrefix === 'mobile_frame_';
-  const ctaStartFrame = isMobile ? 320 : 234;
-  const ctaEndFrame = isMobile ? 420 : 334;
+  const isMobile = framePrefix === 'frame_' && folderPath.includes('frames-mobile');
+  const ctaStartFrame = isMobile ? 36 : 65; // Mobile: pause at frame 36-41, Desktop: pause at frame 65-75
+  const ctaEndFrame = isMobile ? 41 : 75;   // Mobile: pause at frame 36-41, Desktop: pause at frame 65-75
   const framesPerSecond = AUTOPLAY_CONFIG.framesPerSecond;
   const frameInterval = 1000 / framesPerSecond;
   const scrollThreshold = AUTOPLAY_CONFIG.scrollThreshold;
@@ -68,8 +68,7 @@ const WebPSequence = ({
       activeSection,
     ctaStartFrame,
     ctaEndFrame,
-    isMobile,
-    inDuplicateZone: isMobile && currentFrame > 420
+    isMobile
   });
 
   // Get scroll container reference
@@ -229,17 +228,8 @@ const WebPSequence = ({
         let nextFrame = currentFrameRef.current;
 
         if (playDirection === 'forward') {
-          // For mobile, skip duplicate frames in the post-CTA zone
-          // Frames 421-1367 have 5x duplication, so advance by 5 to show unique frames
-          if (isMobile && nextFrame >= 420) {
-            const oldFrame = nextFrame;
-            nextFrame += 5;
-            if (oldFrame === 420) {
-              console.log('📱 MOBILE: Entering duplicate zone, advancing by 5 frames per tick');
-            }
-          } else {
-            nextFrame += 1;
-          }
+          // Advance to next frame
+          nextFrame += 1;
           
           // Check if we've reached CTA zone
           if (nextFrame >= ctaStartFrame && nextFrame <= ctaEndFrame && !isInCTABuffer) {
@@ -279,13 +269,7 @@ const WebPSequence = ({
           }
         } else {
           // Backward
-          // For mobile, skip duplicate frames in the post-CTA zone
-          // Frames 421-1367 have 5x duplication, so advance by 5 to show unique frames
-          if (isMobile && nextFrame > 420) {
-            nextFrame -= 5;
-          } else {
-            nextFrame -= 1;
-          }
+          nextFrame -= 1;
           
           // Check if we've reached the start
           if (nextFrame < 1) {
@@ -473,26 +457,8 @@ const WebPSequence = ({
     return (frameNum) => {
       const cacheKey = `${framePrefix}-${frameNum}-${folderPath}-${frameSuffix}`;
       if (!cache.has(cacheKey)) {
-        let src;
-        // For mobile frames 321-420, use frame 320 image (duplicate zone)
-        if (framePrefix === 'mobile_frame_' && frameNum >= 321 && frameNum <= 420) {
-          src = `${folderPath}${framePrefix}0320${frameSuffix}`;
-        }
-        // For mobile frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
-        else if (framePrefix === 'mobile_frame_' && frameNum >= 421) {
-          const originalFrameStart = 420;
-          const originalFrameEnd = 587;
-          const duplicatesPerFrame = 5;
-          const virtualFrameIndex = frameNum - 420;
-          const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
-          const originalFrame = originalFrameStart + originalFrameIndex;
-          const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
-          src = `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
-        }
-        // For all other frames, use the actual frame number
-        else {
-          src = `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
-        }
+        // Use the actual frame number for all frames (no duplicates)
+        const src = `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
         cache.set(cacheKey, src);
       }
       return cache.get(cacheKey);
@@ -618,9 +584,9 @@ const WebPSequence = ({
       )}
 
       {/* Troubleshooting Map Text Overlay */}
-      {(framePrefix === 'mobile_frame_' 
-        ? (currentFrame >= 4 && currentFrame <= 300)
-        : (currentFrame >= 4 && currentFrame <= 220)
+      {(isMobile
+        ? (currentFrame >= 4 && currentFrame <= 35) // Mobile: show text for frames 4-35
+        : (currentFrame >= 4 && currentFrame <= 64) // Desktop: show text for frames 4-64
       ) && (
         <div className="troubleshooting-text-overlay">
           <div className="troubleshooting-text">

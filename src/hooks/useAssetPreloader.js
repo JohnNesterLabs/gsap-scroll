@@ -31,51 +31,29 @@ const getAssetsToPreload = () => {
         console.log('📱 Mobile device detected - loading mobile frames only');
         return [
             ...baseAssets,
-            ...generateWebPMobileFramePaths(1367, '/frames-mobile-30fps/')
+            ...generateWebPMobileFramePaths(97, '/frames-mobile/')
         ];
     } else {
         console.log('🖥️ Desktop device detected - loading desktop frames only');
         return [
             ...baseAssets,
-            ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/')
+            ...generateWebPDesktopFramePaths(134, '/frame-desktop/')
         ];
     }
 };
 
 // Generate WebP mobile frame paths
-const generateWebPMobileFramePaths = (totalFrames = 1367, folderPath = '/frames-mobile-30fps/') => {
+const generateWebPMobileFramePaths = (totalFrames = 97, folderPath = '/frames-mobile/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');
-        // For frames 321-420, use mobile_frame_0320.webp (duplicate frame 320)
-        if (i >= 321 && i <= 420) {
-            frames.push(`${folderPath}mobile_frame_0320.webp`);
-        }
-        // For frames 421-1367, duplicate each frame from 420-587 by 5 times for smooth scrolling
-        else if (i >= 421) {
-            // Calculate which original frame this corresponds to
-            const originalFrameStart = 420; // Start of the range to duplicate
-            const originalFrameEnd = 587;   // End of the range to duplicate
-            const duplicatesPerFrame = 5;   // Each frame duplicated 5 times
-            // Calculate which original frame this virtual frame corresponds to
-            const virtualFrameIndex = i - 420; // 0-based index from frame 421
-            const originalFrameIndex = Math.floor(virtualFrameIndex / duplicatesPerFrame);
-            const originalFrame = originalFrameStart + originalFrameIndex;
-            // Ensure we don't go beyond the original frame range
-            const clampedOriginalFrame = Math.min(originalFrame, originalFrameEnd);
-            const originalFrameNumber = clampedOriginalFrame.toString().padStart(4, '0');
-            frames.push(`${folderPath}mobile_frame_${originalFrameNumber}.webp`);
-        }
-        // For all other frames (1-320), use the actual frame number
-        else {
-            frames.push(`${folderPath}mobile_frame_${frameNumber}.webp`);
-        }
+        frames.push(`${folderPath}frame_${frameNumber}.webp`);
     }
     return frames;
 };
 
 // Generate WebP desktop frame paths
-const generateWebPDesktopFramePaths = (totalFrames = 428, folderPath = '/frames-desktop-webp/') => {
+const generateWebPDesktopFramePaths = (totalFrames = 134, folderPath = '/frame-desktop/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');

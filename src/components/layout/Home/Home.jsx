@@ -476,14 +476,14 @@ export default function Home() {
         {isMobileDevice() ? (
           <WebPSequence
             startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={1367} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
-            framePrefix="mobile_frame_"
+            totalFrames={97} // Mobile sequence with 97 frames
+            framePrefix="frame_"
             frameSuffix=".webp"
-            folderPath="/frames-mobile-30fps/"
+            folderPath="/frames-mobile/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={320} // CTA zone starts at frame 320
+            stopFrame={36} // CTA zone starts at frame 36
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}

@@ -68,16 +68,16 @@ export const PNG_SEQUENCE_CONFIG = {
 
 // Desktop WebP Sequence Configuration
 export const DESKTOP_WEBP_SEQUENCE_CONFIG = {
-  startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
-  totalFrames: 428,
+  startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 134 frames
+  totalFrames: 134,
   framePrefix: "frame_",
   frameSuffix: ".webp",
-  folderPath: "/frames-desktop-webp/",
+  folderPath: "/frame-desktop/",
 };
 
 // Scroll stop configuration constants
 export const SCROLL_STOP_CONFIG = {
-  stopFrame: 234, // Frame to stop at (frame_0234.png)
+  stopFrame: 65, // Frame to stop at (frame_0065.webp) - Desktop pause at frame 65
   timelineDuration: 5000, // 5 seconds in milliseconds
   
   // Mobile timeline and play button positions
