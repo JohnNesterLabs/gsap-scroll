@@ -39,6 +39,7 @@ const WebPSequence = ({
   const currentFrameRef = useRef(1);
   const scrollAccumulator = useRef(0);
   const lastScrollTime = useRef(Date.now());
+  const lastTouchY = useRef(0);
   const imgRef = useRef(null);
   const hasInitialized = useRef(false);
   const scrollContainerRef = useRef(null);
@@ -120,16 +121,27 @@ const WebPSequence = ({
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || preventScrollHandler.current) return;
 
-    const currentScrollTop = scrollContainer.scrollTop;
+    const lockedScrollTop = scrollContainer.scrollTop;
     
     preventScrollHandler.current = (e) => {
-      // Lock scroll position
-      scrollContainer.scrollTop = currentScrollTop;
+      // In CTA buffer, allow small scroll movements for detection
+      // This enables scroll events to be captured on mobile
+      if (isInCTABuffer) {
+        const currentScroll = scrollContainer.scrollTop;
+        const scrollDiff = Math.abs(currentScroll - lockedScrollTop);
+        // Allow small movements (up to 50px) for scroll detection, then reset
+        if (scrollDiff > 50) {
+          scrollContainer.scrollTop = lockedScrollTop;
+        }
+        return;
+      }
+      // Lock scroll position during auto-play (not in CTA buffer)
+      scrollContainer.scrollTop = lockedScrollTop;
     };
 
     scrollContainer.addEventListener('scroll', preventScrollHandler.current, { passive: false });
-    console.log('🔒 SCROLL PREVENTED at position:', currentScrollTop);
-  }, []);
+    console.log('🔒 SCROLL PREVENTED at position:', lockedScrollTop);
+  }, [isInCTABuffer]);
 
   const restoreScroll = useCallback(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -319,8 +331,30 @@ const WebPSequence = ({
   const handleWheel = useCallback((e) => {
     if (!isVisible) return;
 
-    const scrollDelta = e.deltaY;
+    // Handle both wheel events (desktop) and touch events (mobile)
+    let scrollDelta = 0;
     const now = Date.now();
+    
+    if (e.deltaY !== undefined) {
+      // Wheel event (desktop)
+      scrollDelta = e.deltaY;
+    } else if (e.type === 'touchmove' && e.touches && e.touches.length > 0) {
+      // Touch event (mobile) - calculate delta from touch movement
+      const touch = e.touches[0];
+      if (lastTouchY.current === 0) {
+        lastTouchY.current = touch.clientY;
+        return; // First touch, just record position
+      }
+      scrollDelta = lastTouchY.current - touch.clientY; // Positive = scrolling down
+      lastTouchY.current = touch.clientY;
+    } else if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
+      // Reset touch tracking on touch start
+      lastTouchY.current = e.touches[0].clientY;
+      return;
+    } else {
+      // Fallback for other event types
+      return;
+    }
     
     console.log('🖱️ WHEEL EVENT:', { scrollDelta, isInCTABuffer, isAutoPlaying, showVideoModal });
 
@@ -355,14 +389,19 @@ const WebPSequence = ({
         console.log('📊 BUFFER SCROLL DOWN:', scrollAccumulator.current, 'threshold:', scrollThreshold);
         
         if (scrollAccumulator.current >= scrollThreshold) {
-          // User wants to move past CTA
-          console.log('🚀 EXITING CTA BUFFER - Resuming auto-play forward');
+          // User wants to move past CTA - resume auto-play (works for both mobile and desktop)
+          const nextFrameAfterCTA = ctaEndFrame + 1;
+          console.log(`🚀 EXITING CTA BUFFER - Resuming auto-play forward from frame ${nextFrameAfterCTA}`, {
+            isMobile,
+            ctaEndFrame,
+            nextFrame: nextFrameAfterCTA
+          });
           setIsInCTABuffer(false);
-          setIsAutoPlaying(true);
+          setIsAutoPlaying(true); // ✅ Re-enable auto-play
           setPlayDirection('forward');
           scrollAccumulator.current = 0;
-          currentFrameRef.current = ctaEndFrame + 1;
-          setCurrentFrame(ctaEndFrame + 1);
+          currentFrameRef.current = nextFrameAfterCTA;
+          setCurrentFrame(nextFrameAfterCTA);
         }
       } else if (scrollDelta < 0) {
         // Scrolling up - trying to go back
@@ -403,12 +442,17 @@ const WebPSequence = ({
   useEffect(() => {
     if (!isVisible) return;
 
+    // Use wheel for desktop and touchmove/touchstart for mobile
     window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('touchmove', handleWheel, { passive: true });
+    window.addEventListener('touchmove', handleWheel, { passive: false }); // non-passive to allow preventDefault if needed
+    window.addEventListener('touchstart', handleWheel, { passive: true });
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchmove', handleWheel);
+      window.removeEventListener('touchstart', handleWheel);
+      // Reset touch tracking on cleanup
+      lastTouchY.current = 0;
     };
   }, [isVisible, handleWheel]);
 
