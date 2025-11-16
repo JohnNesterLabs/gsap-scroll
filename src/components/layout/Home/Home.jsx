@@ -482,22 +482,6 @@ export default function Home() {
             folderPath="/frames-mobile/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
-            // Scroll stop functionality - using configuration
-            stopFrame={36} // CTA zone starts at frame 36
-            timelineDuration={scrollStopConfig.timelineDuration}
-            timelinePosition={scrollStopConfig.timelinePosition}
-            playButtonPosition={scrollStopConfig.playButtonPosition}
-            // Video popup functionality
-            videoSrc="/Ticket1_web.mp4"
-            showVideoPopup={true}
-            isVideoPreloaded={isVideoPreloaded}
-            videoPreloadProgress={videoPreloadProgress}
-            onTimelineComplete={() => {
-              console.log("Mobile WebP sequence timeline completed - showing play button");
-            }}
-            onPlayButtonClick={() => {
-              console.log("Mobile WebP sequence play button clicked - resuming scroll");
-            }}
           />
         ) : (
           <WebPSequence
@@ -508,22 +492,6 @@ export default function Home() {
             folderPath={DESKTOP_WEBP_SEQUENCE_CONFIG.folderPath}
             activeSection={activeSection}
             sectionProgress={sectionProgress}
-            // Scroll stop functionality - using configuration
-            stopFrame={scrollStopConfig.stopFrame}
-            timelineDuration={scrollStopConfig.timelineDuration}
-            timelinePosition={scrollStopConfig.timelinePosition}
-            playButtonPosition={scrollStopConfig.playButtonPosition}
-            // Video popup functionality
-            videoSrc="/Ticket1_web.mp4"
-            showVideoPopup={true}
-            isVideoPreloaded={isVideoPreloaded}
-            videoPreloadProgress={videoPreloadProgress}
-            onTimelineComplete={() => {
-              console.log("Desktop WebP sequence timeline completed - showing play button");
-            }}
-            onPlayButtonClick={() => {
-              console.log("Desktop WebP sequence play button clicked - resuming scroll");
-            }}
           />
         )}
 
