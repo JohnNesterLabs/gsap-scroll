@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<!--
+    Frame Sequence Test HTML
+    
+    This file implements a 4-section page with frame animation logic from WebPSequence:
+    - Section 1: Full viewport (purple gradient)
+    - Section 2: Full viewport (pink gradient)
+    - Section 3: Frame animation section (transparent, frames overlay)
+    - Section 4: Footer (blue gradient)
+    
+    Frame animation behavior:
+    - Starts automatically when scrolling into Section 3
+    - Plays forward when scrolling down
+    - Plays backward when scrolling up
+    - Pauses at specific frames (80, 120) - requires scroll input to continue
+    - Scroll is locked during animation
+    - Scrolls to next section when animation completes
+    
+    Configuration:
+    - Frame path: /frame-desktop/ (update CONFIG.folderPath if different)
+    - Frame format: frame_0001.webp to frame_0134.webp
+    - Total frames: 134
+    - Pause frames: 80, 120
+    
+    To test:
+    1. Make sure frame images are in the public/frame-desktop/ folder
+    2. Open this file in a browser (or serve via a web server)
+    3. Scroll down through sections 1, 2, 3, 4
+    4. Scroll up to test reverse animation
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Sequence Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        .scroll-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+        }
+
+        .section {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+
+        .section-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .section-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .section-3 {
+            background: transparent;
+            /* Frame sequence will overlay this */
+        }
+
+        .section-4 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* WebP Sequence Container */
+        .webp-sequence-container {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 15 !important;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            contain: layout style paint;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .webp-sequence-container.visible {
+            opacity: 1;
+        }
+
+        .webp-sequence-frame {
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            object-position: center;
+            opacity: 1;
+            transition: opacity 0.05s ease-out;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            will-change: opacity, transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            image-rendering: auto;
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -ms-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            line-height: 1.6;
+        }
+
+        .debug-info div {
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-container" id="scrollContainer">
+        <div class="section section-1">
+            <div>Section 1</div>
+        </div>
+        <div class="section section-2">
+            <div>Section 2</div>
+        </div>
+        <div class="section section-3" id="frameSection">
+            <div>Section 3 - Frame Animation</div>
+        </div>
+        <div class="section section-4">
+            <div>Section 4 - Footer</div>
+        </div>
+    </div>
+
+    <!-- WebP Sequence Container -->
+    <div class="webp-sequence-container" id="webpSequenceContainer">
+        <img id="frameImage" class="webp-sequence-frame" alt="Frame" />
+    </div>
+
+    <!-- Debug Info -->
+    <div class="debug-info" id="debugInfo">
+        <div>Active Section: <span id="activeSection">0</span></div>
+        <div>Current Frame: <span id="currentFrame">0</span></div>
+        <div>Is Auto Playing: <span id="isAutoPlaying">false</span></div>
+        <div>Play Direction: <span id="playDirection">-</span></div>
+        <div>Is Paused: <span id="isPaused">false</span></div>
+        <div>Is Visible: <span id="isVisible">false</span></div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            startSection: 2, // Frame animation starts at section 3 (0-indexed: section 3 = index 2)
+            totalFrames: 134, // Total number of frames
+            framePrefix: 'frame_',
+            frameSuffix: '.webp',
+            folderPath: '/frame-desktop/',
+            framesPerSecond: 15,
+            scrollThreshold: 100,
+            pauseFrames: [80, 120] // Frames where animation pauses
+        };
+
+        // State
+        const state = {
+            currentFrame: 1,
+            isVisible: false,
+            isAutoPlaying: false,
+            playDirection: 'forward', // 'forward' or 'backward'
+            hasCompletedSequence: false,
+            isPaused: false,
+            activeSection: 0,
+            previousSection: 0
+        };
+
+        // Refs
+        const refs = {
+            autoPlayFrameId: null,
+            currentFrameRef: 1,
+            lastScrollTime: Date.now(),
+            lastTouchY: 0,
+            scrollContainer: null,
+            preventScrollHandler: null,
+            hasInitialized: false,
+            scrollAccumulator: 0
+        };
+
+        // DOM Elements
+        const scrollContainer = document.getElementById('scrollContainer');
+        const webpSequenceContainer = document.getElementById('webpSequenceContainer');
+        const frameImage = document.getElementById('frameImage');
+        const debugInfo = {
+            activeSection: document.getElementById('activeSection'),
+            currentFrame: document.getElementById('currentFrame'),
+            isAutoPlaying: document.getElementById('isAutoPlaying'),
+            playDirection: document.getElementById('playDirection'),
+            isPaused: document.getElementById('isPaused'),
+            isVisible: document.getElementById('isVisible')
+        };
+
+        // Initialize
+        refs.scrollContainer = scrollContainer;
+
+        // Helper Functions
+        function formatFrameNumber(frameNum) {
+            return frameNum.toString().padStart(4, '0');
+        }
+
+        function getFrameImageSrc(frameNum) {
+            return `${CONFIG.folderPath}${CONFIG.framePrefix}${formatFrameNumber(frameNum)}${CONFIG.frameSuffix}`;
+        }
+
+        function isPauseFrame(frame) {
+            return CONFIG.pauseFrames.includes(frame);
+        }
+
+        function updateDebugInfo() {
+            debugInfo.activeSection.textContent = state.activeSection;
+            debugInfo.currentFrame.textContent = state.currentFrame;
+            debugInfo.isAutoPlaying.textContent = state.isAutoPlaying;
+            debugInfo.playDirection.textContent = state.playDirection;
+            debugInfo.isPaused.textContent = state.isPaused;
+            debugInfo.isVisible.textContent = state.isVisible;
+        }
+
+        // Section Tracking
+        function getActiveSection() {
+            const scrollTop = scrollContainer.scrollTop;
+            const sectionHeight = window.innerHeight;
+            const sectionIndex = Math.round(scrollTop / sectionHeight);
+            return Math.min(sectionIndex, 3); // Max 3 sections (0, 1, 2, 3)
+        }
+
+        function updateActiveSection() {
+            const newSection = getActiveSection();
+            if (newSection !== state.activeSection) {
+                state.previousSection = state.activeSection;
+                state.activeSection = newSection;
+                handleSectionChange();
+            }
+        }
+
+        // Scroll Control
+        function scrollToSection(targetSection, instant = false) {
+            if (!scrollContainer) return;
+
+            const totalSections = 4;
+            const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+            const targetScrollProgress = targetSection / (totalSections - 1);
+            const targetScrollTop = targetScrollProgress * maxScroll;
+
+            if (instant) {
+                const originalScrollBehavior = scrollContainer.style.scrollBehavior;
+                scrollContainer.style.scrollBehavior = 'auto';
+                scrollContainer.scrollTop = targetScrollTop;
+                requestAnimationFrame(() => {
+                    scrollContainer.style.scrollBehavior = originalScrollBehavior;
+                });
+            } else {
+                scrollContainer.scrollTo({
+                    top: targetScrollTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function preventScroll() {
+            if (!scrollContainer || refs.preventScrollHandler) return;
+
+            const lockedScrollTop = scrollContainer.scrollTop;
+
+            refs.preventScrollHandler = (e) => {
+                if (state.isPaused) {
+                    const currentScroll = scrollContainer.scrollTop;
+                    const scrollDiff = Math.abs(currentScroll - lockedScrollTop);
+                    if (scrollDiff > 50) {
+                        scrollContainer.scrollTop = lockedScrollTop;
+                    }
+                    return;
+                }
+                scrollContainer.scrollTop = lockedScrollTop;
+            };
+
+            scrollContainer.addEventListener('scroll', refs.preventScrollHandler, { passive: false });
+            console.log('🔒 SCROLL PREVENTED at position:', lockedScrollTop);
+        }
+
+        function restoreScroll() {
+            if (!scrollContainer || !refs.preventScrollHandler) return;
+
+            scrollContainer.removeEventListener('scroll', refs.preventScrollHandler);
+            refs.preventScrollHandler = null;
+            console.log('🔓 SCROLL RESTORED');
+        }
+
+        // Section Change Handler
+        function handleSectionChange() {
+            const previousSection = state.previousSection;
+            const comingFromAbove = previousSection > state.activeSection && previousSection > CONFIG.startSection;
+
+            // Case 1: First time reaching section (scrolling down/forward)
+            if (state.activeSection >= CONFIG.startSection && !refs.hasInitialized && !state.hasCompletedSequence) {
+                console.log('🎬 INITIALIZING AUTO-PLAY - Section became active (forward)');
+                state.isVisible = true;
+                state.isAutoPlaying = true;
+                state.playDirection = 'forward';
+                refs.hasInitialized = true;
+                refs.currentFrameRef = 1;
+                state.currentFrame = 1;
+                webpSequenceContainer.classList.add('visible');
+                frameImage.src = getFrameImageSrc(1);
+                preventScroll();
+            }
+            // Case 2: Scrolling back into section from above (after completion)
+            else if (state.activeSection >= CONFIG.startSection && state.hasCompletedSequence && comingFromAbove) {
+                console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from above (backward)');
+                state.isVisible = true;
+                state.isAutoPlaying = true;
+                state.playDirection = 'backward';
+                refs.hasInitialized = true;
+                state.hasCompletedSequence = false;
+                refs.currentFrameRef = CONFIG.totalFrames;
+                state.currentFrame = CONFIG.totalFrames;
+                webpSequenceContainer.classList.add('visible');
+                frameImage.src = getFrameImageSrc(CONFIG.totalFrames);
+                preventScroll();
+            }
+            // Case 3: Reset if user scrolls back before the section
+            else if (state.activeSection < CONFIG.startSection) {
+                console.log('🎬 RESETTING - User scrolled before start section');
+                state.isVisible = false;
+                state.isAutoPlaying = false;
+                state.isPaused = false;
+                state.hasCompletedSequence = false;
+                refs.hasInitialized = false;
+                refs.currentFrameRef = 1;
+                state.currentFrame = 1;
+                refs.scrollAccumulator = 0;
+                webpSequenceContainer.classList.remove('visible');
+                restoreScroll();
+                if (refs.autoPlayFrameId) {
+                    cancelAnimationFrame(refs.autoPlayFrameId);
+                    refs.autoPlayFrameId = null;
+                }
+            }
+
+            updateDebugInfo();
+        }
+
+        // Auto-play Animation Loop
+        function startAutoPlay() {
+            if (!state.isAutoPlaying || !state.isVisible) {
+                return;
+            }
+
+            // Don't start if already running
+            if (refs.autoPlayFrameId) {
+                return;
+            }
+
+            let lastFrameTime = Date.now();
+            const frameInterval = 1000 / CONFIG.framesPerSecond;
+
+            function animate() {
+                const now = Date.now();
+                const elapsed = now - lastFrameTime;
+
+                if (elapsed >= frameInterval) {
+                    lastFrameTime = now - (elapsed % frameInterval);
+
+                    let nextFrame = refs.currentFrameRef;
+
+                    if (state.playDirection === 'forward') {
+                        nextFrame += 1;
+
+                        // Check if we've reached a pause frame
+                        if (isPauseFrame(nextFrame)) {
+                            console.log(`⏸️ PAUSED at frame ${nextFrame} (forward)`);
+                            state.isPaused = true;
+                            state.isAutoPlaying = false;
+                            refs.scrollAccumulator = 0;
+                            refs.currentFrameRef = nextFrame;
+                            state.currentFrame = nextFrame;
+                            frameImage.src = getFrameImageSrc(nextFrame);
+                            updateDebugInfo();
+                            return;
+                        }
+
+                        // Check if we've completed the sequence
+                        if (nextFrame > CONFIG.totalFrames) {
+                            console.log('✅ SEQUENCE COMPLETE - Handing back scroll control');
+                            nextFrame = CONFIG.totalFrames;
+                            state.isAutoPlaying = false;
+                            state.isPaused = false;
+                            state.hasCompletedSequence = true;
+                            refs.currentFrameRef = nextFrame;
+                            state.currentFrame = nextFrame;
+                            frameImage.src = getFrameImageSrc(nextFrame);
+                            restoreScroll();
+
+                            // Scroll user forward to section 4
+                            setTimeout(() => {
+                                scrollToSection(3);
+                            }, 100);
+
+                            // Hide the WebPSequence after scroll animation completes
+                            setTimeout(() => {
+                                state.isVisible = false;
+                                webpSequenceContainer.classList.remove('visible');
+                                console.log('🎬 WebPSequence hidden after transition');
+                            }, 900);
+
+                            updateDebugInfo();
+                            return;
+                        }
+                    } else {
+                        // Backward
+                        nextFrame -= 1;
+
+                        // Check if we've reached a pause frame
+                        if (isPauseFrame(nextFrame)) {
+                            console.log(`⏸️ PAUSED at frame ${nextFrame} (backward)`);
+                            state.isPaused = true;
+                            state.isAutoPlaying = false;
+                            refs.scrollAccumulator = 0;
+                            refs.currentFrameRef = nextFrame;
+                            state.currentFrame = nextFrame;
+                            frameImage.src = getFrameImageSrc(nextFrame);
+                            updateDebugInfo();
+                            return;
+                        }
+
+                        // Check if we've reached the start
+                        if (nextFrame < 1) {
+                            console.log('⏮️ REACHED START - Resetting and restoring scroll control');
+                            nextFrame = 1;
+                            state.isAutoPlaying = false;
+                            state.isPaused = false;
+                            state.hasCompletedSequence = false;
+                            refs.hasInitialized = false;
+                            refs.currentFrameRef = nextFrame;
+                            state.currentFrame = nextFrame;
+                            frameImage.src = getFrameImageSrc(nextFrame);
+                            restoreScroll();
+
+                            // Hide the WebPSequence FIRST before scrolling
+                            state.isVisible = false;
+                            webpSequenceContainer.classList.remove('visible');
+
+                            // Use requestAnimationFrame to ensure scroll lock is fully removed before scrolling
+                            requestAnimationFrame(() => {
+                                scrollToSection(1.8, true); // true = instant scroll
+                            });
+
+                            updateDebugInfo();
+                            return;
+                        }
+                    }
+
+                    refs.currentFrameRef = nextFrame;
+                    state.currentFrame = nextFrame;
+                    frameImage.src = getFrameImageSrc(nextFrame);
+                    updateDebugInfo();
+                }
+
+                refs.autoPlayFrameId = requestAnimationFrame(animate);
+            }
+
+            refs.autoPlayFrameId = requestAnimationFrame(animate);
+        }
+
+        // Handle scroll events for direction control
+        function handleWheel(e) {
+            if (!state.isVisible) return;
+
+            let scrollDelta = 0;
+            const now = Date.now();
+
+            if (e.deltaY !== undefined) {
+                scrollDelta = e.deltaY;
+            } else if (e.type === 'touchmove' && e.touches && e.touches.length > 0) {
+                const touch = e.touches[0];
+                if (refs.lastTouchY === 0) {
+                    refs.lastTouchY = touch.clientY;
+                    return;
+                }
+                scrollDelta = refs.lastTouchY - touch.clientY;
+                refs.lastTouchY = touch.clientY;
+            } else if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
+                refs.lastTouchY = e.touches[0].clientY;
+                return;
+            } else {
+                return;
+            }
+
+            console.log('🖱️ WHEEL EVENT:', { scrollDelta, isAutoPlaying: state.isAutoPlaying, isPaused: state.isPaused, currentFrame: state.currentFrame });
+
+            // Handle pause state - accumulate scroll to resume
+            if (state.isPaused) {
+                if (scrollDelta > 0) {
+                    refs.scrollAccumulator += scrollDelta;
+                    console.log('📊 PAUSE SCROLL DOWN:', refs.scrollAccumulator, 'threshold:', CONFIG.scrollThreshold);
+
+                    if (refs.scrollAccumulator >= CONFIG.scrollThreshold) {
+                        const pausedFrame = refs.currentFrameRef;
+                        const nextFrameAfterPause = pausedFrame + 1;
+                        console.log(`▶️ RESUMING from pause at frame ${pausedFrame} - continuing forward to frame ${nextFrameAfterPause}`);
+                        state.isPaused = false;
+                        state.isAutoPlaying = true;
+                        state.playDirection = 'forward';
+                        refs.scrollAccumulator = 0;
+                        refs.currentFrameRef = nextFrameAfterPause;
+                        state.currentFrame = nextFrameAfterPause;
+                        frameImage.src = getFrameImageSrc(nextFrameAfterPause);
+                        startAutoPlay();
+                        updateDebugInfo();
+                    }
+                } else if (scrollDelta < 0) {
+                    refs.scrollAccumulator += scrollDelta;
+                    console.log('📊 PAUSE SCROLL UP:', refs.scrollAccumulator, 'threshold:', -CONFIG.scrollThreshold);
+
+                    if (refs.scrollAccumulator <= -CONFIG.scrollThreshold) {
+                        const pausedFrame = refs.currentFrameRef;
+                        const nextFrameBeforePause = pausedFrame - 1;
+                        console.log(`▶️ RESUMING from pause at frame ${pausedFrame} - going backward to frame ${nextFrameBeforePause}`);
+                        state.isPaused = false;
+                        state.isAutoPlaying = true;
+                        state.playDirection = 'backward';
+                        refs.scrollAccumulator = 0;
+                        refs.currentFrameRef = nextFrameBeforePause;
+                        state.currentFrame = nextFrameBeforePause;
+                        frameImage.src = getFrameImageSrc(nextFrameBeforePause);
+                        startAutoPlay();
+                        updateDebugInfo();
+                    }
+                }
+                return;
+            }
+
+            // Direction change during auto-play
+            if (state.isAutoPlaying) {
+                if (scrollDelta < 0 && state.playDirection === 'forward') {
+                    console.log('⏪ REVERSING - User scrolled up during forward play');
+                    state.playDirection = 'backward';
+                    // Restart animation with new direction
+                    if (refs.autoPlayFrameId) {
+                        cancelAnimationFrame(refs.autoPlayFrameId);
+                        refs.autoPlayFrameId = null;
+                    }
+                    startAutoPlay();
+                    updateDebugInfo();
+                } else if (scrollDelta > 0 && state.playDirection === 'backward') {
+                    console.log('⏩ FORWARD - User scrolled down during backward play');
+                    state.playDirection = 'forward';
+                    // Restart animation with new direction
+                    if (refs.autoPlayFrameId) {
+                        cancelAnimationFrame(refs.autoPlayFrameId);
+                        refs.autoPlayFrameId = null;
+                    }
+                    startAutoPlay();
+                    updateDebugInfo();
+                }
+            }
+
+            refs.lastScrollTime = now;
+        }
+
+        // Event Listeners
+        scrollContainer.addEventListener('scroll', () => {
+            updateActiveSection();
+        });
+
+        // Wheel and touch events for frame control
+        window.addEventListener('wheel', handleWheel, { passive: true });
+        window.addEventListener('touchmove', handleWheel, { passive: false });
+        window.addEventListener('touchstart', handleWheel, { passive: true });
+
+        // Watch for auto-play state changes
+        function watchAutoPlayState() {
+            if (state.isAutoPlaying && state.isVisible) {
+                if (!refs.autoPlayFrameId) {
+                    startAutoPlay();
+                }
+            } else {
+                if (refs.autoPlayFrameId) {
+                    cancelAnimationFrame(refs.autoPlayFrameId);
+                    refs.autoPlayFrameId = null;
+                }
+            }
+        }
+
+        // Initial setup
+        updateActiveSection();
+        setInterval(watchAutoPlayState, 100); // Check every 100ms
+        setInterval(updateDebugInfo, 100); // Update debug info
+
+        console.log('✅ Frame Sequence Test Initialized');
+    </script>
+</body>
+</html>
+
