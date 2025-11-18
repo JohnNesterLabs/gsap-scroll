@@ -40,7 +40,7 @@ const WebPSequence = ({
   const scrollThreshold = AUTOPLAY_CONFIG.scrollThreshold;
   
   // Pause frames: Desktop [60, 120], Mobile [40, 80]
-  const pauseFrames = isMobile ? [40, 80] : [60, 120];
+  const pauseFrames = isMobile ? [40, 80] : [80, 120];
   
   // Check if current frame is a pause frame
   const isPauseFrame = (frame) => pauseFrames.includes(frame);

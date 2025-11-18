@@ -47,7 +47,7 @@ export const AUTOPLAY_CONFIG = {
   // Higher values (40-60) = faster, more fluid animation
   // Lower values (20-30) = slower, more deliberate animation
   // Recommended: 30 for balanced performance and smoothness
-  framesPerSecond: 50,
+  framesPerSecond: 15,
   
   // Scroll threshold to exit CTA buffer zone
   // Amount of scroll delta needed to move past the CTA zone
