@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinned Frame Sequence - HTML Example</title>
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Scroll Container */
+    .home-scroll-container {
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      position: relative;
+      z-index: 10;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+    }
+
+    .home-scroll-container::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* Section Styles */
+    .section {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: white;
+      position: relative;
+    }
+
+    .section-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .section-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .section-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .section-4 { background: transparent; } /* Transparent for pinned sequence */
+    .section-5 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .section-6 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .section-7 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+    /* Pinned Frame Sequence Container */
+    .pinned-frame-sequence-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 15 !important;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden;
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      contain: layout style paint;
+      opacity: 0; /* Hidden by default */
+      transition: opacity 0.3s ease;
+    }
+
+    .pinned-frame-sequence-container.visible {
+      opacity: 1;
+    }
+
+    .pinned-frame-sequence-image {
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      object-position: center;
+      opacity: 1;
+      transition: opacity 0.05s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0 !important;
+      padding: 0 !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      will-change: opacity, transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      image-rendering: auto;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .section {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Scroll Container -->
+  <div class="home-scroll-container" id="scrollContainer">
+    <!-- Section 1 -->
+    <div class="section section-1">
+      <h1>Section 1</h1>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="section section-2">
+      <h1>Section 2</h1>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="section section-3">
+      <h1>Section 3</h1>
+    </div>
+
+    <!-- Section 4 - Where pinned sequence appears -->
+    <div class="section section-4">
+      <h1>Section 4 - Pinned Sequence</h1>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="section section-5">
+      <h1>Section 5</h1>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="section section-6">
+      <h1>Section 6</h1>
+    </div>
+
+    <!-- Section 7 -->
+    <div class="section section-7">
+      <h1>Section 7</h1>
+    </div>
+  </div>
+
+  <!-- Pinned Frame Sequence Container -->
+  <div class="pinned-frame-sequence-container" id="pinnedSequence">
+    <img 
+      class="pinned-frame-sequence-image" 
+      id="frameImage"
+      src="" 
+      alt="Frame sequence"
+    />
+  </div>
+
+  <script>
+    // Configuration
+    const CONFIG = {
+      framesPerSecond: 15,
+      scrollThreshold: 100,
+      startSection: 3, // Section 4 (0-indexed)
+      totalFrames: 134,
+      framePrefix: 'frame_',
+      frameSuffix: '.webp',
+      folderPath: '/frame-desktop/',
+      pauseFrames: [80, 120],
+      totalSections: 7,
+    };
+
+    // State
+    let currentFrame = 1;
+    let isVisible = false;
+    let isAutoPlaying = false;
+    let playDirection = 'forward';
+    let hasCompletedSequence = false;
+    let isPaused = false;
+    let hasInitialized = false;
+    let previousSection = 0;
+    let scrollAccumulator = 0;
+    let lastTouchY = 0;
+
+    // Refs
+    const scrollContainer = document.getElementById('scrollContainer');
+    const pinnedSequence = document.getElementById('pinnedSequence');
+    const frameImage = document.getElementById('frameImage');
+    let autoPlayFrameId = null;
+    let preventScrollHandler = null;
+    let lockedScrollTop = 0;
+
+    // Calculate frame interval
+    const frameInterval = 1000 / CONFIG.framesPerSecond;
+
+    // Format frame number with leading zeros
+    function formatFrameNumber(frameNum) {
+      return frameNum.toString().padStart(4, '0');
+    }
+
+    // Get frame image source
+    function getFrameImageSrc(frameNum) {
+      return `${CONFIG.folderPath}${CONFIG.framePrefix}${formatFrameNumber(frameNum)}${CONFIG.frameSuffix}`;
+    }
+
+    // Check if frame is a pause frame
+    function isPauseFrame(frame) {
+      return CONFIG.pauseFrames.includes(frame);
+    }
+
+    // Scroll to section
+    function scrollToSection(targetSection, instant = false) {
+      const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      const targetScrollProgress = targetSection / (CONFIG.totalSections - 1);
+      const targetScrollTop = targetScrollProgress * maxScroll;
+      
+      if (instant) {
+        scrollContainer.style.scrollBehavior = 'auto';
+        scrollContainer.scrollTop = targetScrollTop;
+        requestAnimationFrame(() => {
+          scrollContainer.style.scrollBehavior = 'smooth';
+        });
+      } else {
+        scrollContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Prevent scroll
+    function preventScroll() {
+      if (preventScrollHandler) return;
+      lockedScrollTop = scrollContainer.scrollTop;
+      
+      preventScrollHandler = (e) => {
+        if (isPaused) {
+          const currentScroll = scrollContainer.scrollTop;
+          const scrollDiff = Math.abs(currentScroll - lockedScrollTop);
+          if (scrollDiff > 50) {
+            scrollContainer.scrollTop = lockedScrollTop;
+          }
+          return;
+        }
+        scrollContainer.scrollTop = lockedScrollTop;
+      };
+
+      scrollContainer.addEventListener('scroll', preventScrollHandler, { passive: false });
+    }
+
+    // Restore scroll
+    function restoreScroll() {
+      if (!preventScrollHandler) return;
+      scrollContainer.removeEventListener('scroll', preventScrollHandler);
+      preventScrollHandler = null;
+    }
+
+    // Calculate active section from scroll
+    function getActiveSection() {
+      const scrollTop = scrollContainer.scrollTop;
+      const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      const scrollProgress = scrollTop / maxScroll;
+      const sectionIndex = scrollProgress * (CONFIG.totalSections - 1);
+      return Math.floor(sectionIndex);
+    }
+
+    // Initialize auto-play
+    function initializeAutoPlay(activeSection) {
+      const comingFromAbove = previousSection > activeSection && previousSection > CONFIG.startSection;
+      
+      if (activeSection >= CONFIG.startSection && !hasInitialized && !hasCompletedSequence) {
+        // First time reaching section
+        isVisible = true;
+        isAutoPlaying = true;
+        playDirection = 'forward';
+        hasInitialized = true;
+        currentFrame = 1;
+        pinnedSequence.classList.add('visible');
+        frameImage.src = getFrameImageSrc(currentFrame);
+        preventScroll();
+      } else if (activeSection >= CONFIG.startSection && hasCompletedSequence && comingFromAbove) {
+        // Scrolling back from above
+        isVisible = true;
+        isAutoPlaying = true;
+        playDirection = 'backward';
+        hasInitialized = true;
+        hasCompletedSequence = false;
+        currentFrame = CONFIG.totalFrames;
+        pinnedSequence.classList.add('visible');
+        frameImage.src = getFrameImageSrc(currentFrame);
+        preventScroll();
+      } else if (activeSection < CONFIG.startSection) {
+        // Reset
+        isVisible = false;
+        isAutoPlaying = false;
+        isPaused = false;
+        hasCompletedSequence = false;
+        hasInitialized = false;
+        currentFrame = 1;
+        scrollAccumulator = 0;
+        pinnedSequence.classList.remove('visible');
+        restoreScroll();
+        if (autoPlayFrameId) {
+          cancelAnimationFrame(autoPlayFrameId);
+          autoPlayFrameId = null;
+        }
+      }
+      
+      previousSection = activeSection;
+    }
+
+    // Auto-play animation loop
+    function startAutoPlay() {
+      if (!isAutoPlaying || !isVisible) return;
+
+      let lastFrameTime = Date.now();
+
+      function animate() {
+        const now = Date.now();
+        const elapsed = now - lastFrameTime;
+
+        if (elapsed >= frameInterval) {
+          lastFrameTime = now - (elapsed % frameInterval);
+
+          let nextFrame = currentFrame;
+
+          if (playDirection === 'forward') {
+            nextFrame += 1;
+            
+            if (isPauseFrame(nextFrame)) {
+              isPaused = true;
+              isAutoPlaying = false;
+              scrollAccumulator = 0;
+              currentFrame = nextFrame;
+              frameImage.src = getFrameImageSrc(currentFrame);
+              return;
+            }
+            
+            if (nextFrame > CONFIG.totalFrames) {
+              nextFrame = CONFIG.totalFrames;
+              isAutoPlaying = false;
+              isPaused = false;
+              hasCompletedSequence = true;
+              currentFrame = nextFrame;
+              frameImage.src = getFrameImageSrc(currentFrame);
+              restoreScroll();
+              
+              setTimeout(() => scrollToSection(5), 100);
+              setTimeout(() => {
+                isVisible = false;
+                pinnedSequence.classList.remove('visible');
+              }, 900);
+              return;
+            }
+          } else {
+            nextFrame -= 1;
+            
+            if (isPauseFrame(nextFrame)) {
+              isPaused = true;
+              isAutoPlaying = false;
+              scrollAccumulator = 0;
+              currentFrame = nextFrame;
+              frameImage.src = getFrameImageSrc(currentFrame);
+              return;
+            }
+            
+            if (nextFrame < 1) {
+              nextFrame = 1;
+              isAutoPlaying = false;
+              isPaused = false;
+              hasCompletedSequence = false;
+              hasInitialized = false;
+              currentFrame = nextFrame;
+              frameImage.src = getFrameImageSrc(currentFrame);
+              restoreScroll();
+              isVisible = false;
+              pinnedSequence.classList.remove('visible');
+              
+              requestAnimationFrame(() => scrollToSection(3.8, true));
+              return;
+            }
+          }
+
+          currentFrame = nextFrame;
+          frameImage.src = getFrameImageSrc(currentFrame);
+        }
+
+        if (isAutoPlaying) {
+          autoPlayFrameId = requestAnimationFrame(animate);
+        }
+      }
+
+      autoPlayFrameId = requestAnimationFrame(animate);
+    }
+
+    // Handle scroll events
+    function handleWheel(e) {
+      if (!isVisible) return;
+
+      let scrollDelta = 0;
+      
+      if (e.deltaY !== undefined) {
+        scrollDelta = e.deltaY;
+      } else if (e.type === 'touchmove' && e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        if (lastTouchY === 0) {
+          lastTouchY = touch.clientY;
+          return;
+        }
+        scrollDelta = lastTouchY - touch.clientY;
+        lastTouchY = touch.clientY;
+      } else if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
+        lastTouchY = e.touches[0].clientY;
+        return;
+      } else {
+        return;
+      }
+
+      // Handle pause state
+      if (isPaused) {
+        if (scrollDelta > 0) {
+          scrollAccumulator += scrollDelta;
+          if (scrollAccumulator >= CONFIG.scrollThreshold) {
+            const pausedFrame = currentFrame;
+            const nextFrameAfterPause = pausedFrame + 1;
+            isPaused = false;
+            isAutoPlaying = true;
+            playDirection = 'forward';
+            scrollAccumulator = 0;
+            currentFrame = nextFrameAfterPause;
+            frameImage.src = getFrameImageSrc(currentFrame);
+            startAutoPlay();
+          }
+        } else if (scrollDelta < 0) {
+          scrollAccumulator += scrollDelta;
+          if (scrollAccumulator <= -CONFIG.scrollThreshold) {
+            const pausedFrame = currentFrame;
+            const nextFrameBeforePause = pausedFrame - 1;
+            isPaused = false;
+            isAutoPlaying = true;
+            playDirection = 'backward';
+            scrollAccumulator = 0;
+            currentFrame = nextFrameBeforePause;
+            frameImage.src = getFrameImageSrc(currentFrame);
+            startAutoPlay();
+          }
+        }
+        return;
+      }
+
+      // Direction change during auto-play
+      if (isAutoPlaying) {
+        if (scrollDelta < 0 && playDirection === 'forward') {
+          playDirection = 'backward';
+        } else if (scrollDelta > 0 && playDirection === 'backward') {
+          playDirection = 'forward';
+        }
+      }
+    }
+
+    // Scroll listener
+    scrollContainer.addEventListener('scroll', () => {
+      const activeSection = getActiveSection();
+      initializeAutoPlay(activeSection);
+      
+      if (isAutoPlaying && !autoPlayFrameId) {
+        startAutoPlay();
+      }
+    });
+
+    // Wheel and touch listeners
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchmove', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleWheel, { passive: true });
+
+    // Initialize
+    initializeAutoPlay(getActiveSection());
+  </script>
+</body>
+</html>
+

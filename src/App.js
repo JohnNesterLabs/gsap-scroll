@@ -1,23 +1,22 @@
-import logo from './logo.svg';
 import './App.css';
+import PinnedFrameSequence from './PinnedFrameSequence';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <section className="section section-one">
+        <h2>First Section</h2>
+        <p>This is the first line of text in the first section.</p>
+        <p>This is the second line of text in the first section.</p>
+      </section>
+
+      <section className="section section-three">
+        <h2>Third Section</h2>
+        <p>This is the first line of text in the third section.</p>
+        <p>This is the second line of text in the third section.</p>
+      </section>
+
+      <PinnedFrameSequence />
     </div>
   );
 }
