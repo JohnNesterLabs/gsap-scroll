@@ -15,13 +15,9 @@ const AnimatedSection = ({
   fontWeight = '500' // New prop for font weight
 }) => {
   const [animationState, setAnimationState] = useState("idle");
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
   const sectionRef = useRef(null);
   const observerRef = useRef(null);
   const timersRef = useRef({ timer1: null, timer2: null });
-  const scrollIndicatorRef = useRef(null);
-  const arrowRef = useRef(null);
 
   useEffect(() => {
     const options = {
@@ -38,9 +34,6 @@ const AnimatedSection = ({
           // Reset to first state when entering the section
           // This ensures animations always start from the beginning
           setAnimationState("first");
-          if (sectionNumber === 1) {
-            setHasScrolled(false);
-          }
         } else {
           // When leaving the section, clear all timers and reset to idle
           if (timers.timer1) {
@@ -113,11 +106,7 @@ const AnimatedSection = ({
               gsap.set(secondSetLines, { opacity: 0, y: 30 });
               // Animate each line with proper delays
               secondSetLines.forEach((line, index) => {
-                let delay = index * 0.2;
-                // Special handling for section 2 - add 2 second delay after empty line
-                if (sectionNumber === 2 && index > 1) {
-                  delay = (index - 1) * 0.2 + 2.0;
-                }
+                const delay = index * 0.2;
                 gsap.to(line, {
                   opacity: 1,
                   y: 0,
@@ -137,95 +126,8 @@ const AnimatedSection = ({
     }
   }, [animationState, sectionNumber, secondSet]);
 
-  // Show scroll indicator when second set completes (only for section 1)
-  useEffect(() => {
-    if (sectionNumber === 1 && animationState === "second" && secondSet && secondSet.length > 0) {
-      // Wait for the second set animation to complete (stagger delay * number of lines + duration)
-      const secondSetAnimationDuration = (secondSet.length - 1) * 0.2 + 0.8; // 0.2s stagger + 0.8s duration
-      const timer = setTimeout(() => {
-        setShowScrollIndicator(true);
-      }, secondSetAnimationDuration * 1000);
-      return () => clearTimeout(timer);
-    } else if (sectionNumber === 1 && animationState === "first" && (!secondSet || secondSet.length === 0)) {
-      // If no secondSet, show scroll indicator after firstSet completes
-      const firstSetAnimationDuration = (firstSet.length - 1) * 0.2 + 0.8; // 0.2s stagger + 0.8s duration
-      const timer = setTimeout(() => {
-        setShowScrollIndicator(true);
-      }, (firstSetAnimationDuration + 2) * 1000); // Add 2s delay after firstSet
-      return () => clearTimeout(timer);
-    } else if (sectionNumber === 1 && animationState !== "second" && animationState !== "first") {
-      setShowScrollIndicator(false);
-    }
-  }, [animationState, sectionNumber, secondSet, firstSet]);
-  // GSAP animations for scroll indicator
-  useEffect(() => {
-    if (showScrollIndicator && scrollIndicatorRef.current && arrowRef.current) {
-      const section = sectionRef.current; // Capture ref for cleanup
-      
-      // Set initial state
-      gsap.set([scrollIndicatorRef.current, arrowRef.current], { opacity: 0, y: 20 });
-      // Fade in animation
-      const tl = gsap.timeline();
-      tl.to([scrollIndicatorRef.current, arrowRef.current], {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      });
-      // Floating animation for arrow
-      gsap.to(arrowRef.current, {
-        y: -4,
-        duration: 1.5,
-        ease: "power2.inOut",
-        yoyo: true,
-        repeat: -1
-      });
-      // Scroll trigger to fade out when scrolling away
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top top",
-        end: "bottom top",
-        onLeave: () => {
-          gsap.to([scrollIndicatorRef.current, arrowRef.current], {
-            opacity: 0,
-            y: -20,
-            duration: 0.5,
-            ease: "power2.in"
-          });
-        },
-        onEnterBack: () => {
-          // Don't show again once user has scrolled away
-        }
-      });
-      return () => {
-        ScrollTrigger.getAll().forEach(trigger => {
-          if (trigger.trigger === section) {
-            trigger.kill();
-          }
-        });
-      };
-    }
-  }, [showScrollIndicator]);
 
-  // Hide scroll indicator when user starts scrolling
-  useEffect(() => {
-    if (sectionNumber === 1 && showScrollIndicator) {
-      const handleScroll = () => {
-        if (!hasScrolled) {
-          setHasScrolled(true);
-          setShowScrollIndicator(false);
-        }
-      };
-      // Add scroll listener to the main scroll container
-      const scrollContainer = document.querySelector('.home-scroll-container') || window;
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-      return () => {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      };
-    }
-  }, [sectionNumber, showScrollIndicator, hasScrolled]);
-
-  const gradientClass = sectionNumber === 1 ? "gradient-1" : "gradient-2";
+  const gradientClass = "gradient-2";
 
   return (
     <section
@@ -263,8 +165,6 @@ const AnimatedSection = ({
           {animationState === "second" && secondSet && secondSet.length > 0 && (
             <div className={`text-set text-align-${textAlign} second-set`}>
               {secondSet.map((text, index) => {
-                // Add extra margin for line 1 (empty line) to create gap after "You're lost."
-                const extraMargin = sectionNumber === 2 && index === 1 ? "1.5em" : "0";
                 return (
                   <p
                     key={`second-${index}`}
@@ -273,7 +173,6 @@ const AnimatedSection = ({
                       opacity: 0, // Start hidden, GSAP will animate
                       fontSize: fontSize,
                       fontWeight: fontWeight,
-                      marginBottom: extraMargin
                     }}
                   >
                     {text}
@@ -283,35 +182,6 @@ const AnimatedSection = ({
             </div>
           )}
         </div>
-
-        {/* Scroll Indicator - Only for Section 1 */}
-        {sectionNumber === 1 && showScrollIndicator && !hasScrolled && (
-          <div className="scroll-indicator-wrapper">
-          <div className="scroll-indicator-container">
-            <div ref={scrollIndicatorRef} className="scroll-text">
-              SCROLL
-            </div>
-            <svg
-              ref={arrowRef}
-              className="scroll-arrow"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 4L12 20M12 20L6 14M12 20L18 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          </div>
-        )}
-
       </div>
     </section>
   );

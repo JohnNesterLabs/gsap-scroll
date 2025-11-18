@@ -72,11 +72,11 @@ const WebPSequence = ({
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer) return;
 
-    const totalSections = 7; // Total sections in the app
+    const totalSections = 2; // Total sections in the app (removed sections 1-3, 4, footer, and last-frame image)
     const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
     
     // Calculate scroll position for the target section
-    // targetSection should be between 0 and 6 (totalSections - 1)
+    // targetSection should be between 0 and 1 (totalSections - 1)
     const targetScrollProgress = targetSection / (totalSections - 1);
     const targetScrollTop = targetScrollProgress * maxScroll;
     
@@ -140,6 +140,7 @@ const WebPSequence = ({
   useEffect(() => {
     const previousSection = previousSectionRef.current;
     const comingFromAbove = previousSection > activeSection && previousSection > startSection;
+    const comingFromBelow = previousSection < activeSection && previousSection >= startSection;
     
     // Case 1: First time reaching section (scrolling down/forward)
     if (activeSection >= startSection && !hasInitialized.current && !hasCompletedSequence) {
@@ -152,7 +153,7 @@ const WebPSequence = ({
       setCurrentFrame(1);
       preventScroll();
     } 
-    // Case 2: Scrolling back into section from above (after completion)
+    // Case 2: Scrolling back into section from above (after completion) - re-initialize backward
     else if (activeSection >= startSection && hasCompletedSequence && comingFromAbove) {
       console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from above (backward)');
       setIsVisible(true);
@@ -164,7 +165,31 @@ const WebPSequence = ({
       setCurrentFrame(totalFrames);
       preventScroll();
     }
-    // Case 3: Reset if user scrolls back before the section
+    // Case 3: Scrolling back into section from below (user scrolled past completion and came back)
+    else if (activeSection >= startSection && hasCompletedSequence && comingFromBelow) {
+      console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from below (backward)');
+      setIsVisible(true);
+      setIsAutoPlaying(true);
+      setPlayDirection('backward');
+      hasInitialized.current = true;
+      setHasCompletedSequence(false);
+      currentFrameRef.current = totalFrames;
+      setCurrentFrame(totalFrames);
+      preventScroll();
+    }
+    // Case 4: User is in the section but component was hidden - make it visible again
+    else if (activeSection >= startSection && !isVisible && hasCompletedSequence) {
+      console.log('🎬 RE-SHOWING - User scrolled back into section after completion');
+      setIsVisible(true);
+      setIsAutoPlaying(true);
+      setPlayDirection('backward');
+      hasInitialized.current = true;
+      setHasCompletedSequence(false);
+      currentFrameRef.current = totalFrames;
+      setCurrentFrame(totalFrames);
+      preventScroll();
+    }
+    // Case 5: Reset if user scrolls back before the section
     else if (activeSection < startSection) {
       console.log('🎬 RESETTING - User scrolled before start section');
       setIsVisible(false);
@@ -184,7 +209,7 @@ const WebPSequence = ({
     
     // Update previous section for next comparison
     previousSectionRef.current = activeSection;
-  }, [activeSection, startSection, hasCompletedSequence, totalFrames, preventScroll, restoreScroll]);
+  }, [activeSection, startSection, hasCompletedSequence, totalFrames, preventScroll, restoreScroll, isVisible]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -230,26 +255,18 @@ const WebPSequence = ({
           
           // Check if we've completed the sequence
           if (nextFrame > totalFrames) {
-            console.log('✅ SEQUENCE COMPLETE - Handing back scroll control');
+            console.log('✅ SEQUENCE COMPLETE - Keeping last frame visible');
             nextFrame = totalFrames;
             setIsAutoPlaying(false);
             setIsPaused(false);
             setHasCompletedSequence(true);
-            // Don't hide yet - keep last frame visible during scroll transition
+            // Keep the last frame visible - don't hide to prevent black screen
             currentFrameRef.current = nextFrame;
             setCurrentFrame(nextFrame);
             restoreScroll();
             
-            // Scroll user forward to the last-frame-section (around section 5)
-            setTimeout(() => {
-              scrollToSection(5);
-            }, 100);
-            
-            // Hide the WebPSequence after scroll animation completes (smooth scroll takes ~500-800ms)
-            setTimeout(() => {
-              setIsVisible(false);
-              console.log('🎬 WebPSequence hidden after transition');
-            }, 900);
+            // Allow user to scroll forward naturally - don't force scroll
+            // The component will stay visible at the last frame
             
             return;
           }
@@ -270,7 +287,7 @@ const WebPSequence = ({
           
           // Check if we've reached the start
           if (nextFrame < 1) {
-            console.log('⏮️ REACHED START - Resetting and restoring scroll control');
+            console.log('⏮️ REACHED START - Keeping visible and restoring scroll control');
             nextFrame = 1;
             setIsAutoPlaying(false);
             setIsPaused(false);
@@ -280,13 +297,8 @@ const WebPSequence = ({
             setCurrentFrame(nextFrame);
             restoreScroll();
             
-            // Hide the WebPSequence FIRST before scrolling
-            setIsVisible(false);
-            
-            // Use requestAnimationFrame to ensure scroll lock is fully removed before scrolling
-            requestAnimationFrame(() => {
-              scrollToSection(3.8, true); // true = instant scroll
-            });
+            // Keep the WebPSequence visible at frame 1 - don't hide it
+            // This prevents black screen when user scrolls back
             
             return;
           }
@@ -393,8 +405,35 @@ const WebPSequence = ({
       }
     }
     
+    // Handle scrolling when sequence is completed (not auto-playing)
+    if (!isAutoPlaying && !isPaused && hasCompletedSequence) {
+      // Accumulate scroll to detect user intent
+      scrollAccumulator.current += scrollDelta;
+      
+      if (scrollDelta < 0) {
+        // Scrolling up - user wants to go back
+        console.log('📊 COMPLETED SCROLL UP:', scrollAccumulator.current, 'threshold:', -scrollThreshold);
+        
+        if (scrollAccumulator.current <= -scrollThreshold) {
+          // User wants to scroll back - start backward play from last frame
+          console.log('▶️ RESUMING from completion - going backward from frame', currentFrameRef.current);
+          setIsAutoPlaying(true);
+          setIsPaused(false);
+          setPlayDirection('backward');
+          setHasCompletedSequence(false);
+          scrollAccumulator.current = 0;
+          // Start from current frame (should be totalFrames) and go backward
+          preventScroll();
+        }
+      } else if (scrollDelta > 0) {
+        // Scrolling down - user wants to continue forward (but we're at the end)
+        // Reset accumulator if scrolling forward at completion
+        scrollAccumulator.current = 0;
+      }
+    }
+    
     lastScrollTime.current = now;
-  }, [isVisible, isAutoPlaying, isPaused, playDirection, scrollThreshold, currentFrame]);
+  }, [isVisible, isAutoPlaying, isPaused, playDirection, scrollThreshold, currentFrame, hasCompletedSequence, preventScroll]);
 
   // Attach scroll listeners
   useEffect(() => {

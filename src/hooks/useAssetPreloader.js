@@ -17,7 +17,6 @@ const isMobileDevice = () => {
 const getAssetsToPreload = () => {
     const isMobile = isMobileDevice();
     const baseAssets = [
-        '/hero4.mp4',
         '/demo1.mp4',
         '/Ticket1.mp4',
         '/Ticket1_web.mp4',
@@ -143,8 +142,8 @@ export const useAssetPreloader = () => {
             console.log(`📊 Total assets to load: ${totalAssets}`);
 
             // Separate critical assets from frame sequences
-            const criticalAssets = assetsToPreload.slice(0, 8); // First 8 are critical (videos + logos)
-            const frameAssets = assetsToPreload.slice(8); // Rest are frame sequences
+            const criticalAssets = assetsToPreload.slice(0, 7); // First 7 are critical (videos + logos)
+            const frameAssets = assetsToPreload.slice(7); // Rest are frame sequences
 
             // Load critical assets first
             console.log('📦 Loading critical assets...');

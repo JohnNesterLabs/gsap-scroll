@@ -13,7 +13,6 @@ import {
   TEXT_ALIGN_CONFIGS,
   FONT_SIZE_CONFIGS,
   FONT_WEIGHT_CONFIGS,
-  SECTION1_TEXT_CONFIGS,
 } from './constants';
 
 /**
@@ -117,13 +116,4 @@ export const getFontSizeConfig = () => {
 export const getFontWeightConfig = () => {
   const viewport = getViewportType();
   return FONT_WEIGHT_CONFIGS[viewport] || FONT_WEIGHT_CONFIGS[VIEWPORT_TYPES.DESKTOP];
-};
-
-/**
- * Get section 1 text configuration for current viewport
- * @returns {object} Section 1 text configuration
- */
-export const getSection1TextConfig = () => {
-  const viewport = getViewportType();
-  return SECTION1_TEXT_CONFIGS[viewport] || SECTION1_TEXT_CONFIGS[VIEWPORT_TYPES.DESKTOP];
 };
