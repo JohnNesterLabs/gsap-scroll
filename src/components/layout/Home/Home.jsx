@@ -495,7 +495,7 @@ export default function Home() {
         />
 
         {/* Last Frame Display - Desktop PNG and Mobile WebP */}
-        {isMobileDevice() ? (
+        {/* {isMobileDevice() ? (
           <div className="home-section last-frame-section">
             <img
               src="/frames-mobile-30fps/mobile_frame_0536.webp"
@@ -511,7 +511,7 @@ export default function Home() {
               className="last-frame-image"
             />
           </div>
-        )}
+        )} */}
 
         {/* Footer Section */}
         <Footer />

@@ -273,6 +273,14 @@
             return Math.min(sectionIndex, 3); // Max 3 sections (0, 1, 2, 3)
         }
 
+        // Check if section 3 is fully visible (takes full viewport)
+        function isSection3FullyVisible() {
+            const scrollTop = scrollContainer.scrollTop;
+            const sectionHeight = window.innerHeight;
+            // Section 3 starts at 2 * sectionHeight, so it's fully visible when scrollTop >= 2 * sectionHeight
+            return scrollTop >= 2 * sectionHeight;
+        }
+
         function updateActiveSection() {
             const newSection = getActiveSection();
             if (newSection !== state.activeSection) {
@@ -312,15 +320,14 @@
             const lockedScrollTop = scrollContainer.scrollTop;
 
             refs.preventScrollHandler = (e) => {
-                if (state.isPaused) {
-                    const currentScroll = scrollContainer.scrollTop;
-                    const scrollDiff = Math.abs(currentScroll - lockedScrollTop);
-                    if (scrollDiff > 50) {
-                        scrollContainer.scrollTop = lockedScrollTop;
-                    }
-                    return;
+                const currentScroll = scrollContainer.scrollTop;
+                const scrollDiff = Math.abs(currentScroll - lockedScrollTop);
+                
+                // Allow small scroll movement (100px) to detect scroll direction changes
+                // This enables wheel events to be processed for direction reversal
+                if (scrollDiff > 100) {
+                    scrollContainer.scrollTop = lockedScrollTop;
                 }
-                scrollContainer.scrollTop = lockedScrollTop;
             };
 
             scrollContainer.addEventListener('scroll', refs.preventScrollHandler, { passive: false });
@@ -339,10 +346,12 @@
         function handleSectionChange() {
             const previousSection = state.previousSection;
             const comingFromAbove = previousSection > state.activeSection && previousSection > CONFIG.startSection;
+            const section3FullyVisible = isSection3FullyVisible();
 
             // Case 1: First time reaching section (scrolling down/forward)
-            if (state.activeSection >= CONFIG.startSection && !refs.hasInitialized && !state.hasCompletedSequence) {
-                console.log('🎬 INITIALIZING AUTO-PLAY - Section became active (forward)');
+            // Only start when section 3 is FULLY visible (takes full viewport)
+            if (state.activeSection >= CONFIG.startSection && section3FullyVisible && !refs.hasInitialized && !state.hasCompletedSequence) {
+                console.log('🎬 INITIALIZING AUTO-PLAY - Section 3 is fully visible (forward)');
                 state.isVisible = true;
                 state.isAutoPlaying = true;
                 state.playDirection = 'forward';
@@ -354,35 +363,61 @@
                 preventScroll();
             }
             // Case 2: Scrolling back into section from above (after completion)
-            else if (state.activeSection >= CONFIG.startSection && state.hasCompletedSequence && comingFromAbove) {
-                console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from above (backward)');
-                state.isVisible = true;
-                state.isAutoPlaying = true;
-                state.playDirection = 'backward';
-                refs.hasInitialized = true;
-                state.hasCompletedSequence = false;
-                refs.currentFrameRef = CONFIG.totalFrames;
-                state.currentFrame = CONFIG.totalFrames;
-                webpSequenceContainer.classList.add('visible');
-                frameImage.src = getFrameImageSrc(CONFIG.totalFrames);
-                preventScroll();
+            // Only start when section 3 is FULLY visible - DO NOT start during transition
+            // Make sure we're definitely in section 3 (not transitioning) and coming from section 4
+            else if (state.activeSection === CONFIG.startSection && section3FullyVisible && state.hasCompletedSequence && comingFromAbove && previousSection === 3) {
+                // Additional check: ensure scrollTop is at or very close to section 3's start position
+                // This prevents animation from starting during the half-half transition
+                const scrollTop = scrollContainer.scrollTop;
+                const sectionHeight = window.innerHeight;
+                const section3Start = 2 * sectionHeight;
+                // Only start if we're at the start of section 3 (within 50px tolerance to account for smooth scrolling)
+                // This ensures section 3 takes the full viewport, not half-half with section 4
+                if (scrollTop >= section3Start && scrollTop <= section3Start + 50) {
+                    console.log('🎬 RE-INITIALIZING AUTO-PLAY - Scrolling back from section 4, Section 3 fully visible');
+                    state.isVisible = true;
+                    state.isAutoPlaying = true;
+                    state.playDirection = 'backward';
+                    refs.hasInitialized = true;
+                    state.hasCompletedSequence = false;
+                    refs.currentFrameRef = CONFIG.totalFrames;
+                    state.currentFrame = CONFIG.totalFrames;
+                    webpSequenceContainer.classList.add('visible');
+                    frameImage.src = getFrameImageSrc(CONFIG.totalFrames);
+                    preventScroll();
+                }
             }
-            // Case 3: Reset if user scrolls back before the section
-            else if (state.activeSection < CONFIG.startSection) {
-                console.log('🎬 RESETTING - User scrolled before start section');
-                state.isVisible = false;
-                state.isAutoPlaying = false;
-                state.isPaused = false;
-                state.hasCompletedSequence = false;
-                refs.hasInitialized = false;
-                refs.currentFrameRef = 1;
-                state.currentFrame = 1;
-                refs.scrollAccumulator = 0;
-                webpSequenceContainer.classList.remove('visible');
-                restoreScroll();
-                if (refs.autoPlayFrameId) {
-                    cancelAnimationFrame(refs.autoPlayFrameId);
-                    refs.autoPlayFrameId = null;
+            // Case 3: Reset if user scrolls back before the section or section 3 is not fully visible
+            else if (state.activeSection < CONFIG.startSection || (state.activeSection >= CONFIG.startSection && !section3FullyVisible)) {
+                // If we're in section 3 but not fully visible, make sure animation doesn't start
+                if (state.activeSection >= CONFIG.startSection && !section3FullyVisible && refs.hasInitialized) {
+                    // Don't reset, just ensure animation is not playing during transition
+                    if (state.isAutoPlaying) {
+                        console.log('⏸️ PAUSING - Section 3 not fully visible during transition');
+                        state.isAutoPlaying = false;
+                        if (refs.autoPlayFrameId) {
+                            cancelAnimationFrame(refs.autoPlayFrameId);
+                            refs.autoPlayFrameId = null;
+                        }
+                    }
+                }
+                // Only reset if we're not in section 3 at all
+                else if (refs.hasInitialized && state.activeSection < CONFIG.startSection) {
+                    console.log('🎬 RESETTING - User scrolled before start section');
+                    state.isVisible = false;
+                    state.isAutoPlaying = false;
+                    state.isPaused = false;
+                    state.hasCompletedSequence = false;
+                    refs.hasInitialized = false;
+                    refs.currentFrameRef = 1;
+                    state.currentFrame = 1;
+                    refs.scrollAccumulator = 0;
+                    webpSequenceContainer.classList.remove('visible');
+                    restoreScroll();
+                    if (refs.autoPlayFrameId) {
+                        cancelAnimationFrame(refs.autoPlayFrameId);
+                        refs.autoPlayFrameId = null;
+                    }
                 }
             }
 
@@ -580,10 +615,11 @@
             }
 
             // Direction change during auto-play
-            if (state.isAutoPlaying) {
+            if (state.isAutoPlaying && !state.isPaused) {
                 if (scrollDelta < 0 && state.playDirection === 'forward') {
                     console.log('⏪ REVERSING - User scrolled up during forward play');
                     state.playDirection = 'backward';
+                    refs.scrollAccumulator = 0; // Reset accumulator on direction change
                     // Restart animation with new direction
                     if (refs.autoPlayFrameId) {
                         cancelAnimationFrame(refs.autoPlayFrameId);
@@ -594,6 +630,7 @@
                 } else if (scrollDelta > 0 && state.playDirection === 'backward') {
                     console.log('⏩ FORWARD - User scrolled down during backward play');
                     state.playDirection = 'forward';
+                    refs.scrollAccumulator = 0; // Reset accumulator on direction change
                     // Restart animation with new direction
                     if (refs.autoPlayFrameId) {
                         cancelAnimationFrame(refs.autoPlayFrameId);
@@ -609,7 +646,30 @@
 
         // Event Listeners
         scrollContainer.addEventListener('scroll', () => {
+            const previousActiveSection = state.activeSection;
             updateActiveSection();
+            const section3FullyVisible = isSection3FullyVisible();
+            // Check if we're coming from section 4 (index 3) - scrolling back
+            const comingFromSection4 = state.previousSection === 3 && state.activeSection === CONFIG.startSection;
+            
+            // Continuously check if section 3 becomes fully visible during scroll
+            // This ensures animation starts exactly when section 3 takes full viewport
+            // Forward case: first time reaching section 3
+            if (state.activeSection === CONFIG.startSection && section3FullyVisible && !refs.hasInitialized && !state.hasCompletedSequence) {
+                handleSectionChange();
+            }
+            // Backward case: scrolling back from section 4 to section 3
+            // Only start animation when section 3 is FULLY visible, not during transition
+            else if (state.activeSection === CONFIG.startSection && section3FullyVisible && state.hasCompletedSequence && comingFromSection4 && !state.isAutoPlaying) {
+                // Additional check: ensure we're at the start of section 3, not in transition
+                const scrollTop = scrollContainer.scrollTop;
+                const sectionHeight = window.innerHeight;
+                const section3Start = 2 * sectionHeight;
+                // Only trigger if we're at the start of section 3 (within 50px tolerance)
+                if (scrollTop >= section3Start && scrollTop <= section3Start + 50) {
+                    handleSectionChange();
+                }
+            }
         });
 
         // Wheel and touch events for frame control
