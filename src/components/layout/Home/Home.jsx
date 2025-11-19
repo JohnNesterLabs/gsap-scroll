@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import AnimatedSection from "../../shared/AnimatedSection/AnimatedSection";
 import "./Home.css";
-import InfiniteWordLoop from "../../features/animations/InfiniteWordLoop/InfiniteWordLoop";
 import WebPSequence from "../../features/animations/WebPSequence/WebPSequence";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
@@ -458,18 +457,6 @@ export default function Home() {
             "and fractional knowledge",
             "cripple frontline actions.",
           ]}
-        />
-        <AnimatedSection
-          sectionNumber={3}
-          textPosition={getTextPositionConfig()[2]}
-          textAlign={getTextAlignConfig()[2]}
-          fontSize={getFontSizeConfig()[2]}
-          fontWeight={getFontWeightConfig()[2]}
-          firstSet={["Meet Kahuna AI"]}
-        />
-        <InfiniteWordLoop
-          sectionNumber={4}
-          words={["Secure", "Private", "Enterprise Grade", "Comprehensive"]}
         />
 
         {/* Responsive Animation - WebP Sequence for both Desktop and Mobile */}

@@ -164,7 +164,12 @@ const WebPSequence = ({
       setCurrentFrame(totalFrames);
       preventScroll();
     }
-    // Case 3: Reset if user scrolls back before the section
+    // Case 3: Hide if user scrolls forward past the section (after completion)
+    else if (activeSection > startSection && hasCompletedSequence) {
+      console.log('🎬 HIDING - User scrolled past section after completion');
+      setIsVisible(false);
+    }
+    // Case 4: Reset if user scrolls back before the section
     else if (activeSection < startSection) {
       console.log('🎬 RESETTING - User scrolled before start section');
       setIsVisible(false);
@@ -235,21 +240,13 @@ const WebPSequence = ({
             setIsAutoPlaying(false);
             setIsPaused(false);
             setHasCompletedSequence(true);
-            // Don't hide yet - keep last frame visible during scroll transition
+            // Keep last frame visible - user will manually scroll to footer
             currentFrameRef.current = nextFrame;
             setCurrentFrame(nextFrame);
             restoreScroll();
             
-            // Scroll user forward to the last-frame-section (around section 5)
-            setTimeout(() => {
-              scrollToSection(5);
-            }, 100);
-            
-            // Hide the WebPSequence after scroll animation completes (smooth scroll takes ~500-800ms)
-            setTimeout(() => {
-              setIsVisible(false);
-              console.log('🎬 WebPSequence hidden after transition');
-            }, 900);
+            // Don't auto-scroll - let user manually scroll to footer
+            // The frame sequence will remain visible until user scrolls away
             
             return;
           }

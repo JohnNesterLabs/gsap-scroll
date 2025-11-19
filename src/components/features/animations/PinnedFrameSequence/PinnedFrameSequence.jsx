@@ -4,7 +4,6 @@ import './PinnedFrameSequence.css';
 /**
  * PinnedFrameSequence Component
  * 
- * A pinned section that auto-plays frame sequences when user reaches section 4.
  * Uses the same frames for both mobile and desktop.
  * 
  * Features:
@@ -23,7 +22,7 @@ const CONFIG = {
   // Scroll threshold to resume from pause (in pixels)
   scrollThreshold: 100,
   
-  // Section where animation starts (0-indexed, so 3 = section 4)
+  // Section where animation starts (0-indexed)
   startSection: 3,
   
   // Total number of frames in sequence
@@ -193,106 +192,6 @@ const PinnedFrameSequence = ({
     };
   }, [restoreScroll]);
 
-  // Auto-play animation loop
-  useEffect(() => {
-    if (!isAutoPlaying || !isVisible) {
-      return;
-    }
-
-    let lastFrameTime = Date.now();
-
-    const animate = () => {
-      const now = Date.now();
-      const elapsed = now - lastFrameTime;
-
-      if (elapsed >= frameInterval) {
-        lastFrameTime = now - (elapsed % frameInterval);
-
-        let nextFrame = currentFrameRef.current;
-
-        if (playDirection === 'forward') {
-          nextFrame += 1;
-          
-          // Check if we've reached a pause frame
-          if (isPauseFrame(nextFrame)) {
-            setIsPaused(true);
-            setIsAutoPlaying(false);
-            scrollAccumulator.current = 0;
-            currentFrameRef.current = nextFrame;
-            setCurrentFrame(nextFrame);
-            return;
-          }
-          
-          // Check if we've completed the sequence
-          if (nextFrame > CONFIG.totalFrames) {
-            nextFrame = CONFIG.totalFrames;
-            setIsAutoPlaying(false);
-            setIsPaused(false);
-            setHasCompletedSequence(true);
-            currentFrameRef.current = nextFrame;
-            setCurrentFrame(nextFrame);
-            restoreScroll();
-            
-            setTimeout(() => {
-              scrollToSection(5);
-            }, 100);
-            
-            setTimeout(() => {
-              setIsVisible(false);
-            }, 900);
-            
-            return;
-          }
-        } else {
-          // Backward
-          nextFrame -= 1;
-          
-          // Check if we've reached a pause frame
-          if (isPauseFrame(nextFrame)) {
-            setIsPaused(true);
-            setIsAutoPlaying(false);
-            scrollAccumulator.current = 0;
-            currentFrameRef.current = nextFrame;
-            setCurrentFrame(nextFrame);
-            return;
-          }
-          
-          // Check if we've reached the start
-          if (nextFrame < 1) {
-            nextFrame = 1;
-            setIsAutoPlaying(false);
-            setIsPaused(false);
-            setHasCompletedSequence(false);
-            hasInitialized.current = false;
-            currentFrameRef.current = nextFrame;
-            setCurrentFrame(nextFrame);
-            restoreScroll();
-            setIsVisible(false);
-            
-            requestAnimationFrame(() => {
-              scrollToSection(3.8, true);
-            });
-            
-            return;
-          }
-        }
-
-        currentFrameRef.current = nextFrame;
-        setCurrentFrame(nextFrame);
-      }
-
-      autoPlayFrameId.current = requestAnimationFrame(animate);
-    };
-
-    autoPlayFrameId.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (autoPlayFrameId.current) {
-        cancelAnimationFrame(autoPlayFrameId.current);
-        autoPlayFrameId.current = null;
-      }
-    };
-  }, [isAutoPlaying, playDirection, isVisible, frameInterval, isPauseFrame, restoreScroll, scrollToSection]);
 
   // Handle scroll events for direction control
   const handleWheel = useCallback((e) => {
