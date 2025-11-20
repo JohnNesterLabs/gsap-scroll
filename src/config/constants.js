@@ -1,6 +1,6 @@
 // Configuration constants
 export const CONFIG = {
-  startSection: 2, // Frame animation starts at section 3 (0-indexed: section 3 = index 2)
+  startSection: 1, // Frame animation starts at section 2 (0-indexed: section 2 = index 1)
   totalFramesDesktop: 258, // Total number of frames for desktop
   totalFramesMobile: 224, // Total number of frames for mobile
   framePrefix: 'frame_',

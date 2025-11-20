@@ -15,15 +15,11 @@
 }
 
 .section-2 {
-  background: #000000;
+  background: transparent;
+  /* Frame sequence will overlay this - animation starts when this section becomes fully visible */
 }
 
 .section-3 {
-  background: #000000;
-  /* Frame sequence will overlay this */
-}
-
-.section-4 {
   background: #000000;
   border: 2px solid #ffffff;
   box-sizing: border-box;
