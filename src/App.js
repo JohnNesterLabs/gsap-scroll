@@ -101,6 +101,18 @@ function App() {
     return scrollTop >= 1 * sectionHeight;
   }, []);
 
+  // Check if section 2 should trigger animation (configurable trigger point)
+  const isSection2Triggered = useCallback(() => {
+    if (!scrollContainerRef.current) return false;
+    const scrollTop = scrollContainerRef.current.scrollTop;
+    const sectionHeight = window.innerHeight;
+    // Section 2 normally starts at 1 * sectionHeight
+    // animationTriggerOffset allows starting before/after section 2 begins
+    // Example: offset -0.2 means trigger at 0.8 * sectionHeight (20% before section 2)
+    const triggerPoint = (1 + CONFIG.animationTriggerOffset) * sectionHeight;
+    return scrollTop >= triggerPoint;
+  }, []);
+
   // Scroll Control
   const scrollToSection = useCallback((targetSection, instant = false) => {
     if (!scrollContainerRef.current) return;
@@ -273,17 +285,19 @@ function App() {
             if (frameImageRef.current) {
               frameImageRef.current.src = getFrameImageSrcForDevice(nextFrame);
             }
-            restoreScroll();
-
+            
             // Hide the WebPSequence FIRST before scrolling
             if (webpSequenceContainerRef.current) {
               webpSequenceContainerRef.current.classList.remove('visible');
             }
 
-            // Use requestAnimationFrame to ensure scroll lock is fully removed before scrolling
-            requestAnimationFrame(() => {
-              scrollToSection(0.8, true); // Scroll back to section 1 area - true = instant scroll
-            });
+            // Restore scroll control
+            restoreScroll();
+
+            // Wait a bit to ensure scroll lock is fully removed, then scroll to section 1 completely
+            setTimeout(() => {
+              scrollToSection(0, true); // Scroll to section 1 (index 0) completely - true = instant scroll
+            }, 100);
 
             autoPlayFrameIdRef.current = null;
             return;
@@ -421,12 +435,13 @@ function App() {
     const previousSection = state.previousSection;
     const comingFromAbove = previousSection > state.activeSection && previousSection > CONFIG.startSection;
     const section2FullyVisible = isSection2FullyVisible();
+    const section2Triggered = isSection2Triggered();
     const totalFrames = getTotalFramesForDevice();
 
     // Case 1: First time reaching section (scrolling down/forward)
-    // Only start when section 2 (frame animation) is FULLY visible (takes full viewport)
-    if (state.activeSection >= CONFIG.startSection && section2FullyVisible && !hasInitializedRef.current && !state.hasCompletedSequence) {
-      console.log('🎬 INITIALIZING AUTO-PLAY - Section 2 is fully visible (forward)');
+    // Start when section 2 reaches the configurable trigger point
+    if (state.activeSection >= CONFIG.startSection && section2Triggered && !hasInitializedRef.current && !state.hasCompletedSequence) {
+      console.log('🎬 INITIALIZING AUTO-PLAY - Section 2 trigger point reached (forward)');
       setState(prev => ({
         ...prev,
         isVisible: true,
@@ -476,10 +491,10 @@ function App() {
         preventScroll();
       }
     }
-    // Case 3: Reset if user scrolls back before the section or section 2 is not fully visible
-    else if (state.activeSection < CONFIG.startSection || (state.activeSection >= CONFIG.startSection && !section2FullyVisible)) {
-      // If we're in section 2 but not fully visible, make sure animation doesn't start
-      if (state.activeSection >= CONFIG.startSection && !section2FullyVisible && hasInitializedRef.current) {
+    // Case 3: Reset if user scrolls back before the section or section 2 trigger point
+    else if (state.activeSection < CONFIG.startSection || (state.activeSection >= CONFIG.startSection && !section2Triggered)) {
+      // If we're in section 2 but not at trigger point, make sure animation doesn't start
+      if (state.activeSection >= CONFIG.startSection && !section2Triggered && hasInitializedRef.current) {
         // Don't reset, just ensure animation is not playing during transition
         // Keep scroll locked - don't restore it (matches HTML behavior)
         if (state.isAutoPlaying) {
@@ -518,9 +533,13 @@ function App() {
           cancelAnimationFrame(autoPlayFrameIdRef.current);
           autoPlayFrameIdRef.current = null;
         }
+        // Ensure we're scrolled to section 1 completely
+        setTimeout(() => {
+          scrollToSection(0, true);
+        }, 100);
       }
     }
-  }, [state.activeSection, state.previousSection, state.hasCompletedSequence, state.isAutoPlaying, isSection2FullyVisible, getTotalFramesForDevice, getFrameImageSrcForDevice, preventScroll, restoreScroll]);
+  }, [state.activeSection, state.previousSection, state.hasCompletedSequence, state.isAutoPlaying, isSection2FullyVisible, isSection2Triggered, getTotalFramesForDevice, getFrameImageSrcForDevice, preventScroll, restoreScroll]);
 
   // Update active section
   const updateActiveSection = useCallback(() => {
@@ -595,14 +614,15 @@ function App() {
 
     const handleScroll = () => {
       updateActiveSection();
+      const section2Triggered = isSection2Triggered();
       const section2FullyVisible = isSection2FullyVisible();
       // Check if we're coming from section 3 (index 2) - scrolling back
       const comingFromSection3 = state.previousSection === 2 && state.activeSection === CONFIG.startSection;
       
-      // Continuously check if section 2 becomes fully visible during scroll
-      // This ensures animation starts exactly when section 2 takes full viewport
-      // Forward case: first time reaching section 2
-      if (state.activeSection === CONFIG.startSection && section2FullyVisible && !hasInitializedRef.current && !state.hasCompletedSequence) {
+      // Continuously check if section 2 reaches trigger point during scroll
+      // This ensures animation starts at the configurable trigger point
+      // Forward case: first time reaching section 2 trigger point
+      if (state.activeSection >= CONFIG.startSection && section2Triggered && !hasInitializedRef.current && !state.hasCompletedSequence) {
         handleSectionChange();
       }
       // Backward case: scrolling back from section 3 to section 2
@@ -655,7 +675,16 @@ function App() {
     <div className="App">
       <ScrollContainer scrollContainerRef={scrollContainerRef}>
         <Section className="section-1">
-          <div>Section 1</div>
+          <video
+            className="section-1-video"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source src="/hero4.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </Section>
         <Section 
           className="section-2" 

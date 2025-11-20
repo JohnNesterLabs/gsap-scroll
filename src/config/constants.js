@@ -10,6 +10,12 @@ export const CONFIG = {
   framesPerSecond: 20,
   scrollThreshold: 100,
   pauseFramesDesktop: [65, 136, 197, 258], // Frames where animation pauses (desktop)
-  pauseFramesMobile: [37, 102, 162, 224] // Frames where animation pauses (mobile)
+  pauseFramesMobile: [37, 102, 162, 224], // Frames where animation pauses (mobile)
+  // Animation trigger offset (in viewport height units)
+  // Positive values = start after section 2 begins (e.g., 0.2 = start when 20% of section 2 is visible)
+  // Zero = start exactly when section 2 begins (at 1 * sectionHeight)
+  // Negative values = start before section 2 begins (e.g., -0.2 = start 20% before section 2 would normally start)
+  // Example: -0.3 means animation starts when scrollTop >= 0.7 * sectionHeight (30% before section 2)
+  animationTriggerOffset:-1 // Start animation 20% before section 2 touches the viewport
 };
 
