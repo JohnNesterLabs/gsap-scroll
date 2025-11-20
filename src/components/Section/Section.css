@@ -16,6 +16,9 @@
 
 .section-2 {
   background: transparent;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   /* Frame sequence will overlay this - animation starts when this section becomes fully visible */
 }
 
