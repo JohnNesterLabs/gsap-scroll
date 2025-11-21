@@ -7,7 +7,7 @@ export const CONFIG = {
   frameSuffix: '.webp',
   folderPathDesktop: '/final-frames-desktop-webp/',
   folderPathMobile: '/frames-full-mobile/',
-  framesPerSecond: 20,
+  framesPerSecond: 15,
   scrollThreshold: 100,
   pauseFramesDesktop: [65, 102, 127, 157], // Frames where animation pauses (desktop)
   pauseFramesMobile: [37, 102, 162, 224], // Frames where animation pauses (mobile)

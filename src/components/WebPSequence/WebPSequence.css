@@ -20,7 +20,7 @@
   -webkit-backface-visibility: hidden;
   contain: layout style paint;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: none;
 }
 
 .webp-sequence-container.visible {

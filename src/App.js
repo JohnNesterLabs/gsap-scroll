@@ -227,8 +227,7 @@ function App() {
             }
             restoreScroll();
 
-            // Start fading out the WebPSequence immediately
-            // This ensures smooth transition to footer
+            // Hide WebPSequence instantly (no fade-out)
             setState(prev => ({
               ...prev,
               isVisible: false
@@ -237,11 +236,8 @@ function App() {
               webpSequenceContainerRef.current.classList.remove('visible');
             }
 
-            // Scroll user forward to section 3 (footer) after a brief delay
-            // This allows the fade-out to start before scrolling
-            setTimeout(() => {
-              scrollToSection(2); // Section 3 (footer) is at index 2
-            }, 50);
+            // Scroll user forward to section 3 (footer) instantly to avoid showing any background
+            scrollToSection(2, true); // Section 3 (footer) is at index 2, true = instant scroll
 
             autoPlayFrameIdRef.current = null;
             return;
@@ -689,14 +685,20 @@ function App() {
         <Section 
           className="section-2" 
           id="frameSection"
-          style={{
-            backgroundImage: 'url(/final-frames-desktop-webp/frame_0001.webp)'
-          }}
         >
           {/* Section 2 - Frame Animation */}
         </Section>
         <Section className="section-3">
-          <div>Section 3 - Footer</div>
+          <div>
+            <a 
+              href="about:blank" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: 'white', textDecoration: 'none' }}
+            >
+              Section 3 - Footer
+            </a>
+          </div>
         </Section>
       </ScrollContainer>
 
