@@ -690,7 +690,7 @@ function App() {
           className="section-2" 
           id="frameSection"
           style={{
-            backgroundImage: 'url(/frames-desktop-webp/frame_0001.webp)'
+            backgroundImage: 'url(/final-frames-desktop-webp/frame_0001.webp)'
           }}
         >
           {/* Section 2 - Frame Animation */}

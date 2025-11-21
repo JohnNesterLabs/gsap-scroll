@@ -1,15 +1,15 @@
 // Configuration constants
 export const CONFIG = {
   startSection: 1, // Frame animation starts at section 2 (0-indexed: section 2 = index 1)
-  totalFramesDesktop: 258, // Total number of frames for desktop
+  totalFramesDesktop: 189, // Total number of frames for desktop
   totalFramesMobile: 224, // Total number of frames for mobile
   framePrefix: 'frame_',
   frameSuffix: '.webp',
-  folderPathDesktop: '/frames-desktop-webp/',
+  folderPathDesktop: '/final-frames-desktop-webp/',
   folderPathMobile: '/frames-full-mobile/',
   framesPerSecond: 20,
   scrollThreshold: 100,
-  pauseFramesDesktop: [65, 136, 197, 258], // Frames where animation pauses (desktop)
+  pauseFramesDesktop: [65, 102, 127, 157], // Frames where animation pauses (desktop)
   pauseFramesMobile: [37, 102, 162, 224], // Frames where animation pauses (mobile)
   // Animation trigger offset (in viewport height units)
   // Positive values = start after section 2 begins (e.g., 0.2 = start when 20% of section 2 is visible)
