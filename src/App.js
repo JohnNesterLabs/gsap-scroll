@@ -681,6 +681,10 @@ function App() {
             <source src="/hero4.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
+          <div className="section-1-text">
+            <div className="section-1-line1">Future of Technical Product Support</div>
+            <div className="section-1-line2">A Productivity Leap for Your Frontline</div>
+          </div>
         </Section>
         <Section 
           className="section-2" 
@@ -708,6 +712,7 @@ function App() {
         isVisible={state.isVisible}
         shouldShowIcon={shouldShowIcon()}
         onIconClick={handleIconClick}
+        currentFrame={state.currentFrame}
       />
 
       <VideoModal

@@ -7,8 +7,12 @@ const WebPSequence = ({
   frameImageRef, 
   isVisible, 
   shouldShowIcon, 
-  onIconClick 
+  onIconClick,
+  currentFrame 
 }) => {
+  // Show text from frame 4 to 65
+  const showText = currentFrame >= 4 && currentFrame <= 65;
+
   return (
     <div 
       className={`webp-sequence-container ${isVisible ? 'visible' : ''}`} 
@@ -20,6 +24,13 @@ const WebPSequence = ({
         className="webp-sequence-frame" 
         alt="Frame" 
       />
+      
+      {/* Text overlay from frame 4 to 65 */}
+      {showText && isVisible && (
+        <div className="frame-text-overlay">
+          AI that automatically builds and nurtures your Troubleshooting Map
+        </div>
+      )}
       
       {/* Clickable Icon at Pause Frames */}
       {shouldShowIcon && <VideoIcon onClick={onIconClick} />}
