@@ -1,0 +1,31 @@
+/* Video Icon at Pause Frames */
+.video-icon-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+  border: 3px solid white;
+}
+
+.video-icon-container:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translate(-50%, -50%) scale(1.1);
+  border-color: #ffd700;
+}
+
+.video-play-icon {
+  width: 40px;
+  height: 40px;
+  margin-left: 5px; /* Slight offset for play button visual balance */
+}
