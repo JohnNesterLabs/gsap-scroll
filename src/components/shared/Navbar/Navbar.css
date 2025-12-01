@@ -1,0 +1,41 @@
+/* ========================================
+   Navbar Component Styles
+======================================== */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--page-width);
+  height: var(--nav-height);
+  z-index: 1000;
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+}
+
+.navbar__container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 var(--space-14);
+}
+
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 31px;
+  cursor: pointer;
+}
+
+.navbar__logo-icon {
+  width: 28px;
+  height: 31px;
+}
+
+.navbar__logo-text {
+  height: 15px;
+}
+

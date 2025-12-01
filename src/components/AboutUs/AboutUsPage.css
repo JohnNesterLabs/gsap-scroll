@@ -1,0 +1,19 @@
+/* ========================================
+   About Us Page Styles
+======================================== */
+
+.about-us-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  overflow-x: hidden;
+}
+
+.about-us-page__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+

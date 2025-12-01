@@ -1,0 +1,91 @@
+/* ========================================
+   Button Component Styles
+======================================== */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Size Variants */
+.button--medium {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+}
+
+.button--small {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+}
+
+.button--ghost {
+  height: 24px;
+  padding: 0;
+  background: transparent;
+}
+
+/* Color Variants */
+.button--primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(12px);
+}
+
+.button--primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.button--secondary {
+  background-color: var(--color-text-primary);
+  color: var(--color-text-dark);
+  backdrop-filter: blur(12px);
+}
+
+.button--secondary:hover {
+  background-color: #e5e5e5;
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+  backdrop-filter: blur(12px);
+}
+
+.button--ghost:hover {
+  opacity: 0.8;
+}
+
+/* Button Text */
+.button__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Button Icon */
+.button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button__icon--left {
+  margin-right: 4px;
+}
+
+.button__icon--right {
+  margin-left: 4px;
+}
+

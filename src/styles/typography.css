@@ -1,0 +1,133 @@
+/* ========================================
+   Typography Styles
+   Based on Prodigy Sans from Figma
+======================================== */
+
+/* Font Face Declarations */
+/* Note: Replace with actual font files when available */
+@font-face {
+  font-family: 'Prodigy Sans';
+  src: local('Prodigy Sans Regular'), local('ProdigySans-Regular');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Prodigy Sans';
+  src: local('Prodigy Sans Medium'), local('ProdigySans-Medium');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Prodigy Sans';
+  src: local('Prodigy Sans Italic'), local('ProdigySans-Italic');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Fallback to DM Sans from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+
+/* Typography Utility Classes */
+.text-title-hero-large {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-hero);
+}
+
+.text-title-hero {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-hero);
+}
+
+.text-title-page {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+}
+
+.text-heading-small {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-none);
+}
+
+.text-subheading-medium {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-none);
+}
+
+.text-subheading-small {
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+}
+
+.text-body-large {
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+.text-body-medium {
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+}
+
+.text-body-small {
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-loose);
+}
+
+.text-code-base {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-none);
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+/* Text Alignment */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+

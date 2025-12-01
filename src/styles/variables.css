@@ -1,0 +1,86 @@
+/* ========================================
+   Design Tokens - About Us Page
+   Extracted from Figma Design
+======================================== */
+
+:root {
+  /* Colors */
+  --color-bg: #000000;
+  --color-bg-dark: #050708;
+  --color-bg-medium: #0a0d0f;
+  --color-bg-light: #141a1e;
+  
+  --color-primary: #0632f9;
+  --color-primary-hover: #0528d4;
+  
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #898d8f;
+  --color-text-muted: #74797b;
+  --color-text-dark: #0c0c0d;
+  
+  --color-border: #444647;
+  --color-border-light: rgba(116, 121, 123, 0.5);
+  
+  --color-card-bg: rgba(116, 121, 123, 0.08);
+  --color-card-border: #444647;
+  
+  --color-gradient-start: rgba(20, 26, 30, 1);
+  --color-gradient-mid: rgba(10, 13, 15, 1);
+  --color-gradient-end: rgba(0, 0, 0, 1);
+  
+  /* Typography - Font Families */
+  --font-family-base: 'Prodigy Sans', 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-medium: 'Prodigy Sans Medium', 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-italic: 'Prodigy Sans Italic', 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Typography - Font Sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 40px;
+  --font-size-2xl: 64px;
+  
+  /* Typography - Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.13;
+  --line-height-snug: 1.2;
+  --line-height-normal: 1.24;
+  --line-height-relaxed: 1.4;
+  --line-height-loose: 1.43;
+  
+  /* Typography - Letter Spacing */
+  --letter-spacing-hero: -2.2px;
+  
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 20px;
+  --space-8: 24px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-11: 48px;
+  --space-12: 64px;
+  --space-13: 84px;
+  --space-14: 96px;
+  --space-15: 248px;
+  
+  /* Border Radius */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-full: 99px;
+  
+  /* Shadows & Effects */
+  --blur-sm: 5px;
+  --blur-md: 36px;
+  
+  /* Layout */
+  --page-width: 1440px;
+  --content-width: 1248px;
+  --nav-height: 64px;
+}
+

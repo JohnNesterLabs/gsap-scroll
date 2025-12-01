@@ -1,0 +1,103 @@
+/* ========================================
+   Leadership Section Styles
+======================================== */
+
+.leadership {
+  position: relative;
+  width: var(--page-width);
+  height: 1380px;
+  overflow: hidden;
+}
+
+.leadership__bg-left {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 720px;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center left,
+    rgba(20, 26, 30, 0.5) 0%,
+    rgba(10, 13, 15, 0.3) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.leadership__bg-right {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%) rotate(180deg) scaleY(-1);
+  width: 720px;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center left,
+    rgba(20, 26, 30, 0.5) 0%,
+    rgba(10, 13, 15, 0.3) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.leadership__content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.leadership__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-6);
+  text-align: center;
+  width: 100%;
+}
+
+.leadership__tag {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  color: var(--color-text-secondary);
+  text-align: center;
+  width: 100%;
+}
+
+.leadership__title {
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-hero);
+  color: var(--color-text-primary);
+  text-align: center;
+  width: 100%;
+  margin: 0;
+}
+
+.leadership__cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.leadership__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-12);
+}
+
+.leadership__row--center {
+  justify-content: center;
+}
+
