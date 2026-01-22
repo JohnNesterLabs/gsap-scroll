@@ -69,31 +69,31 @@ export default function Demo() {
   const [videoPreloadProgress, setVideoPreloadProgress] = useState(0);
   const preloadVideoRef = useRef(null);
 
-  // PNG Sequence Configuration
-  // CONFIGURATION: Change startSection to control when PNG sequence starts
-  // - startSection: 4 = PNG sequence starts from section 4 (after L657 section)
-  // - startSection: 5 = PNG sequence starts from section 5 (after section 4)
+  // Desktop WebP Sequence Configuration (replaces PNG)
+  // CONFIGURATION: Change startSection to control when WebP sequence starts
+  // - startSection: 4 = WebP sequence starts from section 4 (after L657 section)
+  // - startSection: 5 = WebP sequence starts from section 5 (after section 4)
   //
   // TO CHANGE START SECTION: Simply modify the startSection value below
   // Example: Change startSection: 4 to startSection: 5 to start from section 5
-  const PNG_SEQUENCE_CONFIG = {
-    startSection: 4, // PNG sequence starts from section 4 and completes all 378 frames
-    totalFrames: 378,
+  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
+    startSection: 4, // WebP sequence starts from section 4 and completes all 328 frames
+    totalFrames: 328,
     framePrefix: "frame_",
-    frameSuffix: ".png",
-    folderPath: "/frames-journey/",
+    frameSuffix: ".webp",
+    folderPath: "/frames-desktop-webp/",
   };
 
   // Desktop WebP Sequence Configuration
   // CUSTOMIZE: Start section, total frames, frame prefix, suffix, and folder path
   // Using WebP format for better performance on desktop devices
-  const DESKTOP_WEBP_SEQUENCE_CONFIG = {
-    startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
-    totalFrames: 428,
-    framePrefix: "frame_",
-    frameSuffix: ".webp",
-    folderPath: "/frames-desktop-webp/",
-  };
+  // const DESKTOP_WEBP_SEQUENCE_CONFIG = {
+  //   startSection: 4, // Desktop WebP sequence starts from section 4 and completes all 428 frames
+  //   totalFrames: 428,
+  //   framePrefix: "frame_",
+  //   frameSuffix: ".webp",
+  //   folderPath: "/frames-desktop-webp/",
+  // };
 
   // Scroll Stop Configuration
   // CUSTOMIZE: Timeline and Play Button positions for different devices
@@ -945,15 +945,15 @@ export default function Demo() {
         {/* Responsive Animation - WebP Sequence for both Desktop and Mobile */}
         {isMobileDevice() ? (
           <WebPSequence
-            startSection={PNG_SEQUENCE_CONFIG.startSection}
-            totalFrames={1367} // Updated to 536 frames (436 original + 100 duplicates of frame 320)
+            startSection={DESKTOP_WEBP_SEQUENCE_CONFIG.startSection}
+            totalFrames={436} // Mobile WebP frames
             framePrefix="mobile_frame_"
             frameSuffix=".webp"
             folderPath="/frames-mobile-30fps/"
             activeSection={activeSection}
             sectionProgress={sectionProgress}
             // Scroll stop functionality - using configuration
-            stopFrame={320} // CTA zone starts at frame 320
+            stopFrame={320} // Mobile stop frame
             timelineDuration={scrollStopConfig.timelineDuration}
             timelinePosition={scrollStopConfig.timelinePosition}
             playButtonPosition={scrollStopConfig.playButtonPosition}

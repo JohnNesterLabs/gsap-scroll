@@ -429,18 +429,30 @@ const WebPSequence = ({
         </div>
       )}
 
-      {/* Troubleshooting Map Text Overlay - Customized for mobile and desktop */}
-      {(framePrefix === 'mobile_frame_' 
-        ? (currentFrame >= 4 && currentFrame <= 300)  // Mobile: frames 4-100
-        : (currentFrame >= 4 && currentFrame <= 220)  // Desktop: frames 4-230
-      ) && (
-        <div className="troubleshooting-text-overlay">
-          <div className="troubleshooting-text">
-            AI that automatically builds and nurtures your Troubleshooting Map
-          </div>
-        </div>
-      )}
-
+       {/* Troubleshooting Map Text Overlay - Different ranges for desktop and mobile */}
+       {(() => {
+         const isMobile = framePrefix === 'mobile_frame_';
+         const shouldShow = isMobile 
+           ? (currentFrame >= 4 && currentFrame <= 318)  // Mobile: frames 4-320
+           : (currentFrame >= 4 && currentFrame <= 233); // Desktop: frames 4-233
+         
+         return shouldShow && (
+           <div className="troubleshooting-text-overlay">
+             <div className="troubleshooting-text">
+               {isMobile ? (
+                 <>
+                   AI that automatically builds<br />
+                   and nurtures your<br />
+                   Troubleshooting Map
+                 </>
+               ) : (
+                 "AI that automatically builds and nurtures your Troubleshooting Map"
+               )}
+             </div>
+           </div>
+         );
+       })()}
+      
       {/* Video Modal Popup */}
       {showVideoModal && (
         <div className="video-modal-overlay" onClick={handleVideoModalClose}>
