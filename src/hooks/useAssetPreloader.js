@@ -37,7 +37,7 @@ const getAssetsToPreload = () => {
         console.log('🖥️ Desktop device detected - loading desktop frames only');
         return [
             ...baseAssets,
-            ...generateWebPDesktopFramePaths(428, '/frames-desktop-webp/')
+            ...generateWebPDesktopFramePaths(728, '/frames-desktop-webp/')
         ];
     }
 };
@@ -75,7 +75,7 @@ const generateWebPMobileFramePaths = (totalFrames = 1367, folderPath = '/frames-
 };
 
 // Generate WebP desktop frame paths
-const generateWebPDesktopFramePaths = (totalFrames = 428, folderPath = '/frames-desktop-webp/') => {
+const generateWebPDesktopFramePaths = (totalFrames = 728, folderPath = '/frames-desktop-webp/') => {
     const frames = [];
     for (let i = 1; i <= totalFrames; i++) {
         const frameNumber = i.toString().padStart(4, '0');

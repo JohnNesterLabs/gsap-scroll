@@ -88,7 +88,7 @@ const WebPSequence = ({
         if (process.env.NODE_ENV === 'development') {
           const isMobile = framePrefix === 'mobile_frame_';
           const ctaStart = isMobile ? 320 : 234;
-          const ctaEnd = isMobile ? 420 : 334;
+          const ctaEnd = isMobile ? 420 : 634;
           const isCTAZone = clampedFrame >= ctaStart && clampedFrame <= ctaEnd;
 
           const frameInfo = {
@@ -212,6 +212,16 @@ const WebPSequence = ({
       return `${folderPath}${framePrefix}${formatFrameNumber(clampedOriginalFrame)}${frameSuffix}`;
     }
 
+    // For desktop frames 234-634, use frame 234 image (extended duplicate zone)
+    if (framePrefix === 'frame_' && frameNum >= 234 && frameNum <= 634) {
+      return `${folderPath}${framePrefix}0234${frameSuffix}`;
+    }
+    // For desktop frames 635-728, shift back to original frame numbers (635-728 becomes 335-428)
+    if (framePrefix === 'frame_' && frameNum >= 635) {
+      const shiftedFrame = frameNum - 300; // 635-728 becomes 335-428
+      return `${folderPath}${framePrefix}${formatFrameNumber(shiftedFrame)}${frameSuffix}`;
+    }
+
     // For all other frames, use the actual frame number
     return `${folderPath}${framePrefix}${formatFrameNumber(frameNum)}${frameSuffix}`;
   };
@@ -225,7 +235,7 @@ const WebPSequence = ({
       showOnDuplicateZone = currentFrame >= 320 && currentFrame <= 420 && isVisible;
     } else {
       // Desktop: Show CTA on frames 234-334 (duplicate zone)
-      showOnDuplicateZone = currentFrame >= 234 && currentFrame <= 334 && isVisible;
+      showOnDuplicateZone = currentFrame >= 234 && currentFrame <= 634 && isVisible;
     }
 
     const result = showOnDuplicateZone;
@@ -248,7 +258,7 @@ const WebPSequence = ({
       visible = currentFrame >= 320 && currentFrame <= 420 && isVisible;
     } else {
       // Desktop: Show CTA on frames 234-334
-      visible = currentFrame >= 234 && currentFrame <= 334 && isVisible;
+      visible = currentFrame >= 234 && currentFrame <= 634 && isVisible;
     }
 
     console.log('📱 Continue CTA Visibility Check:', {
